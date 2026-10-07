@@ -11,10 +11,11 @@ Read these before building:
 - `references/style-dna.md` — palette, type, depth, pacing, and easing numbers measured from the references.
 - `references/techniques.md` — every signature move, with its measured timing and the `motion-kit.js` call that reproduces it.
 - `references/breakdowns.md` — shot-by-shot timelines of the four references. Use them as storyboard templates.
+- `references/audio.md` — voice-over (local TTS), procedural music/SFX, ducking and loudness. Read it whenever the video needs sound.
 
 ## Workflow
 
-1. **Script in beats.** Write the video as a beat list: `t, shot, on-screen text, move, transition out`. Keep on-screen text to 1–5 words per beat. Typical arc: *hook question → problem → brand reveal → 2–4 feature shots → CTA → end logo.* 12–20 s for a teaser.
+1. **Script in beats** (and, if there is voice-over, generate it first with `scripts/tts.py` — its line durations set the scene times). Write the video as a beat list: `t, shot, on-screen text, move, transition out`. Keep on-screen text to 1–5 words per beat. Typical arc: *hook question → problem → brand reveal → 2–4 feature shots → CTA → end logo.* 12–20 s for a teaser.
 2. **Copy the kit.** Copy `kit/template.html` and `kit/motion-kit.js` into a working folder. The template is a 1080×1920 stage (switch to 1920×1080 by changing `--w/--h` and `STAGE`), a GSAP master timeline, and a demo sequence to replace.
 3. **Build every beat as a timeline segment** with `motion-kit.js` helpers placed by absolute time labels on one master timeline. Never use CSS animations/transitions, `setTimeout`, or `Date.now()` — the renderer only controls GSAP time. Canvas/three.js scenes must draw from the time passed to `window.__seek(t)`.
 4. **Preview** by opening the HTML in a browser (it loops; `space` pauses, `←/→` scrubs, `?t=4.2` jumps).
@@ -46,4 +47,4 @@ Read these before building:
 
 ## Limits to tell the user
 
-No audio is generated (mux a supplied track with `--audio`). No photoreal footage/people — this is shapes, type, UI, icons, logos, particles, simple 3D. Brand logos and real app UI must come from the user or be original stand-ins.
+Voice-over is synthetic (Kokoro). Music and effects are procedural and simple; a licensed track supplied by the user will sound better (mux it with `--audio`). No photoreal footage/people — this is shapes, type, UI, icons, logos, particles, simple 3D. Brand logos and real app UI must come from the user or be original stand-ins.
