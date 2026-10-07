@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <link rel="stylesheet" href="assets/shared.css">
+      <style>
+        #type .panel { position: absolute; background: var(--brand); border-left: 3px solid var(--paper); overflow: hidden; will-change: transform; }
+        #type .ga { position: absolute; font-weight: 700; letter-spacing: -0.05em; line-height: 1; color: var(--paper); }
+      </style>
+      <!-- Bar 9 (f960-1080). REF_A typography spec: the typeface name builds per character, a guide draws, the glyph set
+           rises line by line, and stacked brand panels slide in from the right 3 f apart, each carrying a giant "a"
+           so the offset edges read as a stack. -->
+      <div data-hf-id="hf-wfu0" id="type" class="beat" data-composition-id="type" data-width="1080" data-height="1920">
+        <div data-hf-id="hf-wvtw" class="stage sg"></div>
+      </div>
+      <script>
+        (function () {
+          const root = document.querySelector("#type");
+          const st = root.querySelector(".stage");
+          const { W, H, land } = LK.dims(root);
+          const { C, F, el } = LK;
+          const T0 = 960, L = (f) => F(f - T0);
+          const tl = gsap.timeline({ paused: true });
+          el(st, "div", "fill", { background: C.paper });
+
+          const G = land
+            ? { m: 70, name: [70, 64, 150], rule: 420, glyph: [70, 590, 40], pan: { x: 1060, y: 0, w: 900, h: H, step: 28, a: 760, ax: 120, ay: 120 } }
+            : { m: 56, name: [56, 250, 130], rule: 560, glyph: [56, 610, 33], pan: { x: 170, y: 1010, w: 960, h: 910, step: 26, a: 600, ax: 120, ay: 40 } };
+
+          const nm = el(st, "div", "abs", { left: G.name[0], top: G.name[1], fontSize: G.name[2], fontWeight: 700, letterSpacing: "-0.045em", lineHeight: 0.95, color: C.ink });
+          const l1 = el(nm, "div", "nowrap", null, "Space"), l2 = el(nm, "div", "nowrap", null, "Grotesk");
+          tl.fromTo([...LK.split(l1, "char"), ...LK.split(l2, "char")], { yPercent: 115 }, { yPercent: 0, duration: F(12), ease: "expo.out", stagger: F(1) }, 0);
+
+          const g = LK.svg(st, W, H);
+          const rl = LK.line(g, G.m, G.rule, land ? 1000 : W - G.m, G.rule, C.ink);
+          LK.draw(tl, rl, F(14), F(20));
+          const cap = el(st, "div", "abs cap", { left: G.m, top: G.rule + 16, color: C.ink }, "Typeface");
+          const sp = el(st, "div", "abs spec", { left: G.m + (land ? 260 : 170), top: G.rule + 18, width: land ? 560 : 520, color: C.ink }, "Space Grotesk — Bold for display, Medium for labels. The site’s own face, set tight.");
+          tl.fromTo([...LK.split(cap, "word"), ...LK.split(sp, "word")], { yPercent: 110 }, { yPercent: 0, duration: F(8), ease: "expo.out", stagger: F(1) }, F(20));
+
+          const rows = ["ABCDEFGHIJKLMNO", "PQRSTUVWXYZabcde", "fghijklmnopqrstuvwxy", "z0123456789@#$%&"];
+          const gb = el(st, "div", "abs", { left: G.glyph[0], top: G.glyph[1], fontSize: G.glyph[2], fontWeight: 700, lineHeight: 1.12, letterSpacing: "0.01em", color: C.ink });
+          const lines = rows.map((r) => { const m = el(gb, "div", "lm"); return el(m, "span", "ln", null, r); });
+          tl.fromTo(lines, { yPercent: 110 }, { yPercent: 0, duration: F(12), ease: "expo.out", stagger: F(3) }, F(26));
+
+          // f990: five brand panels slide in from the right, 3 f apart; the last one sits furthest right.
+          const P = G.pan;
+          const stack = el(st, "div", "fill");
+          for (let i = 0; i < 5; i++) {
+            const p = el(stack, "div", "panel", { left: P.x + i * P.step, top: P.y, width: P.w, height: P.h });
+            const ga = el(p, "div", "ga", { left: P.ax, top: P.ay, fontSize: P.a }, "a");
+            ga.setAttribute("data-layout-allow-overlap", ""); ga.setAttribute("data-layout-allow-occlusion", "");
+            tl.fromTo(p, { x: W }, { x: 0, duration: F(14), ease: "expo.out" }, F(30 + i * 3));
+          }
+          tl.to(stack, { x: land ? -60 : -40, duration: F(70), ease: "none" }, F(50));
+          tl.set({}, {}, L(1080));
+          window.__timelines["type"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

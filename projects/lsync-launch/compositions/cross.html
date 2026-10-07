@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <link rel="stylesheet" href="assets/shared.css">
+      <!-- Bar 6 (f600-720), the drop. REF_A crossing bars: ink field crossed by brand bars, the seal on a paper tile at
+           the crossing, a giant word cropped by the top edge sliding down, the second word typed per character. -->
+      <div data-hf-id="hf-5j60" id="cross" class="beat" data-composition-id="cross" data-width="1080" data-height="1920">
+        <div data-hf-id="hf-wvtw" class="stage sg"></div>
+      </div>
+      <script>
+        (function () {
+          const root = document.querySelector("#cross");
+          const st = root.querySelector(".stage");
+          const { W, H, land } = LK.dims(root);
+          const { C, F, el } = LK;
+          const T0 = 600, L = (f) => F(f - T0);
+          const tl = gsap.timeline({ paused: true });
+          el(st, "div", "fill", { background: C.ink });
+
+          const G = land
+            ? { vx: 600, hy: 560, b: 130, big: { l: 790, t: -24, fs: 340 }, sm: { l: 790, t: 760, fs: 170 }, spec: [44, 22, 470], shift: [690, 500] }
+            : { vx: 270, hy: 1000, b: 120, big: { l: 440, t: 250, fs: 250 }, sm: { l: 430, t: 1180, fs: 132 }, spec: [24, 18, 220], shift: [320, 960] };
+          const vb = el(st, "div", "abs", { left: G.vx - G.b / 2, top: 0, width: G.b, height: H, background: C.brand });
+          const hb = el(st, "div", "abs", { left: 0, top: G.hy - G.b / 2, width: W, height: G.b, background: C.brand });
+          const tile = el(st, "div", "abs", { left: G.vx - G.b / 2, top: G.hy - G.b / 2, width: G.b, height: G.b, background: C.paper });
+          const seal = el(tile, "img", "pic", { left: G.b * 0.12, top: G.b * 0.12, width: G.b * 0.76, height: G.b * 0.76 });
+          seal.src = "assets/lsc-seal.png"; seal.alt = "";
+          const spec = el(hb, "div", "abs spec", { left: G.spec[0], top: G.spec[1], width: G.spec[2], color: C.paper },
+            land ? "For every student of DSSC — Santa Cruz Extension Campus. Records, finances and feedback in one public place." : "For every student of DSSC — Santa Cruz.");
+
+          const big = el(st, "div", "abs nowrap", { left: G.big.l, top: G.big.t, fontSize: G.big.fs, fontWeight: 700, letterSpacing: "-0.05em", lineHeight: 1, color: C.paper }, "Every");
+          const sm = el(st, "div", "abs nowrap", { left: G.sm.l, top: G.sm.t, fontSize: G.sm.fs, fontWeight: 500, letterSpacing: "0.02em", lineHeight: 1, color: C.paper }, "student");
+          const chars = LK.split(sm, "char");
+
+          // f600: bars slam in on the drop (expo.out, 12 f), tile pops at the crossing.
+          tl.fromTo(vb, { yPercent: -100 }, { yPercent: 0, duration: F(12), ease: "expo.out" }, 0);
+          tl.fromTo(hb, { xPercent: -100 }, { xPercent: 0, duration: F(12), ease: "expo.out" }, F(3));
+          tl.fromTo(tile, { scale: 0 }, { scale: 1, duration: F(12), ease: "expo.out" }, F(10));
+          tl.fromTo(LK.split(spec, "word"), { yPercent: 110 }, { yPercent: 0, duration: F(8), ease: "expo.out", stagger: F(1) }, F(30));
+          // Giant word slides down out of the top edge and keeps drifting; the small word types on.
+          tl.fromTo(big, { y: -G.big.fs * 1.1 }, { y: 0, duration: F(22), ease: "expo.out" }, F(12));
+          tl.to(big, { y: 34, duration: F(86), ease: "none" }, F(34));
+          tl.fromTo(chars, { yPercent: 115 }, { yPercent: 0, duration: F(10), ease: "expo.out", stagger: F(2) }, F(36));
+          // f690: the grid re-positions (power4.inOut, 12 f); the tile rides the crossing.
+          const mv = { duration: F(12), ease: "power4.inOut" };
+          tl.to(vb, { x: G.shift[0] - G.vx, ...mv }, F(90)).to(tile, { x: G.shift[0] - G.vx, y: G.shift[1] - G.hy, ...mv }, F(90)).to(hb, { y: G.shift[1] - G.hy, ...mv }, F(90));
+          tl.set({}, {}, L(720));
+          window.__timelines["cross"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

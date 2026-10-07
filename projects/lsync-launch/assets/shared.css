@@ -58,3 +58,12 @@
 .bbar .label { font-size: calc(var(--u) * 2.0); color: var(--ink); letter-spacing: 0.14em; }
 .bview { position: absolute; left: 0; right: 0; bottom: 0; top: calc(var(--u) * 5.2 + 2px); overflow: hidden; background: var(--paper); }
 .bview img { position: absolute; left: 0; top: 0; display: block; }
+
+/* Brand-system film helpers */
+.abs { position: absolute; }
+.sg { font-family: "Space Grotesk", sans-serif; }
+.cap { font-weight: 500; font-size: 20px; line-height: 1.25; letter-spacing: 0; }
+.spec { font-weight: 400; font-size: 15px; line-height: 1.45; letter-spacing: 0.01em; }
+.idx { font-weight: 500; font-size: 18px; letter-spacing: 0.12em; }
+.nowrap { white-space: nowrap; }
+.pic { position: absolute; display: block; object-fit: cover; }

@@ -18,3 +18,23 @@ Each technique below is taken from a measured reference moment (`reference_break
 | 12 | **The beat grid owns the edit** (REF_A, REF_C, upload: every cut within ±20 ms of an onset) | Whole film | Every cut and major move starts on a beat or eighth; the SFX cue sheet is placed by frame; whoosh peaks sit on cut frames. |
 
 **Rejected on purpose:** REF_B's red glow halos and blur pushes, REF_C's orange and blue gradients, glows and 3D tilt, the upload's vignette, glow and CTA copy. They all contradict the solid-colour, institutional brief.
+
+---
+
+## v-next 2 — REF_A applied directly (after "that's not motion graphics")
+
+The user asked for the launch to look like the Strava film. REF_A's sections now map one-to-one onto the film:
+
+| REF_A moment | Launch section | Applied as |
+|---|---|---|
+| "Brand Principles": dashed grid, one line per shot, white → black → orange → white | `principles` (bars 1–2) | Four principles (Open every record. / Show every peso. / Hear every student. / One step better than yesterday.) on paper → ink → brand → paper. The guides slide to a new grid on each cut. |
+| Photo stack, one rectangle per eighth | `stack` (bars 3–4) | The council's officer cards plus crops of the live site, 15 landings, each with a tick. |
+| Wordmark wipe, construction guides with chevrons at the corners, spec block | `wordmark` (bar 5) | The LSynC wordmark, gold dots plus mini seals at the corners, spec text. |
+| Crop push into "RAVA" with the chevron and three logo chips | `wordmark` (bar 5, f540) | A push into "SynC", the seal, and ink / brand / outline chips. |
+| Charcoal field, orange crossing bars, logo tile, "You" cropped from the top, "are my" typed per character | `cross` (bar 6) | Ink field, brand bars, the seal tile, "Every" from the top, "student" typed per character. |
+| Giant "HIGH" pull-back, colour spec cards, black / orange split | `palette` (bars 7–8) | "OPEN" pulls back; ink, brand and gold fields carry their hex and RGB specs. |
+| "Maison Neue" spec with glyph set and stacked orange panels with "a" | `type` (bar 9) | "Space Grotesk", the glyph set, and stacked brand panels with "a". |
+| Logo alone | `mark` (bar 11) | The seal inside construction rings, then alone. |
+| "Daop." signature, small, held | `signoff` (bar 12) | NOW LIVE · lsync.vercel.app · site name · A.Y., small and held. |
+
+Added for the launch (not in REF_A): `interface` (bar 10), so the product itself is shown.

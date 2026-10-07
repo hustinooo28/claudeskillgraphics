@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <link rel="stylesheet" href="assets/shared.css">
+      <!-- Bar 11 (f1200-1320). REF_A logo beat: the seal opens from its centre inside dashed construction rings and
+           axes, a caption names it, then the construction retracts and the seal stands alone. -->
+      <div data-hf-id="hf-bwr2" id="mark" class="beat" data-composition-id="mark" data-width="1080" data-height="1920">
+        <div data-hf-id="hf-wvtw" class="stage sg"></div>
+      </div>
+      <script>
+        (function () {
+          const root = document.querySelector("#mark");
+          const st = root.querySelector(".stage");
+          const { W, H, land } = LK.dims(root);
+          const { C, F, el } = LK;
+          const T0 = 1200, L = (f) => F(f - T0);
+          const tl = gsap.timeline({ paused: true });
+          el(st, "div", "fill", { background: C.paper });
+          const cx = W / 2, cy = land ? 520 : 900, S = land ? 400 : 520;
+
+          const g = LK.svg(st, W, H);
+          const ax = [LK.line(g, cx, cy, 0, cy, C.ink), LK.line(g, cx, cy, W, cy, C.ink), LK.line(g, cx, cy, cx, 0, C.ink), LK.line(g, cx, cy, cx, H, C.ink)];
+          const R = [S * 0.62, S * 0.82];
+          const rings = R.map((r) => LK.ring(g, cx, cy, r, C.ink, "5 7"));
+          const dots = R.flatMap((r) => [[cx - r, cy], [cx + r, cy], [cx, cy - r], [cx, cy + r]]).map(([x, y]) => LK.dot(g, x, y, 4, C.accent));
+
+          const seal = el(st, "img", "pic", { left: cx - S / 2, top: cy - S / 2, width: S, height: S });
+          seal.src = "assets/lsc-seal.png"; seal.alt = "Local Student Council seal";
+          tl.fromTo(seal, { clipPath: "circle(0% at 50% 50%)", scale: 0.86 }, { clipPath: "circle(50% at 50% 50%)", scale: 1, duration: F(20), ease: "expo.out" }, 0);
+          tl.to(seal, { scale: 1.04, duration: F(100), ease: "none" }, F(20));
+          ax.forEach((l, i) => LK.draw(tl, l, F(2 + i), F(22)));
+          tl.fromTo(rings, { attr: { r: 0 } }, { attr: { r: (i) => R[i] }, duration: F(20), ease: "expo.out", stagger: F(4) }, F(6));
+          tl.fromTo(dots, { attr: { r: 0 } }, { attr: { r: 4 }, duration: F(8), ease: "expo.out", stagger: F(1) }, F(18));
+
+          const cap = el(st, "div", "abs", { left: cx - 300, width: 600, top: cy + S * 0.82 + 34, textAlign: "center", color: C.ink });
+          const c1 = el(cap, "div", "cap", { fontWeight: 600 }, "The Seal");
+          const c2 = el(cap, "div", "spec", { marginTop: 4 }, "Local Student Council · DSSC — Santa Cruz Extension Campus");
+          const cw = [...LK.split(c1, "word"), ...LK.split(c2, "word")];
+          tl.fromTo(cw, { yPercent: 110 }, { yPercent: 0, duration: F(8), ease: "expo.out", stagger: F(1) }, F(16));
+
+          // f1275: construction retracts (expo.in, 12 f); the seal stands alone into the cut.
+          const out = { duration: F(12), ease: "expo.in", immediateRender: false };
+          ax.forEach((l) => tl.fromTo(l, { attr: { x2: +l.getAttribute("x2"), y2: +l.getAttribute("y2") } }, { attr: { x2: cx, y2: cy }, ...out }, L(1275)));
+          tl.fromTo(rings, { attr: { r: (i) => R[i] } }, { attr: { r: 0 }, ...out }, L(1275));
+          tl.fromTo(dots, { attr: { r: 4 } }, { attr: { r: 0 }, ...out }, L(1275));
+          tl.fromTo(cw, { yPercent: 0 }, { yPercent: -110, ...out }, L(1275));
+          tl.set({}, {}, L(1320));
+          window.__timelines["mark"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

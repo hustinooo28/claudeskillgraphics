@@ -9,43 +9,62 @@
 
 | Frame | Time (s) | Bar.beat | File | Gain | Aligned on | Marks |
 |---|---|---|---|---|---|---|
-| 15 | 0.250 | 1.1 | `assets/audio/sfx/tick_soft.wav` | -20 dB | onset | accent hairline starts drawing |
-| 45 | 0.750 | 1.2 | `assets/audio/sfx/tick_ui.wav` | -24 dB | onset | ORG label, line 1 |
-| 60 | 1.000 | 1.3 | `assets/audio/sfx/tick_ui.wav` | -24 dB | onset | ORG label, line 2 |
-| 120 | 2.000 | 2.1 | `assets/audio/sfx/whoosh_wipe.wav` | -9 dB | peak | brand wipe crosses centre (cut frame) |
-| 240 | 4.000 | 3.1 | `assets/audio/sfx/whoosh_wipe.wav` | -9 dB | peak | paper wipe crosses centre (cut frame) |
-| 241 | 4.017 | 3.1 | `assets/audio/sfx/riser.wav` | -13 dB | onset | riser under bar 3, ends before f360 |
-| 360 | 6.000 | 4.1 | `assets/audio/sfx/whoosh_wipe.wav` | -10 dB | peak | hard cut to ink; panel A enters |
-| 378 | 6.300 | 4.1 | `assets/audio/sfx/whoosh_short.wav` | -13 dB | peak | panel B lands |
-| 480 | 8.000 | 5.1 | `assets/audio/sfx/tick_soft.wav` | -20 dB | onset | hairline between panels |
-| 578 | 9.633 | 5.4 | `assets/audio/sfx/whoosh_short.wav` | -15 dB | peak | panels exit |
-| 585 | 9.750 | 5.4 | `assets/audio/sfx/rev_cymbal.wav` | -12 dB | peak | reverse cymbal peaks and stops: silence f585-599 |
-| 600 | 10.000 | 6.1 | `assets/audio/sfx/impact_sub.wav` | -3 dB | onset | REVEAL: hard cut to brand, seal lands |
-| 640 | 10.667 | 6.2 | `assets/audio/sfx/tick_soft.wav` | -20 dB | onset | accent rule under the site name |
-| 722 | 12.033 | 7.1 | `assets/audio/sfx/whoosh_rise.wav` | -12 dB | peak | cut to paper; browser frame rises |
-| 735 | 12.250 | 7.1 | `assets/audio/sfx/tick_ui.wav` | -22 dB | onset | index 01 |
-| 840 | 14.000 | 8.1 | `assets/audio/sfx/tick_ui.wav` | -20 dB | onset | cut to page 02 |
-| 855 | 14.250 | 8.1 | `assets/audio/sfx/tick_ui.wav` | -22 dB | onset | index 02 |
-| 960 | 16.000 | 9.1 | `assets/audio/sfx/tick_ui.wav` | -22 dB | onset | section label (bar 9 downbeat) |
-| 975 | 16.250 | 9.1 | `assets/audio/sfx/tick_soft.wav` | -19 dB | onset | scroll starts (interaction) |
-| 1035 | 17.250 | 9.3 | `assets/audio/sfx/tick_soft.wav` | -19 dB | onset | scroll stops on the allocations table |
-| 1080 | 18.000 | 10.1 | `assets/audio/sfx/tick_ui.wav` | -20 dB | onset | cut to page 03 |
-| 1095 | 18.250 | 10.1 | `assets/audio/sfx/tick_ui.wav` | -22 dB | onset | index 03 |
-| 1200 | 20.000 | 11.1 | `assets/audio/sfx/whoosh_short.wav` | -14 dB | peak | frame collapses to a tile |
-| 1215 | 20.250 | 11.1 | `assets/audio/sfx/tick_ui.wav` | -22 dB | onset | tile 2 lands |
-| 1230 | 20.500 | 11.2 | `assets/audio/sfx/tick_ui.wav` | -22 dB | onset | tile 3 lands |
-| 1290 | 21.500 | 11.4 | `assets/audio/sfx/whoosh_wipe.wav` | -11 dB | peak | ink panel reaches full frame |
-| 1320 | 22.000 | 12.1 | `assets/audio/sfx/impact_final.wav` | -2 dB | onset | ENDCARD: NOW LIVE; final impact with reverb tail |
+| 2 | 0.033 | 1.1 | `assets/audio/sfx/tick_soft.wav` | -20 dB | onset | construction grid draws |
+| 20 | 0.333 | 1.1 | `assets/audio/sfx/tick_ui.wav` | -24 dB | onset | principle 01 types on |
+| 60 | 1.000 | 1.3 | `assets/audio/sfx/hit.wav` | -8 dB | onset | field cut to ink (principle 02) |
+| 120 | 2.000 | 2.1 | `assets/audio/sfx/hit.wav` | -8 dB | onset | field cut to brand (principle 03) |
+| 180 | 3.000 | 2.3 | `assets/audio/sfx/hit.wav` | -8 dB | onset | field cut to paper (principle 04) |
+| 240 | 4.000 | 3.1 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 01 lands |
+| 255 | 4.250 | 3.1 | `assets/audio/sfx/tick_soft.wav` | -21 dB | onset | collage piece 02 lands |
+| 270 | 4.500 | 3.2 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 03 lands |
+| 285 | 4.750 | 3.2 | `assets/audio/sfx/tick_soft.wav` | -21 dB | onset | collage piece 04 lands |
+| 300 | 5.000 | 3.3 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 05 lands |
+| 315 | 5.250 | 3.3 | `assets/audio/sfx/tick_soft.wav` | -21 dB | onset | collage piece 06 lands |
+| 330 | 5.500 | 3.4 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 07 lands |
+| 345 | 5.750 | 3.4 | `assets/audio/sfx/tick_soft.wav` | -21 dB | onset | collage piece 08 lands |
+| 360 | 6.000 | 4.1 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 09 lands |
+| 375 | 6.250 | 4.1 | `assets/audio/sfx/tick_soft.wav` | -21 dB | onset | collage piece 10 lands |
+| 390 | 6.500 | 4.2 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 11 lands |
+| 405 | 6.750 | 4.2 | `assets/audio/sfx/tick_soft.wav` | -21 dB | onset | collage piece 12 lands |
+| 420 | 7.000 | 4.3 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 13 lands |
+| 435 | 7.250 | 4.3 | `assets/audio/sfx/tick_soft.wav` | -21 dB | onset | collage piece 14 lands |
+| 450 | 7.500 | 4.4 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 15 lands |
+| 465 | 7.750 | 4.4 | `assets/audio/sfx/whoosh_short.wav` | -15 dB | peak | collage clears: silence f465-480 |
+| 481 | 8.017 | 5.1 | `assets/audio/sfx/whoosh_rise.wav` | -19 dB | peak | LSynC wordmark wipes on, in the gap |
+| 506 | 8.433 | 5.1 | `assets/audio/sfx/tick_ui.wav` | -22 dB | onset | corner seals and gold dots |
+| 552 | 9.200 | 5.3 | `assets/audio/sfx/whoosh_wipe.wav` | -12 dB | peak | crop push into SynC |
+| 566 | 9.433 | 5.3 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | chip 1 (ink) |
+| 571 | 9.517 | 5.4 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | chip 2 (brand) |
+| 576 | 9.600 | 5.4 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | chip 3 (outline) |
+| 600 | 10.000 | 6.1 | `assets/audio/sfx/impact_sub.wav` | -3 dB | onset | THE DROP: crossing bars slam in |
+| 636 | 10.600 | 6.2 | `assets/audio/sfx/tick_soft.wav` | -22 dB | onset | 'student' types on |
+| 690 | 11.500 | 6.4 | `assets/audio/sfx/whoosh_short.wav` | -15 dB | peak | grid re-positions |
+| 720 | 12.000 | 7.1 | `assets/audio/sfx/hit.wav` | -8 dB | onset | cut to OPEN |
+| 732 | 12.200 | 7.1 | `assets/audio/sfx/whoosh_wipe.wav` | -12 dB | peak | OPEN pulls back |
+| 770 | 12.833 | 7.2 | `assets/audio/sfx/whoosh_short.wav` | -14 dB | peak | ink field rises |
+| 840 | 14.000 | 8.1 | `assets/audio/sfx/whoosh_wipe.wav` | -11 dB | peak | brand field slides in |
+| 872 | 14.533 | 8.2 | `assets/audio/sfx/whoosh_short.wav` | -14 dB | peak | gold field arrives |
+| 960 | 16.000 | 9.1 | `assets/audio/sfx/hit.wav` | -9 dB | onset | cut to the typeface spec |
+| 992 | 16.533 | 9.2 | `assets/audio/sfx/whoosh_wipe.wav` | -12 dB | peak | stacked panels slide in |
+| 1082 | 18.033 | 10.1 | `assets/audio/sfx/whoosh_wipe.wav` | -12 dB | peak | live pages land as a stack |
+| 1112 | 18.533 | 10.2 | `assets/audio/sfx/whoosh_short.wav` | -14 dB | peak | pages fan out |
+| 1125 | 18.750 | 10.2 | `assets/audio/sfx/tick_ui.wav` | -22 dB | onset | index labels |
+| 1148 | 19.133 | 10.3 | `assets/audio/sfx/whoosh_rise.wav` | -13 dB | peak | push into the Transparency Board |
+| 1200 | 20.000 | 11.1 | `assets/audio/sfx/rev_cymbal.wav` | -12 dB | peak | reverse cymbal into the seal |
+| 1201 | 20.017 | 11.1 | `assets/audio/sfx/hit.wav` | -12 dB | onset | seal opens |
+| 1210 | 20.167 | 11.1 | `assets/audio/sfx/tick_soft.wav` | -22 dB | onset | construction rings draw |
+| 1276 | 21.267 | 11.3 | `assets/audio/sfx/whoosh_short.wav` | -17 dB | peak | construction retracts |
+| 1320 | 22.000 | 12.1 | `assets/audio/sfx/impact_final.wav` | -2 dB | onset | NOW LIVE: final impact with reverb tail |
 
 ## Bed and mix
 
-- **Bed** (`assets/audio/bed.wav`, generated): a minimal percussive bed in D minor (Dm, Bb, F, C), 120 BPM.
-  - Bar 1: a kick on the downbeat and a low pad.
-  - Bars 2–3: kick on quarters plus hats.
-  - Bar 4: kick only.
-  - Bar 5, beats 3–4: the bed drops out under the reverse cymbal; f585–599 is total silence.
-  - Bars 6–11: the drop, with rim on 2 and 4 and an eighth-note bass pluck.
-  - Bar 12: the bed stops; only the final impact and its tail play.
+- **Bed** (`assets/audio/bed.wav`, generated): a minimal percussive bed in D minor (Dm, Bb, F, C), 120 BPM, shaped on REF_A's structure.
+  - Bars 1–2 (principles): kick on quarters, plus a hit on every field cut.
+  - Bars 3–4 (collage): hats join, with one tick per piece landing on the eighths. f465–480 is total silence.
+  - Bar 5 (wordmark): pad and sub only; the wordmark lands in the gap.
+  - Bars 6–10 (crossing bars → interface): the drop, with rim on 2 and 4 and an eighth-note bass pluck.
+  - Bar 11 (seal): pad and sub only, with the reverse cymbal into the seal.
+  - Bar 12 (sign-off): the bed stops; only the final impact and its tail play.
 - **Processing**
   - Whooshes and the riser are high-passed at 150 Hz (4th / 2nd order).
   - The bed ducks −5 dB under both impacts (8 ms attack, 120 ms hold, 350 ms release).

@@ -60,6 +60,14 @@ def reverse_cymbal(dur):
     y[-int(0.01 * SR):] *= np.linspace(1, 0, int(0.01 * SR))  # hard stop into the silence
     return S.norm(y, 0.9)
 
+def hit(dur=0.32):
+    """Short field-cut hit: low thump + click, no long tail (keeps the stack count low)."""
+    t = S.t_(dur)
+    f = 60 + 120 * np.exp(-t * 40)
+    x = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 14) + 0.5 * S.hp(rng.standard_normal(len(t)), 2500) * np.exp(-t * 120)
+    x[-int(0.03 * SR):] *= np.linspace(1, 0, int(0.03 * SR))
+    return S.norm(x, 0.95)
+
 def reverb(x, secs=2.2, wet=0.32):
     """Generated decaying-noise impulse; used on the final impact only."""
     t = S.t_(secs)
@@ -72,7 +80,8 @@ SFX = {
     "whoosh_short.wav": (whoosh(0.34, 400, 6000, 0.6), 0.34 * 0.6),
     "whoosh_rise.wav": (whoosh(0.5, 200, 3500, 0.7), 0.5 * 0.7),
     "riser.wav": (riser(1.9), 0.0),
-    "rev_cymbal.wav": (reverse_cymbal(1.5), 1.5),
+    "rev_cymbal.wav": (reverse_cymbal(0.8), 0.8),
+    "hit.wav": (hit(), 0.0),
     "impact_sub.wav": (impact_sub(1.5), 0.0),
     "impact_final.wav": (S.norm(reverb(impact_sub(1.4)), 0.95), 0.0),
     "tick_ui.wav": (tick(2400), 0.0),
@@ -84,33 +93,38 @@ for name, (x, _) in SFX.items():
 # ---------------- cue list: (frame the sound lands on, file, gain dB, what it marks) ----------------
 # For whooshes / reverse cymbal the frame is where the PEAK lands (the file starts earlier).
 CUES = [
-    (15, "tick_soft.wav", -20, "accent hairline starts drawing"),
-    (45, "tick_ui.wav", -24, "ORG label, line 1"),
-    (60, "tick_ui.wav", -24, "ORG label, line 2"),
-    (120, "whoosh_wipe.wav", -9, "brand wipe crosses centre (cut frame)"),
-    (240, "whoosh_wipe.wav", -9, "paper wipe crosses centre (cut frame)"),
-    (241, "riser.wav", -13, "riser under bar 3, ends before f360"),
-    (360, "whoosh_wipe.wav", -10, "hard cut to ink; panel A enters"),
-    (378, "whoosh_short.wav", -13, "panel B lands"),
-    (480, "tick_soft.wav", -20, "hairline between panels"),
-    (578, "whoosh_short.wav", -15, "panels exit"),
-    (585, "rev_cymbal.wav", -12, "reverse cymbal peaks and stops: silence f585-599"),
-    (600, "impact_sub.wav", -3, "REVEAL: hard cut to brand, seal lands"),
-    (640, "tick_soft.wav", -20, "accent rule under the site name"),
-    (722, "whoosh_rise.wav", -12, "cut to paper; browser frame rises"),
-    (735, "tick_ui.wav", -22, "index 01"),
-    (840, "tick_ui.wav", -20, "cut to page 02"),
-    (855, "tick_ui.wav", -22, "index 02"),
-    (960, "tick_ui.wav", -22, "section label (bar 9 downbeat)"),
-    (975, "tick_soft.wav", -19, "scroll starts (interaction)"),
-    (1035, "tick_soft.wav", -19, "scroll stops on the allocations table"),
-    (1080, "tick_ui.wav", -20, "cut to page 03"),
-    (1095, "tick_ui.wav", -22, "index 03"),
-    (1200, "whoosh_short.wav", -14, "frame collapses to a tile"),
-    (1215, "tick_ui.wav", -22, "tile 2 lands"),
-    (1230, "tick_ui.wav", -22, "tile 3 lands"),
-    (1290, "whoosh_wipe.wav", -11, "ink panel reaches full frame"),
-    (1320, "impact_final.wav", -2, "ENDCARD: NOW LIVE; final impact with reverb tail"),
+    (2, "tick_soft.wav", -20, "construction grid draws"),
+    (20, "tick_ui.wav", -24, "principle 01 types on"),
+    (60, "hit.wav", -8, "field cut to ink (principle 02)"),
+    (120, "hit.wav", -8, "field cut to brand (principle 03)"),
+    (180, "hit.wav", -8, "field cut to paper (principle 04)"),
+] + [(240 + 15 * i, "tick_ui.wav" if i % 2 == 0 else "tick_soft.wav", -21, f"collage piece {i + 1:02d} lands") for i in range(15)] + [
+    (465, "whoosh_short.wav", -15, "collage clears: silence f465-480"),
+    (481, "whoosh_rise.wav", -19, "LSynC wordmark wipes on, in the gap"),
+    (506, "tick_ui.wav", -22, "corner seals and gold dots"),
+    (552, "whoosh_wipe.wav", -12, "crop push into SynC"),
+    (566, "tick_ui.wav", -21, "chip 1 (ink)"),
+    (571, "tick_ui.wav", -21, "chip 2 (brand)"),
+    (576, "tick_ui.wav", -21, "chip 3 (outline)"),
+    (600, "impact_sub.wav", -3, "THE DROP: crossing bars slam in"),
+    (636, "tick_soft.wav", -22, "'student' types on"),
+    (690, "whoosh_short.wav", -15, "grid re-positions"),
+    (720, "hit.wav", -8, "cut to OPEN"),
+    (732, "whoosh_wipe.wav", -12, "OPEN pulls back"),
+    (770, "whoosh_short.wav", -14, "ink field rises"),
+    (840, "whoosh_wipe.wav", -11, "brand field slides in"),
+    (872, "whoosh_short.wav", -14, "gold field arrives"),
+    (960, "hit.wav", -9, "cut to the typeface spec"),
+    (992, "whoosh_wipe.wav", -12, "stacked panels slide in"),
+    (1082, "whoosh_wipe.wav", -12, "live pages land as a stack"),
+    (1112, "whoosh_short.wav", -14, "pages fan out"),
+    (1125, "tick_ui.wav", -22, "index labels"),
+    (1148, "whoosh_rise.wav", -13, "push into the Transparency Board"),
+    (1200, "rev_cymbal.wav", -12, "reverse cymbal into the seal"),
+    (1201, "hit.wav", -12, "seal opens"),
+    (1210, "tick_soft.wav", -22, "construction rings draw"),
+    (1276, "whoosh_short.wav", -17, "construction retracts"),
+    (1320, "impact_final.wav", -2, "NOW LIVE: final impact with reverb tail"),
 ]
 
 def cue_span(frame, name):
@@ -136,29 +150,26 @@ def rim(peak):
 for b in range(12):
     t0 = b * 4 * BEAT; bar = b + 1; ci = b % 4
     if bar == 12:
-        break  # the endcard is impact + tail only
-    S.place(bed, S.pad_chord(prog[ci], 4 * BEAT + 0.4, 1400) * (0.025 if bar < 6 else 0.04), t0)
+        break  # the sign-off is the final impact and its tail only
+    S.place(bed, S.pad_chord(prog[ci], 4 * BEAT + 0.4, 1400) * (0.03 if bar < 6 else 0.04), t0)
     bt = S.t_(4 * BEAT)
     sub = np.sin(2 * np.pi * S.note_hz(bass[ci] - 12) * bt) * S.env(len(bt), a=0.02, d=0.1, s=0.9, r=0.2, sus_len=4 * BEAT - 0.35)
-    S.place(bed, sub * (0.05 if bar == 1 else 0.13), t0)
+    S.place(bed, sub * (0.06 if bar in (5, 11) else 0.13), t0)
+    if bar in (5, 11):
+        continue  # wordmark and seal: pad + sub only (REF_A's gaps around the reveals)
     for e in range(8):  # eighths
         te = t0 + e * BEAT / 2
-        if bar == 1:
-            if e == 0: S.place(bed, S.kick(0.35), te)
-            continue
-        if bar == 5 and e >= 4:
-            continue  # bar 5, beats 3-4: the bed drops out under the reverse cymbal
         if e % 2 == 0:
             S.place(bed, S.kick(0.42 if bar >= 6 else 0.34), te)
-        if bar in (2, 3) or bar >= 6:
+        if bar >= 3:
             S.place(bed, S.hat(0.035 if e % 2 == 0 else 0.055), te)
         if bar >= 6 and e in (2, 6):
             S.place(bed, rim(0.09), te)
         if bar >= 6 and e % 2 == 1:
             S.place(bed, S.pluck(bass[ci] + 24, 0.18, 0.04), te)
 bed = S.hp(bed, 30, 2)
-# hard silence for the final eighth of bar 5 (f585-599), and nothing under the endcard but the impact tail
-bed[int(fs(585) * SR): int(fs(600) * SR)] = 0
+# hard silence for the last eighth of bar 4 (f465-480): the wordmark lands in space; nothing under the sign-off
+bed[int(fs(465) * SR): int(fs(480) * SR)] = 0
 cut = int(fs(1320) * SR); bed[cut:] = 0
 bed[cut - int(0.01 * SR): cut] *= np.linspace(1, 0, int(0.01 * SR))
 
@@ -200,13 +211,13 @@ rows = "\n".join(
 
 ## Bed and mix
 
-- **Bed** (`assets/audio/bed.wav`, generated): a minimal percussive bed in D minor (Dm, Bb, F, C), 120 BPM.
-  - Bar 1: a kick on the downbeat and a low pad.
-  - Bars 2–3: kick on quarters plus hats.
-  - Bar 4: kick only.
-  - Bar 5, beats 3–4: the bed drops out under the reverse cymbal; f585–599 is total silence.
-  - Bars 6–11: the drop, with rim on 2 and 4 and an eighth-note bass pluck.
-  - Bar 12: the bed stops; only the final impact and its tail play.
+- **Bed** (`assets/audio/bed.wav`, generated): a minimal percussive bed in D minor (Dm, Bb, F, C), 120 BPM, shaped on REF_A's structure.
+  - Bars 1–2 (principles): kick on quarters, plus a hit on every field cut.
+  - Bars 3–4 (collage): hats join, with one tick per piece landing on the eighths. f465–480 is total silence.
+  - Bar 5 (wordmark): pad and sub only; the wordmark lands in the gap.
+  - Bars 6–10 (crossing bars → interface): the drop, with rim on 2 and 4 and an eighth-note bass pluck.
+  - Bar 11 (seal): pad and sub only, with the reverse cymbal into the seal.
+  - Bar 12 (sign-off): the bed stops; only the final impact and its tail play.
 - **Processing**
   - Whooshes and the riser are high-passed at 150 Hz (4th / 2nd order).
   - The bed ducks −5 dB under both impacts (8 ms attack, 120 ms hold, 350 ms release).

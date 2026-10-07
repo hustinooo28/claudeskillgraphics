@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <link rel="stylesheet" href="assets/shared.css">
+      <style>
+        #wordmark .wm { position: absolute; font-weight: 700; letter-spacing: -0.045em; line-height: 1; color: var(--brand); text-align: center; white-space: nowrap; }
+        #wordmark .chip { position: absolute; display: flex; align-items: center; justify-content: center; font-weight: 700; letter-spacing: -0.03em; }
+      </style>
+      <!-- Bar 5 (f480-600). REF_A wordmark: the LSynC wordmark wipes on in the silence, construction guides draw
+           around it with the seal at each corner, a spec block types in, then a crop push into "SynC" while three
+           wordmark chips (ink / brand / outline) stack in. -->
+      <div data-hf-id="hf-irl2" id="wordmark" class="beat" data-composition-id="wordmark" data-width="1080" data-height="1920">
+        <div data-hf-id="hf-wvtw" class="stage sg"></div>
+      </div>
+      <script>
+        (function () {
+          const root = document.querySelector("#wordmark");
+          const st = root.querySelector(".stage");
+          const { W, H, land } = LK.dims(root);
+          const { C, F, el } = LK;
+          const T0 = 480, L = (f) => F(f - T0);
+          const tl = gsap.timeline({ paused: true });
+          el(st, "div", "fill", { background: C.paper });
+
+          const G = land
+            ? { cx: 960, cy: 540, fs: 250, bw: 760, push: { x: 760, y: 900, s: 2.5 }, spec: [80, 70], chip: [1520, 64, 320, 76], seal: [1500, 520, 180] }
+            : { cx: 540, cy: 900, fs: 200, bw: 610, push: { x: 470, y: 1180, s: 2.3 }, spec: [70, 250], chip: [700, 250, 300, 70], seal: [800, 860, 160] };
+          const top = G.cy - G.fs * 0.5, capT = top + G.fs * 0.22, base = top + G.fs * 0.93;
+          const x0 = G.cx - G.bw / 2, x1 = G.cx + G.bw / 2;
+
+          const grp = el(st, "div", "fill");
+          const g = LK.svg(grp, W, H);
+          const gl = [
+            LK.line(g, 0, capT, W, capT, C.ink), LK.line(g, W, base, 0, base, C.ink),
+            LK.line(g, x0, 0, x0, H, C.ink), LK.line(g, x1, H, x1, 0, C.ink),
+          ];
+          const dots = [[x0, capT], [x1, capT], [x0, base], [x1, base]].map(([x, y]) => LK.dot(g, x, y, 4, C.accent));
+          const wm = el(grp, "div", "wm", { left: G.cx - G.bw, width: G.bw * 2, top, fontSize: G.fs }, "LSynC");
+          const marks = [[x0, capT], [x1, capT], [x0, base], [x1, base]].map(([x, y]) => {
+            const m = el(grp, "img", "pic", { width: 44, height: 44, left: x - 22 + (x < G.cx ? -34 : 34), top: y - 22 + (y < G.cy ? -34 : 34) });
+            m.src = "assets/lsc-seal.png"; m.alt = ""; return m;
+          });
+
+          // f480: the wordmark wipes on left -> right (power4.inOut, 20 f), landing in the silence.
+          tl.fromTo(wm, { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: F(20), ease: "power4.inOut" }, L(480));
+          // f498: construction guides draw out, gold dots and corner seals pop in.
+          gl.forEach((l, i) => LK.draw(tl, l, L(498 + i * 2), F(20)));
+          tl.fromTo(dots, { attr: { r: 0 } }, { attr: { r: 4 }, duration: F(8), ease: "expo.out", stagger: F(2) }, L(506));
+          tl.fromTo(marks, { scale: 0 }, { scale: 1, duration: F(10), ease: "expo.out", stagger: F(2) }, L(508));
+
+          // f505: spec block types in, per word, 1 f apart.
+          const spec = el(st, "div", "abs", { left: G.spec[0], top: G.spec[1], width: 380, color: C.ink });
+          const h = el(spec, "div", "cap", { fontWeight: 600 }, "LSynC wordmark");
+          const p = el(spec, "div", "spec", { marginTop: 10 }, "Set in Space Grotesk Bold, tracked tight. It names the Digital Transparency Board of the Local Student Council, DSSC — Santa Cruz Extension Campus.");
+          tl.fromTo(LK.split(h, "word"), { yPercent: 110 }, { yPercent: 0, duration: F(10), ease: "expo.out", stagger: F(2) }, L(505));
+          tl.fromTo(LK.split(p, "word"), { yPercent: 110 }, { yPercent: 0, duration: F(8), ease: "expo.out", stagger: F(1) }, L(510));
+
+          // f540: crop push into "SynC" (power4.inOut, 24 f); the grid travels with it.
+          tl.fromTo(grp, { x: 0, y: 0, scale: 1 }, { x: G.push.x - G.cx, y: G.push.y - G.cy, scale: G.push.s, duration: F(24), ease: "power4.inOut", transformOrigin: `${G.cx}px ${G.cy}px` }, L(540));
+          // The seal, large, beside the cropped word.
+          const seal = el(st, "img", "pic", { width: G.seal[2], height: G.seal[2], left: G.seal[0], top: G.seal[1] });
+          seal.src = "assets/lsc-seal.png"; seal.alt = "";
+          LK.live(tl, seal, L(556));
+          tl.fromTo(seal, { clipPath: "inset(100% 0% 0% 0%)", y: 40 }, { clipPath: "inset(0% 0% 0% 0%)", y: 0, duration: F(12), ease: "expo.out" }, L(556));
+          // f566/571/576: three wordmark chips stack in from the right.
+          const [cx, cy, cw, ch] = G.chip;
+          [[C.ink, C.paper, null], [C.brand, C.paper, null], [C.paper, C.ink, C.ink]].forEach(([bgc, fg, bd], i) => {
+            const c = el(st, "div", "chip", { left: cx, top: cy + i * (ch + 14), width: cw, height: ch, background: bgc, color: fg, fontSize: ch * 0.46, border: bd ? `2px solid ${bd}` : "none" }, "LSynC");
+            tl.fromTo(c, { xPercent: 130 }, { xPercent: 0, duration: F(10), ease: "expo.out" }, L(566 + i * 5));
+          });
+          tl.set({}, {}, L(600));
+          window.__timelines["wordmark"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
