@@ -9,6 +9,7 @@ Claude Code skills for 3D, animation, and visual design, vendored under `.claude
 | `design-dna` | [zanwei/design-dna](https://github.com/zanwei/design-dna) |
 | `motion-design` | [lottiefiles/motion-design-skill](https://github.com/lottiefiles/motion-design-skill) |
 | `genjutsu` | [genjutsu.athevon.dev](https://genjutsu.athevon.dev) |
+| `ui-promo-motion` | Original. Learned from four reference promo videos: style guide, GSAP motion kit, and an HTML → MP4 frame-by-frame renderer |
 
 ## Using them
 
@@ -16,9 +17,18 @@ Claude Code skills for 3D, animation, and visual design, vendored under `.claude
 - **In another project:** copy the folders you want into that project's `.claude/skills/`.
 - **Everywhere on your machine:** copy them into `~/.claude/skills/`.
 
+## Rendering videos (`ui-promo-motion`)
+
+```sh
+cd .claude/skills/ui-promo-motion && npm install      # gsap + Inter, served locally while rendering
+node scripts/render.cjs kit/template.html demo.mp4 --fps 30 --mb 4
+```
+
+Requires Node 18+, `ffmpeg`, and Playwright with Chromium (`npm i -g playwright && npx playwright install chromium`).
+
 ## Updating
 
-From the repo root, re-run the installer without `-g` and commit the result:
+For the third-party skills, re-run the installer from the repo root without `-g` and commit the result:
 
 ```sh
 npx skills add cloudai-x/threejs-skills -a claude-code -y

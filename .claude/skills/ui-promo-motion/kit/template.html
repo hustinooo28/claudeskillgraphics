@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI Promo Template</title>
+<!-- The renderer serves these two from local node_modules (npm install in the skill folder). -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="motion-kit.js"></script>
+<style>
+  :root {
+    --w: 1080px; --h: 1920px;            /* 1920px / 1080px for landscape */
+    --accent: #22C55E;                    /* the one brand colour */
+    --ink: #111113; --ink-2: #8E8E93;
+    --canvas: #F4F4F6; --dark: #0E0E10;
+    --shadow: 0 30px 60px -10px rgba(0,0,0,.14), 0 8px 20px rgba(0,0,0,.06);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: #000; overflow: hidden; }
+  #stage {
+    position: absolute; left: 0; top: 0; width: var(--w); height: var(--h); overflow: hidden;
+    background: radial-gradient(120% 80% at 50% 45%, #fff 0%, var(--canvas) 60%, #ECECEF 100%);
+    font-family: 'Inter Variable', 'Inter', 'SF Pro Display', -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    color: var(--ink); letter-spacing: -0.025em; font-weight: 650;
+  }
+  .shot { position: absolute; inset: 0; visibility: hidden; display: grid; place-items: center; }
+  .tint { position: absolute; inset: -20%; background: radial-gradient(40% 35% at 50% 50%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%); filter: blur(40px); }
+  .center { position: relative; text-align: center; }
+  .h1 { font-size: 120px; line-height: 1.04; }
+  .h2 { font-size: 88px; line-height: 1.05; }
+  .sub { font-size: 40px; font-weight: 450; color: var(--ink-2); margin-top: 28px; letter-spacing: -0.01em; }
+  .accent { color: var(--accent); }
+  .w, .c { display: inline-block; will-change: transform, filter; }
+
+  /* logo */
+  .lockup { display: flex; align-items: center; gap: 34px; font-size: 128px; }
+  .mark { width: 150px; height: 150px; }
+  .mark circle.ring { fill: none; stroke: var(--accent); stroke-width: 26; stroke-linecap: round; }
+  .mark circle.core { fill: var(--accent); }
+
+  /* cards */
+  .list { display: grid; gap: 30px; width: 820px; }
+  .card {
+    display: flex; align-items: center; gap: 30px; padding: 34px 40px; border-radius: 34px;
+    background: #fff; box-shadow: var(--shadow); font-size: 44px;
+  }
+  .card .ico { width: 84px; height: 84px; border-radius: 24px; background: color-mix(in srgb, var(--accent) 18%, #fff); display: grid; place-items: center; }
+  .card .ico::after { content: ''; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); }
+  .card small { display: block; font-size: 28px; font-weight: 450; color: var(--ink-2); letter-spacing: -0.01em; margin-top: 6px; }
+  .cursor { position: absolute; left: 0; top: 0; width: 64px; height: 64px; z-index: 10; filter: drop-shadow(0 6px 10px rgba(0,0,0,.25)); }
+
+  /* swoosh + CTA */
+  .mk-swoosh { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; z-index: 20; pointer-events: none; }
+  .mk-swoosh path { fill: none; stroke: var(--accent); stroke-width: 1800; stroke-linecap: round; }
+  .brand-bg { background: var(--accent); }
+  .pill {
+    display: flex; align-items: center; gap: 28px; height: 150px; padding: 0 22px 0 64px; border-radius: 999px;
+    background: #fff; color: var(--accent); font-size: 58px; white-space: nowrap; overflow: hidden;
+  }
+  .pill .label { display: inline-block; }
+  .pill .dot { flex: none; width: 106px; height: 106px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 60px; }
+
+  /* design-tool selection box (MK.selectionBox) */
+  .mk-select { position: absolute; border: 3px dashed #222; opacity: 0; }
+  .mk-select i { position: absolute; width: 16px; height: 16px; background: #222; border-radius: 50%; }
+  .mk-select i:nth-child(1) { left: -9px; top: -9px; } .mk-select i:nth-child(2) { right: -9px; top: -9px; }
+  .mk-select i:nth-child(3) { left: -9px; bottom: -9px; } .mk-select i:nth-child(4) { right: -9px; bottom: -9px; }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- 1. Hook -->
+  <section class="shot" id="s1">
+    <div class="tint"></div>
+    <div class="center">
+      <div class="h1" id="hook">Need to get <span class="accent">somewhere?</span></div>
+      <div class="sub" id="hookSub">One tap. Every ride.</div>
+    </div>
+  </section>
+
+  <!-- 2. Brand reveal -->
+  <section class="shot" id="s2">
+    <div class="lockup" id="lockup">
+      <span id="meet">Meet</span>
+      <svg class="mark" viewBox="0 0 150 150"><circle class="ring" cx="75" cy="75" r="56" transform="rotate(120 75 75)"/><circle class="core" cx="75" cy="75" r="20"/></svg>
+      <span id="wordmark">orbit</span>
+    </div>
+  </section>
+
+  <!-- 3. Product UI -->
+  <section class="shot" id="s3">
+    <div class="tint" style="opacity:.6"></div>
+    <div class="list" id="list">
+      <div class="card"><span class="ico"></span><div>Central Station<small>12 min · 4.2 km</small></div></div>
+      <div class="card"><span class="ico"></span><div>City Library<small>8 min · 2.9 km</small></div></div>
+      <div class="card"><span class="ico"></span><div>Harbour Market<small>15 min · 5.1 km</small></div></div>
+      <div class="card"><span class="ico"></span><div>Airport T2<small>34 min · 21 km</small></div></div>
+    </div>
+    <svg class="cursor" id="cursor" viewBox="0 0 24 24"><path d="M4 2l16 9-7 1.6L9.6 20z" fill="#111" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>
+  </section>
+
+  <!-- 4. CTA on full-bleed brand colour -->
+  <section class="shot brand-bg" id="s4">
+    <div class="pill" id="pill"><span class="label">Ride now</span><span class="dot">→</span></div>
+  </section>
+
+  <!-- 5. End logo -->
+  <section class="shot" id="s5">
+    <div class="center">
+      <svg class="mark" id="endMark" viewBox="0 0 150 150" style="width:220px;height:220px"><circle class="ring" cx="75" cy="75" r="56" transform="rotate(120 75 75)"/><circle class="core" cx="75" cy="75" r="20"/></svg>
+      <div class="sub" id="endLine" style="color:var(--ink);font-weight:600;font-size:60px">Go anywhere.</div>
+    </div>
+  </section>
+
+  <svg class="mk-swoosh" id="swoosh" viewBox="0 0 1080 1920" preserveAspectRatio="none"><path d="M-900 1500 C 200 1300, 500 700, 2000 300"/></svg>
+</div>
+
+<script>
+const tl = gsap.timeline({ defaults: { ease: MK.EASE.out } });
+
+// 1. Hook (0 – 2.2)
+MK.cut(tl, '#s1', 0);
+tl.add(MK.wordsIn('#hook', { tint: getComputedStyle(document.documentElement).getPropertyValue('--accent') }), 0.1);
+tl.add(MK.wordsIn('#hookSub', { stagger: 0.1, from: 'below', blur: 8 }), 0.9);
+tl.add(MK.drift('#s1 .center', { duration: 2.2 }), 0);
+tl.add(MK.wordsOut('#hook'), 1.8);
+tl.to('#hookSub', { opacity: 0, filter: 'blur(8px)', duration: 0.3, ease: MK.EASE.in }, 1.8);
+
+// 2. Brand reveal (2.2 – 4.4)
+MK.cut(tl, '#s2', 2.2);
+tl.add(MK.wordsIn('#meet', { from: 'small' }), 2.25);
+tl.fromTo('#s2 .core', { scale: 0, transformOrigin: '50% 50%' }, { scale: 1, duration: 0.35, ease: MK.EASE.pop }, 2.5);
+tl.add(MK.drawStroke('#s2 .ring', { duration: 0.55 }), 2.55);
+tl.add(MK.typeIn('#wordmark', { style: 'pop', cps: 16 }), 2.6);
+tl.add(MK.zoomThrough('#lockup', { scale: 3.2, origin: '50% 50%' }), 3.9);
+
+// 3. Product UI (4.4 – 6.9)
+MK.cut(tl, '#s3', 4.4);
+tl.add(MK.cascade('#list .card'), 4.4);
+tl.set('#cursor', { x: 900, y: 1500 }, 4.4);
+tl.add(MK.cursorClick("#cursor", 760, 880, { duration: 0.7 }), 5.0);
+tl.add(MK.focus('#list .card', 1, { scale: 1.18 }), 5.75);
+tl.add(MK.swoosh('#swoosh', { inDur: 0.45, hold: 0.25, outDur: 0.45 }), 6.4);
+
+// 4. CTA (6.85 – 9.2) — the swoosh covers the cut, its tail reveals the pill
+MK.cut(tl, '#s4', 6.85);
+tl.add(MK.popIn('#pill', { y: 120, rotation: 0, scale: 0.8 }), 7.3);
+tl.add(MK.pillToWipe('#pill'), 8.2); // collapse .35 + hold .2 + wipe .4 → frame is white at ~9.15
+
+// 5. End logo (9.2 – 11.4)
+MK.cut(tl, '#s5', 9.2);
+tl.fromTo('#endMark .core', { scale: 0, transformOrigin: '50% 50%' }, { scale: 1, duration: 0.4, ease: MK.EASE.pop }, 9.25);
+tl.add(MK.drawStroke('#endMark .ring', { duration: 0.6 }), 9.3);
+tl.add(MK.wordsIn('#endLine', { from: 'below', blur: 8 }), 9.75);
+tl.add(MK.drift('#s5 .center', { scale: 1.03, duration: 2.2 }), 9.25);
+tl.to({}, { duration: 0.1 }, 11.3); // pad the end so the last frame holds
+
+MK.mount(tl);
+</script>
+</body>
+</html>
