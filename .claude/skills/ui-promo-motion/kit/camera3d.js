@@ -15,6 +15,20 @@
   const gsap = global.gsap;
   const C3 = {};
   const $ = (q) => (typeof q === 'string' ? document.querySelector(q) : q);
+  const D2R = Math.PI / 180;
+  const norm = (v) => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  // Facing normal of a plane after rotateY(ry) rotateX(rx) (CSS axes: +y is down, +z toward the viewer).
+  const normalOf = (ry, rx = 0) => [Math.sin(ry * D2R) * Math.cos(rx * D2R), -Math.sin(rx * D2R), Math.cos(ry * D2R) * Math.cos(rx * D2R)];
+  // Shade + specular overlays appended inside a lit element.
+  const litLayers = (el, glare) => {
+    const mk = (cls, css) => { const d = document.createElement('div'); d.className = cls; Object.assign(d.style, { position: 'absolute', inset: '0', borderRadius: 'inherit', pointerEvents: 'none', ...css }); el.appendChild(d); return d; };
+    const shade = mk('c3-shade', { background: '#000', opacity: 0 });
+    const spec = mk('c3-spec', glare
+      ? { background: 'linear-gradient(115deg, transparent 38%, rgba(255,255,255,.75) 48%, rgba(255,255,255,.18) 54%, transparent 64%)', backgroundSize: '320% 100%', opacity: 0, mixBlendMode: 'screen' }
+      : { background: 'linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.5))', opacity: 0, mixBlendMode: 'screen' });
+    return { shade, spec };
+  };
 
   C3.rig = function (viewport, opts = {}) {
     const vp = $(viewport);
@@ -28,7 +42,9 @@
     vp.appendChild(world);
 
     const rig = {
-      vp, world, fov, objects: [],
+      vp, world, fov, objects: [], lit: [], shadows: [],
+      // Point key light in world space + ambient fill. Tween light.x/y/z to move highlights across surfaces.
+      light: { x: -900, y: -1200, z: 1800, ambient: 0.42, spec: 0.6, shininess: 26, ...(opts.light || {}) },
       cam: { x: 0, y: 0, z: fov, rx: 0, ry: 0, rz: 0, focus: fov, dof: opts.dof ?? 14, maxBlur: opts.maxBlur ?? 14 },
 
       // Place an element (or a C3.group) in world space. Its centre sits at (x, y, z).
@@ -46,6 +62,10 @@
         o.apply = () => (el.style.transform = `translate3d(${o.x}px,${o.y}px,${o.z}px) rotateY(${o.ry}deg) rotateX(${o.rx}deg) rotateZ(${o.rz}deg) scale(${o.s})`);
         o.apply();
         if (!p.parent) rig.objects.push(o);
+        if (p.lit) { // flat lit surface: shades as it turns away from the light, glare slides across it
+          const L = litLayers(el, p.lit === 'glare');
+          rig.lit.push({ kind: 'face', o, ...L, gloss: p.gloss ?? 1 });
+        }
         return o;
       },
 
@@ -64,12 +84,87 @@
           o.apply();
           const pt = m.transformPoint(new DOMPoint(o.x, o.y, o.z));
           const dist = rig.fov - pt.z; // distance in front of the eye
-          o.el.style.visibility = dist < 40 ? 'hidden' : '';
+          if (o.cull !== false) o.el.style.visibility = dist < 40 ? 'hidden' : '';
           if (o.dofOn && c.dof > 0) {
             const b = Math.min(c.maxBlur, (Math.abs(dist - c.focus) / 1000) * c.dof);
             o.el.style.filter = b > 0.3 ? `blur(${b.toFixed(2)}px)` : 'none';
           }
         }
+        rig.applyLighting();
+        for (const sh of rig.shadows) sh.update();
+      },
+
+      // Lambert shade + Blinn specular for every lit surface, from rig.light and the camera position.
+      shadeFace(p, n, shade, spec, gloss = 1, slide = true) {
+        const Lt = rig.light, c = rig.cam;
+        const L = norm([Lt.x - p[0], Lt.y - p[1], Lt.z - p[2]]);
+        const V = norm([c.x - p[0], c.y - p[1], c.z - p[2]]);
+        const H = norm([L[0] + V[0], L[1] + V[1], L[2] + V[2]]);
+        const lam = Math.max(0, dot(n, L));
+        const lightAmt = Lt.ambient + (1 - Lt.ambient) * lam;
+        const sp = Math.pow(Math.max(0, dot(n, H)), Lt.shininess) * Lt.spec * gloss;
+        if (shade) shade.style.opacity = ((1 - lightAmt) * 0.9).toFixed(3);
+        if (spec) {
+          spec.style.opacity = sp.toFixed(3);
+          if (slide) spec.style.backgroundPosition = `${(50 + (n[0] - H[0]) * 170 + (n[1] - H[1]) * 60).toFixed(1)}% 0`;
+        }
+        return { lam, dark: (1 - lightAmt) * 0.9, spec: sp };
+      },
+
+      applyLighting() {
+        const c = rig.cam;
+        for (const it of rig.lit) {
+          if (it.kind === 'face') {
+            const o = it.o;
+            rig.shadeFace([o.x, o.y, o.z], normalOf(o.ry, o.rx), it.shade, it.spec, it.gloss);
+          } else if (it.kind === 'wall') {
+            // Smooth (Gouraud) shading: light the strip EDGES, then give each strip a gradient between its two
+            // edges, so the curve shades continuously and the specular band glides along it without banding.
+            const g = it.g, n = it.strips.length, edge = new Array(n + 1);
+            for (let i = 0; i <= n; i++) {
+              const a = it.th0 + i * it.dth + g.ry * D2R;
+              const p = [g.x + Math.sin(a) * g.radius, g.y, g.z + Math.cos(a) * g.radius];
+              edge[i] = rig.shadeFace(p, normalOf(a / D2R, g.rx), null, null, it.gloss, false);
+            }
+            it.strips.forEach((st, i) => {
+              const A = edge[i], B = edge[i + 1];
+              st.shade.style.opacity = 1;
+              st.shade.style.background = `linear-gradient(90deg, rgba(0,0,0,${A.dark.toFixed(3)}), rgba(0,0,0,${B.dark.toFixed(3)}))`;
+              st.spec.style.opacity = 1;
+              st.spec.style.background = `linear-gradient(90deg, rgba(255,255,255,${A.spec.toFixed(3)}), rgba(255,255,255,${B.spec.toFixed(3)}))`;
+            });
+          } else if (it.kind === 'phone') {
+            const g = it.g, p = [g.x, g.y, g.z];
+            rig.shadeFace(p, normalOf(g.ry, g.rx), it.front.shade, it.front.spec, 1.2);
+            // The visible side wall (left or right) brightens or darkens with the light.
+            const V = norm([c.x - g.x, c.y - g.y, c.z - g.z]);
+            const nL = normalOf(g.ry - 90), nR = normalOf(g.ry + 90);
+            const side = dot(nL, V) > dot(nR, V) ? nL : nR;
+            const L = norm([rig.light.x - g.x, rig.light.y - g.y, rig.light.z - g.z]);
+            const b = (0.35 + 1.0 * Math.max(0, dot(side, L))).toFixed(3);
+            for (const layer of it.sides) layer.style.filter = `brightness(${b})`;
+          }
+        }
+      },
+
+      // Soft contact shadow of `target` on a C3.floor; fades and spreads as the target rises.
+      addShadow(target, floor, o2 = {}) {
+        const { w = target.el.offsetWidth * 0.9 || 300, h = 120, opacity = 0.6 } = o2;
+        const d = document.createElement('div');
+        Object.assign(d.style, { position: 'absolute', width: `${w}px`, height: `${h}px`, borderRadius: '50%', background: 'radial-gradient(closest-side, rgba(0,0,0,.95), rgba(0,0,0,0))', pointerEvents: 'none' });
+        floor.el.appendChild(d);
+        const sh = { el: d, update() {
+          const half = (target.el.offsetHeight || target.height || 800) / 2 * (target.s || 1);
+          const lift = Math.max(0, floor.y - (target.y + half * Math.cos((target.rx || 0) * D2R)));
+          const k = 1 + lift / 700;
+          d.style.left = `${floor.size / 2 + (target.x - floor.x) - w / 2}px`;
+          d.style.top = `${floor.size / 2 + (target.z - floor.z) - h / 2}px`;
+          d.style.transform = `scale(${k.toFixed(3)})`;
+          d.style.opacity = (opacity / (1 + lift / 350)).toFixed(3);
+          d.style.filter = `blur(${(8 + lift / 25).toFixed(1)}px)`;
+        } };
+        rig.shadows.push(sh);
+        return sh;
       },
 
       // Orbit the camera around a point: tween an angle and keep the camera aimed at the centre.
@@ -117,11 +212,20 @@
    * tl.to(group, { ry: -30, onUpdate: rig.update }) to "pan along the screen".
    */
   C3.curvedWall = function (rig, src, opts = {}) {
-    const { width = 1600, height = 900, radius = 1400, strips = 48, x = 0, y = 0, z = 0, border = null, glow = null } = opts;
+    const { width = 1600, height = 900, strips = 48, x = 0, y = 0, z = 0, border = null, glow = null } = opts;
+    // Keep the bend subtle: by default the whole wall wraps `arc` degrees (70). More than ~120° reads as a
+    // drum and its edges smear under a wide lens — clamp it. Pair walls with a long lens (rig fov >= 1800).
+    const maxArc = (120 * Math.PI) / 180;
+    let radius = opts.radius || width / (((opts.arc || 70) * Math.PI) / 180);
+    if (width / radius > maxArc) {
+      console.warn(`C3.curvedWall: ${((width / radius) * 180 / Math.PI).toFixed(0)}° wrap is too strong; clamped to 120°`);
+      radius = width / maxArc;
+    }
     // The group sits on the cylinder axis, so spinning it pans along the surface; the front is at z.
     const g = C3.group(rig, { x, y, z: z - radius });
     const sw = width / strips;
     const arc = width / radius; // radians covered
+    const litStrips = [];
     for (let i = 0; i < strips; i++) {
       const s = document.createElement('div');
       const th = ((i + 0.5) / strips - 0.5) * arc;
@@ -134,6 +238,7 @@
       if (i === strips - 1 && border) s.style.borderRight = border;
       if (glow) s.style.boxShadow = glow;
       g.el.appendChild(s);
+      if (opts.lit !== false) litStrips.push({ th, ...litLayers(s, false) });
       const o = { el: s, x: Math.sin(th) * radius, y: 0, z: Math.cos(th) * radius, ry: (th * 180) / Math.PI, rx: 0, rz: 0, s: 1 };
       s.style.position = 'absolute';
       s.style.left = `${-sw / 2}px`; s.style.top = `${-height / 2}px`;
@@ -141,6 +246,7 @@
       s.style.transform = `translate3d(${o.x}px,0,${o.z}px) rotateY(${o.ry}deg)`;
     }
     g.width = width; g.height = height; g.radius = radius;
+    if (litStrips.length) rig.lit.push({ kind: 'wall', g, strips: litStrips, th0: -arc / 2, dth: arc / strips, gloss: opts.gloss ?? 0.8 });
     // Rotating the group by `deg` brings content at arc-length radius*deg into the centre.
     g.panTo = (px) => -((px / radius) * 180) / Math.PI; // px offset from centre -> group ry
     return g;
@@ -235,6 +341,33 @@
     tl.set($(target), { filter: 'none' }, at + frames / fps);
   };
 
+  /*
+   * Directional (one-axis) motion blur via an SVG filter. Sub-frame blending (--mb) alone shows fast
+   * pans as stacked copies; this gives a continuous smear along the direction of travel.
+   *   const mb = C3.motionBlur('#view3d');            // axis 'x' (default) or 'y'
+   *   tl.add(mb.swell(18, 0.75), at);                 // ramps 0 -> 18 px -> 0 over the move
+   */
+  let mbCount = 0;
+  C3.motionBlur = function (el, axis = 'x') {
+    el = $(el);
+    const id = `c3mb${++mbCount}`;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '0'); svg.setAttribute('height', '0'); svg.style.position = 'absolute';
+    svg.innerHTML = `<filter id="${id}" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>`;
+    document.body.appendChild(svg);
+    const fe = svg.querySelector('feGaussianBlur');
+    const o = { v: 0 };
+    const apply = () => {
+      fe.setAttribute('stdDeviation', axis === 'x' ? `${o.v} 0` : `0 ${o.v}`);
+      el.style.filter = o.v > 0.3 ? `url(#${id})` : 'none';
+    };
+    o.swell = (peak, duration) => gsap.timeline()
+      .to(o, { v: peak, duration: duration / 2, ease: 'sine.in', onUpdate: apply })
+      .to(o, { v: 0, duration: duration / 2, ease: 'sine.out', onUpdate: apply });
+    o.apply = apply;
+    return o;
+  };
+
   // Whip pan: translate hard with blur; cut on the blurriest frame.
   C3.whip = function (el, opts = {}) {
     const { x = -1400, duration = 0.32, blur = 28 } = opts;
@@ -269,8 +402,11 @@
     const { w = 390, h = 844, depth = 30, radius = 62, layers = 16, bezel = 13, screen = null,
       frame = ['#8E9BAE', '#3B4250'], ...pos } = opts;
     const g = C3.group(rig, pos);
+    const sides = []; let front = null;
     for (let i = layers - 1; i >= 0; i--) {
       const L = document.createElement('div');
+      if (i > 0 && i < layers - 1) sides.push(L);
+      if (i === 0) front = L;
       const t = i / (layers - 1); // 0 = front face, 1 = back
       const edge = i === 0 || i === layers - 1;
       Object.assign(L.style, {
@@ -293,6 +429,7 @@
       }
     }
     g.width = w; g.height = h;
+    if (opts.lit !== false) rig.lit.push({ kind: 'phone', g, sides, front: litLayers(front, true) }); // glare sweeps the glass as it turns
     return g;
   };
 
@@ -366,16 +503,29 @@
     return tl;
   };
 
-  // App-open: the tapped icon grows to fill the frame, then the app UI fades in over it.
-  C3.appOpen = function (icon, ui, opts = {}) {
-    icon = $(icon);
-    const { duration = 0.55, stageW = 1920, stageH = 1080 } = opts;
-    const r = icon.getBoundingClientRect();
-    const k = MKscale();
-    const cover = (Math.hypot(stageW, stageH) / (r.width / k)) * 1.05;
-    return gsap.timeline()
-      .to(icon, { scale: cover, borderRadius: '6px', duration, ease: 'power3.in' }, 0)
-      .fromTo($(ui), { opacity: 0, scale: 1.08, filter: 'blur(12px)' }, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.6, ease: 'expo.out' }, duration * 0.8);
+  /*
+   * App-open: the tapped icon breaks out of the (3D) phone and grows to fill the whole frame.
+   * `overlay` is an empty div directly inside #stage (above the shots). At the tween's first frame it is
+   * placed exactly over the icon's projected on-screen rect (works for icons inside 3D-transformed phones),
+   * takes the icon's colour/radius, and the icon itself is hidden. Fade the overlay out as the next shot starts.
+   */
+  C3.appOpen = function (icon, overlay, opts = {}) {
+    icon = $(icon); overlay = $(overlay);
+    const { duration = 0.5 } = opts;
+    const st = { p: 0 };
+    let cover = 20;
+    const init = () => {
+      const stage = $('#stage'), k = MKscale(), sr = stage.getBoundingClientRect(), r = icon.getBoundingClientRect();
+      const w = r.width / k, h = r.height / k, cs = getComputedStyle(icon);
+      Object.assign(overlay.style, { position: 'absolute', left: `${(r.left - sr.left) / k}px`, top: `${(r.top - sr.top) / k}px`, width: `${w}px`, height: `${h}px`,
+        background: cs.backgroundColor !== 'rgba(0, 0, 0, 0)' ? cs.backgroundColor : cs.backgroundImage, borderRadius: cs.borderRadius, zIndex: 50, opacity: 1, transformOrigin: '50% 50%' });
+      cover = (Math.hypot(stage.offsetWidth, stage.offsetHeight) * 2.2) / Math.min(w, h);
+      icon.style.visibility = 'hidden';
+    };
+    return gsap.timeline().to(st, {
+      p: 1, duration, ease: 'none', onStart: init,
+      onUpdate: () => { const e = st.p * st.p * st.p; overlay.style.transform = `scale(${1 + e * (cover - 1)})`; overlay.style.filter = `blur(${(e * 6).toFixed(2)}px)`; },
+    });
   };
   const MKscale = () => (global.MK && global.MK.stageScale ? global.MK.stageScale() : 1);
 
@@ -394,6 +544,36 @@
     set();
     return gsap.timeline().to(o, { s: to, duration, ease, onUpdate: set, onStart: set,
       onComplete: () => { scene.style.webkitMaskImage = 'none'; scene.style.maskImage = 'none'; } });
+  };
+
+  /* ---------- environment that reacts to the camera ---------- */
+
+  /*
+   * A floor plane in world space under the subject: perspective grid + light pool that shifts and foreshortens
+   * as the camera orbits, cranes or dollies. Add contact shadows with rig.addShadow(target, floor).
+   */
+  C3.floor = function (rig, opts = {}) {
+    const { y = 500, x = 0, z = -400, size = 7000, grid = 140, line = 'rgba(255,255,255,.07)', pool = 'rgba(82,111,242,.35)', fade = 0.42 } = opts;
+    const el = document.createElement('div');
+    Object.assign(el.style, { width: `${size}px`, height: `${size}px`,
+      background: `radial-gradient(closest-side, ${pool}, transparent 70%), repeating-linear-gradient(0deg, ${line} 0 2px, transparent 2px ${grid}px), repeating-linear-gradient(90deg, ${line} 0 2px, transparent 2px ${grid}px)`,
+      webkitMaskImage: `radial-gradient(closest-side, #000 ${fade * 100}%, transparent 100%)`, maskImage: `radial-gradient(closest-side, #000 ${fade * 100}%, transparent 100%)` });
+    rig.world.appendChild(el);
+    const o = rig.add(el, { x, y, z, rx: 90, dof: false, cull: false });
+    o.size = size;
+    return o;
+  };
+
+  // A backdrop (glow, gradient, image) placed far back in world space so it parallaxes against the subject.
+  C3.backdrop = function (rig, el, opts = {}) {
+    el = $(el);
+    // cover = 1 fills the viewport exactly when seen from camZ (default: the camera's current z), so a 2D
+    // background can be swapped for its 3D twin without a jump; >1 leaves margin for camera moves.
+    const { z = -5000, cover = 1.6, camZ = rig.cam.z } = opts;
+    const k = ((camZ - z) / rig.fov) * cover;
+    el.style.width = `${rig.vp.offsetWidth * k}px`; el.style.height = `${rig.vp.offsetHeight * k}px`;
+    rig.world.appendChild(el);
+    return rig.add(el, { x: opts.x || 0, y: opts.y || 0, z, dof: false, cull: false });
   };
 
   global.C3 = C3;

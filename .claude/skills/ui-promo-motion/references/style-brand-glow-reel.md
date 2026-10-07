@@ -48,11 +48,15 @@ The McDonald's spot is flat 2D but has two moves worth stealing:
 4. **Sound design is half the spot.** Whoosh on every move, UI foley on taps, a hit on the logo, glitch/light sounds on streaks. A voice-over line every 2–4 s; music stems duck under it.
 5. **Pace:** a new idea every 1.5–3 s, about 21 s total for the 16:9 cut, with a separate 9:16 cut from the same scenes.
 
+Fast moves (phone tumble, whips, pushes through icons) follow the motion-blur rules in `style-3d-showcase.md`: a directional or isotropic blur ramp on top of `--mb 4`, never sub-frame blending alone.
+
 ## Kit mapping (`kit/camera3d.js`)
 
 | Move | Helper |
 |---|---|
-| Brand glow blob | `C3.glow(el, { color })` + tween `x/y/scale`; pulse with `C3.pulse` |
+| Brand glow blob | `C3.glow(el, { color })` + tween `x/y/scale`; pulse with `C3.pulse`. Drive `rig.light` from its position each frame so shading and glare match the glow |
+| Stage floor + contact shadow | `C3.floor(rig, { pool: brand })`, `rig.addShadow(phone, floor)` |
+| Parallax glow behind 3D UI | `C3.backdrop(rig, glowEl, { z: -3500 })` |
 | 3D phone with live screen | `C3.phone(rig, { screen: htmlElement })`: an extruded rounded slab (stacked layers) with the screen on the front face; tumble/orbit it with the rig |
 | Mockup PNG with UI warped into its screen | `C3.fitQuad(contentEl, w, h, quad)` with the corners from `kit/assets/mockups/mockups.json` |
 | Logo: icon pop + ring + wordmark slide-out | `C3.logoReveal(iconEl, wordEl, ringEl)` |

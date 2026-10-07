@@ -85,6 +85,8 @@
     <div class="ring" id="ring5b"></div>
   </section>
 
+  <div id="appZoom" style="opacity:0"></div>
+
   <!-- 6 spotlight end card (revealed through a logo-shaped mask) -->
   <section class="shot" id="s6" style="background:#050505">
     <div class="spot"></div>
@@ -106,26 +108,35 @@ tl.to(glowB, { x: 400, y: 900, duration: 12, ease: 'sine.inOut' }, 0);
 MK.cut(tl, '#s1', 0);
 tl.add(C3.logoReveal('#icon1', '#word1', '#ring1'), 0.3);
 tl.add(C3.pulse(glowA), 0.35);
-tl.to('#logo1', { scale: 1.6, y: -200, opacity: 0, filter: 'blur(18px)', duration: 0.45, ease: 'power3.in' }, 1.55);
+tl.to('#logo1', { scale: 1.6, y: -200, opacity: 0, filter: 'blur(18px)', duration: 0.45, ease: 'power3.in' }, 1.35);
 
 /* 2 phone tumbles in, lock → home, app opens (1.8 – 4.6) */
 MK.cut(tl, '#s2', 1.8);
-const rig = C3.rig('#v2', { fov: 1300, dof: 0 });
+const rig = C3.rig('#v2', { fov: 1300, dof: 0, light: { ambient: 0.38, spec: 0.75, shininess: 24 } });
+const rig4 = C3.rig('#v4', { fov: 1300, dof: 16, maxBlur: 10, light: { ambient: 0.5, spec: 0.6, shininess: 30 } });
 const home = document.getElementById('home');
 ['#ff5a5f', '#2BD96B', '#4c8dff', '#ffc94a', '#b46bff', '#ff8a3d', '#30d5c8', '#ff4fa3', '#9aa3ad', '#2BD96B', '#4c8dff', '#ffc94a']
   .forEach((c, i) => { const a = document.createElement('div'); a.className = 'app'; a.style.background = c; if (i === 5) a.id = 'appIcon'; home.appendChild(a); });
 const phone = C3.phone(rig, { screen: '#phoneScreen', x: 0, y: 0, z: 0 });
+const floor2 = C3.floor(rig, { y: 520, z: -200, size: 5200, pool: 'rgba(43,217,107,.42)', line: 'rgba(160,255,190,.06)' });
+rig.addShadow(phone, floor2, { w: 360, h: 110, opacity: 0.75 });
+// The key light rides with the brand glow, so shading and glare always agree with the visible light source.
+MK.onFrame(() => { const gx = gsap.getProperty(glowA, 'x'), gy = gsap.getProperty(glowA, 'y');
+  for (const r of [rig, rig4]) Object.assign(r.light, { x: (gx - 960) * 3, y: (gy - 540) * 3 - 700, z: 1500 }); });
 tl.fromTo(phone, { y: -1400, rx: -70, ry: 50, rz: -30 }, { y: 40, rx: 22, ry: -18, rz: 0, duration: 0.95, ease: 'expo.out' }, 1.8);
+tl.add(C3.pulse(glowA, { scale: 1.25 }), 2.35); // the light reacts to the phone landing
+tl.fromTo('#v2', { filter: 'blur(16px)' }, { filter: 'blur(0px)', duration: 0.45, ease: 'power2.out', immediateRender: false }, 1.8); // fast tumble: blur ramp, not stacked copies
 tl.fromTo(rig.cam, { z: 1350 }, { z: 1150, duration: 2.2, ease: 'sine.inOut' }, 1.8); // slow push; the low angle comes from the phone's own tilt
 tl.to(phone, { ry: 14, rx: 14, duration: 1.3, ease: 'sine.inOut' }, 2.75);
 tl.to('#lock', { y: -900, duration: 0.45, ease: 'power3.in' }, 3.05);
 tl.fromTo('#home .app', { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, stagger: 0.02, ease: E.pop }, 3.25);
 tl.to(phone, { rx: 0, ry: 0, y: 0, duration: 0.5, ease: E.inOut }, 4.0);
 tl.to(rig.cam, { z: 520, y: 0, rx: 0, duration: 0.6, ease: 'power3.in' }, 4.0); // push into the icon area
-tl.to('#appIcon', { scale: 14, borderRadius: '4px', duration: 0.5, ease: 'power3.in' }, 4.1);
+tl.add(C3.appOpen('#appIcon', '#appZoom', { duration: 0.5 }), 4.1); // icon breaks out of the phone and fills the frame
 
 /* 3 angled mockup with UI warped into its screen (4.6 – 6.2) */
 MK.cut(tl, '#s3', 4.6);
+tl.to('#appZoom', { opacity: 0, duration: 0.3, ease: 'none' }, 4.6);
 const MQ = { tl: [80, 36], tr: [577, 110], br: [732, 1403], bl: [207, 1364] }; // from assets/mockups/mockups.json
 C3.fitQuad('#mockUI', 640, 1380, MQ);
 tl.fromTo('#mockWrap', { scale: 0.62, x: 0, y: 260, rotation: 8, opacity: 0, filter: 'blur(16px)' }, { scale: 0.68, y: 30, rotation: 0, opacity: 1, filter: 'blur(0px)', duration: 0.8, ease: 'expo.out' }, 4.6);
@@ -133,14 +144,16 @@ tl.to('#mockWrap', { x: -60, scale: 0.72, duration: 1.2, ease: 'sine.inOut' }, 5
 
 /* 4 floating glass rows in 3D with DOF focus pulls (6.2 – 8.6) */
 MK.cut(tl, '#s4', 6.2);
-const rig4 = C3.rig('#v4', { fov: 1300, dof: 16, maxBlur: 10 });
+
 const rows = ['Heavy Cotton Tee|$38.00 · 24 in stock', 'Suede Chelsea Boot|$128.00 · 11 in stock', 'Bomber Jacket|$148.00 · 7 in stock', 'Wool Beanie|$24.00 · 52 in stock']
   .map((t, i) => {
     const [a, b] = t.split('|');
     const el = document.createElement('div'); el.className = 'row glass';
     el.innerHTML = `<div class="th" style="background:${['#d9cbb4', '#8a5a35', '#a8552d', '#6b2f2f'][i]}"></div><div>${a}<small>${b}</small></div><div class="pill">Active</div>`;
-    return rig4.add(el, { x: 0, y: -240 + i * 165, z: -i * 60, rx: 0, ry: -14 });
+    return rig4.add(el, { x: 0, y: -240 + i * 165, z: -i * 60, rx: 0, ry: -14, lit: 'glare' });
   });
+const back4 = document.createElement('div'); back4.style.background = 'radial-gradient(30% 30% at 35% 45%, rgba(43,217,107,.5), transparent 70%), radial-gradient(22% 22% at 70% 60%, rgba(43,217,107,.25), transparent 70%)';
+C3.backdrop(rig4, back4, { z: -3500, cover: 1.8, camZ: 1600 }); // parallax glow behind the rows
 tl.fromTo(rig4.cam, { x: -200, y: -120, z: 1700, ry: -10, rx: 6, focus: 1450 }, { x: 140, y: 120, z: 1500, ry: 6, rx: 4, duration: 2.4, ease: 'sine.inOut' }, 6.2);
 rows.forEach((r, i) => tl.fromTo(r, { x: 600, s: 0.9 }, { x: 0, s: 1, duration: 0.7, ease: E.out }, 6.2 + i * 0.08));
 [0, 1, 2].forEach((k, j) => {

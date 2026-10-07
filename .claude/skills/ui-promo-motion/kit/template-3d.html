@@ -24,6 +24,8 @@
   .view { position: absolute; inset: 0; }
   .beam { position: absolute; left: 300px; top: -400px; width: 520px; height: 2000px; transform: rotate(32deg);
     background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); filter: blur(40px); }
+  #waveBack { position: absolute; }
+  .ambient3d { background: radial-gradient(45% 45% at 55% 50%, rgba(255,90,31,.55), transparent 70%), radial-gradient(25% 25% at 25% 30%, rgba(255,90,31,.3), transparent 70%); }
   .ambient { position: absolute; inset: -20%; background: radial-gradient(40% 40% at 60% 55%, rgba(255,90,31,.55), transparent 70%), radial-gradient(30% 30% at 25% 30%, rgba(255,90,31,.25), transparent 70%); filter: blur(30px); }
   .gcard { width: 620px; height: 380px; border-radius: 22px; overflow: hidden; border: 2px solid rgba(255,150,110,.95);
     box-shadow: 0 0 26px 4px rgba(255,90,31,.9), 0 0 120px 24px rgba(255,80,20,.38); background: #fff; color: #111; padding: 26px 30px; }
@@ -46,6 +48,7 @@
 
   <section class="shot black" id="sB">
     <svg id="wave"></svg>
+    <div id="waveBack"><svg id="wave3d" style="width:100%;height:100%"></svg></div>
     <div id="guides" style="position:absolute;inset:0"></div>
     <div class="mid"><div class="small" id="b1" style="font-size:52px">Showreel</div></div>
     <div id="panel2d"></div>
@@ -87,12 +90,14 @@ tl.to('#sA', { backgroundColor: '#cfcfcf', duration: 0.1 }, 1.45);
 MK.cut(tl, '#sB', 1.6);
 C3.invertFlash(tl, '#stage', 1.6);
 const wave = C3.neonWave('#wave', { y: 560, amp: 34, thickness: 9 });
-tl.to(wave, { phase: Math.PI * 5, duration: 4.8, ease: 'none', onUpdate: wave.draw }, 1.6);
+const wave3d = C3.neonWave('#wave3d', { y: 560, amp: 34, thickness: 9 });
+tl.to([wave, wave3d], { phase: Math.PI * 5, duration: 4.8, ease: 'none', onUpdate: () => { wave.draw(); wave3d.draw(); } }, 1.6);
 tl.fromTo('#b1', { opacity: 0, filter: 'blur(10px)', scale: 1.2 }, { opacity: 1, filter: 'blur(0px)', scale: 1, duration: 0.5 }, 1.6);
 tl.to('#b1', { opacity: 0, filter: 'blur(8px)', duration: 0.25, ease: E.in }, 2.1);
 tl.add(C3.guides('#guides', { x: 580, y: 325, w: 760, h: 430 }), 1.95);
 tl.fromTo('#panel2d', { scale: 0, opacity: 1 }, { scale: 1, duration: 0.45, ease: 'expo.out' }, 2.2);
-tl.set('#panel2d', { opacity: 0 }, 2.65);
+tl.to('#panel2d', { backgroundColor: '#E5322D', duration: 0.15, ease: 'none' }, 2.45);   // content arrives on the flat panel first
+tl.to('#panel2d', { opacity: 0, duration: 0.2, ease: 'none' }, 2.6);                    // ...then it dissolves into the 3D wall
 
 // Curved wall: three panels tiled into one texture, mapped onto a convex cylinder.
 const P = 1400, H = 800;
@@ -109,19 +114,31 @@ const wallSrc = C3.panelSVG(P * 3, H, '#ffffff', [
   { x: P * 2 + 1010, y: 560, text: '38 GB', size: 70, color: '#127a4a', anchor: 'middle', weight: 800 },
   { x: P * 2 + 380, y: 420, text: 'Endless cycle', size: 48, color: '#2d52d6', anchor: 'middle', weight: 700 },
 ]);
-const rig = C3.rig('#view3d', { fov: 1100, dof: 0 });
-const wall = C3.curvedWall(rig, wallSrc, { width: P * 3, height: H, radius: 1500, strips: 72, border: '3px dashed rgba(255,255,255,.85)' });
+const FOV = 2200; // long lens: keeps the curved wall from stretching at the edges
+const rig = C3.rig('#view3d', { fov: FOV, dof: 0 });
+// The neon wave becomes a backdrop in world space: identical framing at the hand-off, then real parallax.
+rig.cam.z = (FOV * P) / 760;
+C3.backdrop(rig, '#waveBack', { z: -2600, cover: 1 });
+rig.light = { ...rig.light, x: -1400, y: -900, z: 2600, ambient: 0.5, spec: 0.55, shininess: 22 };
+const wall = C3.curvedWall(rig, wallSrc, { width: P * 3, height: H, arc: 72, strips: 72, border: '3px dashed rgba(255,255,255,.85)' });
 const centre = wall.panTo(-P); // first panel (left third) at centre
 gsap.set(wall, { ry: centre });
 tl.set('#view3d', { opacity: 0 }, 0);
-tl.set('#view3d', { opacity: 1 }, 2.65);
+tl.to('#view3d', { opacity: 1, duration: 0.2, ease: 'none' }, 2.6);
+tl.to('#wave, #guides', { opacity: 0, duration: 0.2, ease: 'none' }, 2.6);
 // match the 2D panel (760 px wide) then dolly in so the panel fills the frame
-tl.fromTo(rig.cam, { z: (1100 * P) / 760 }, { z: 1250, duration: 0.7, ease: E.inOut }, 2.65);
-tl.to(wall, { ry: wall.panTo(0), duration: 0.45, ease: 'power3.inOut' }, 3.5);   // pan to panel 2
-tl.to(wall, { ry: wall.panTo(P), duration: 0.45, ease: 'power3.inOut' }, 4.3);   // pan to panel 3
-tl.to(rig.cam, { z: 3900, rx: -6, ry: 8, duration: 1.0, ease: E.inOut }, 5.0);    // pull back: reveal the wall
-tl.to(wall, { ry: wall.panTo(0), duration: 1.0, ease: E.inOut }, 5.0);
-tl.to(rig.cam, { z: 200, rx: 0, ry: 0, duration: 0.45, ease: 'power3.in' }, 5.95); // punch through
+tl.fromTo(rig.cam, { z: (FOV * P) / 760 }, { z: (FOV * P) / 1650, duration: 0.8, ease: E.inOut }, 2.6); // match the 760 px flat panel, then fill the frame
+// pans: 0.75 s power2.inOut + a horizontal motion-blur swell (sub-frame blending alone shows stacked copies)
+const panBlur = C3.motionBlur('#view3d', 'x');
+tl.to(wall, { ry: wall.panTo(0), duration: 0.75, ease: 'power2.inOut' }, 3.4);   // pan to panel 2
+tl.add(panBlur.swell(22, 0.75), 3.4);
+tl.to(wall, { ry: wall.panTo(P), duration: 0.75, ease: 'power2.inOut' }, 4.25);  // pan to panel 3
+tl.add(panBlur.swell(22, 0.75), 4.25);
+tl.to(rig.cam, { z: (FOV * P * 3) / 1500, rx: -4, ry: 5, duration: 0.95, ease: E.inOut }, 5.05);    // pull back: reveal the whole wall
+tl.to(wall, { ry: wall.panTo(0), duration: 0.95, ease: E.inOut }, 5.05);
+tl.fromTo(rig.light, { x: -1400 }, { x: 1600, duration: 1.4, ease: 'sine.inOut' }, 4.9); // key light sweeps: the specular band travels along the curve
+tl.to(rig.cam, { z: 500, rx: 0, ry: 0, duration: 0.42, ease: 'power3.in' }, 5.98); // punch through
+tl.fromTo('#view3d', { filter: 'blur(0px)' }, { filter: 'blur(12px)', duration: 0.42, ease: 'power3.in', immediateRender: false }, 5.98); // zooms smear radially; an isotropic blur ramp hides the copies
 
 /* D — dark beam text (6.4 – 7.6) */
 MK.cut(tl, '#sD', 6.4);
@@ -131,7 +148,10 @@ tl.add(MK.wordsIn('#d1', { stagger: 0.09, blur: 8 }), 6.45);
 
 /* E — glowing card cloud, orbit, fly into a screen (7.6 – 10.9) */
 MK.cut(tl, '#sE', 7.6);
-const cloud = C3.rig('#cloud', { fov: 1100, dof: 10, maxBlur: 10 });
+const cloud = C3.rig('#cloud', { fov: 1600, dof: 10, maxBlur: 10, light: { x: 900, y: -1100, z: 1400, ambient: 0.64, spec: 0.75, shininess: 30 } });
+const amb3d = document.createElement('div'); amb3d.className = 'ambient3d';
+C3.backdrop(cloud, amb3d, { z: -3200, cover: 1.8, camZ: 2000 });
+const cloudFloor = C3.floor(cloud, { y: 820, z: -500, size: 6000, pool: 'rgba(255,90,31,.38)', line: 'rgba(255,140,90,.08)' });
 const spots = [[-700, -330, -200, 18], [40, -420, -700, 12], [720, -260, -150, 22], [-520, 140, 150, 16], [300, 60, -350, 20],
   [880, 330, -650, 24], [-120, 430, -900, 14], [-980, 420, -1100, 20], [520, -720, -1300, 16]];
 const cards = spots.map(([x, y, z, ry], i) => {
@@ -139,9 +159,11 @@ const cards = spots.map(([x, y, z, ry], i) => {
   el.className = 'gcard' + (i % 3 === 1 ? ' dark' : '');
   el.innerHTML = `<div class="bar"><i></i><i></i><i></i></div><h3>${['Moodboard', 'Dashboard', 'Storage', 'Chat', 'Launch', 'Analytics', 'Files', 'Inbox', 'Design'][i]}</h3>
     <div class="blk" style="width:${60 + (i * 13) % 35}%"></div><div class="blk" style="width:${40 + (i * 29) % 45}%"></div><div class="blk" style="width:${50 + (i * 7) % 30}%"></div>`;
-  return cloud.add(el, { x, y, z, ry, rx: -6 });
+  return cloud.add(el, { x, y, z, ry, rx: -6, lit: 'glare' });
 });
-tl.add(cloud.orbit({ cx: 0, cz: -300, radius: 1750, from: -24, to: 14, duration: 2.6, ease: 'sine.inOut' }), 7.6);
+cards.forEach((c) => cloud.addShadow(c, cloudFloor, { opacity: 0.45 }));
+tl.fromTo(cloud.light, { x: 1400 }, { x: -1200, duration: 2.6, ease: 'sine.inOut' }, 7.6); // light drifts against the orbit
+tl.add(cloud.orbit({ cx: 0, cz: -300, radius: 2500, from: -24, to: 14, duration: 2.6, ease: 'sine.inOut' }), 7.6);
 tl.fromTo(cloud.cam, { y: -160 }, { y: 120, duration: 2.6, ease: 'sine.inOut' }, 7.6);
 cards.forEach((c, i) => tl.fromTo(c, { z: c.z - 1400, s: 0.6 }, { z: c.z, s: 1, duration: 0.9, ease: E.out }, 7.65 + i * 0.07));
 tl.fromTo('#cloud', { opacity: 0 }, { opacity: 1, duration: 0.3 }, 7.6);

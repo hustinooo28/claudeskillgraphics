@@ -50,7 +50,7 @@ The camera is `rig.cam = { x, y, z, rx, ry, rz, focus, dof }`. The z = 0 plane r
 | **Pan / tilt** | tween `cam.ry` / `cam.rx` (±5–10°) | layered on a dolly so the move never feels flat |
 | **Orbit** | `tl.add(rig.orbit({ cx, cz, radius, from, to, duration }), at)` | 20–40° over 2–3 s |
 | **Fly into a screen** | `tl.to(rig.cam, { ...rig.frame(card, 1.2), duration: .75, ease: 'expo.inOut' })`, then cut to the screen's content full-frame | 0.6–0.9 s |
-| **Pan along a curved wall** | `tl.to(wall, { ry: wall.panTo(px), ease: 'power3.inOut', duration: .45 })` | 0.4–0.5 s, motion blur from `--mb 4` |
+| **Pan along a curved wall** | `tl.to(wall, { ry: wall.panTo(px), ease: 'power2.inOut', duration: .75 })` + `C3.motionBlur(view).swell(22, .75)` | 0.7–0.8 s |
 | **Whip pan** | `C3.whip(el)`; cut on the blurriest frame | 0.3 s |
 
 Depth of field: objects added with `rig.add` blur in proportion to their distance from `cam.focus` (`dof` px per 1000 px, capped at `maxBlur`). `rig.orbit` and `rig.frame` set `focus` for you.
@@ -64,6 +64,28 @@ Depth of field: objects added with `rig.add` blur in proportion to their distanc
 - `C3.scramble(el, text, { duration })`: deterministic glyph-scramble reveal.
 - `C3.invertFlash(tl, '#stage', at)`: 2-frame invert on a cut.
 - Ambient bloom: a big blurred radial gradient in the glow colour behind the 3D layer, drifting slowly.
+
+## Lighting and a reactive environment (always on for 3D)
+
+A 3D move only sells when the **surroundings react** and the **surfaces are lit**. Flat, unlit cards over a 2D backdrop read as cardboard sliding over wallpaper.
+
+- **Put the background in the world.** Use `C3.backdrop(rig, el, { z: -3000, cover })` for glows, gradients and the neon wave, so they parallax against the subject as the camera dollies, orbits or cranes. With `cover: 1` and `camZ` set to the camera's starting z, the 3D backdrop matches a 2D one exactly, so you can swap one for the other mid-shot without a visible jump.
+- **Give it a floor.** `C3.floor(rig, { y, pool, line })` adds a perspective grid with a light pool. It foreshortens with every camera move and is the strongest single cue that the camera really moves. Ground objects with `rig.addShadow(obj, floor)`: a soft contact shadow that spreads and fades as the object rises (a phone landing, a card lifting).
+- **Light every surface.** `rig.light = { x, y, z, ambient, spec, shininess }` is a point key light in world space:
+  - Objects added with `lit: true` (or `lit: 'glare'` for glass and screens) shade as they turn away from it.
+  - A Blinn specular glare slides across them as they rotate.
+  - `C3.curvedWall` strips are shaded smoothly (per-edge gradients), so a highlight band glides along the curve as the wall pans.
+  - `C3.phone` gets screen glare plus side walls that brighten or darken with the light.
+- **Tie the light to what the viewer sees.** If a glow blob is visible, drive `rig.light` from its position every frame (`MK.onFrame`), so highlights always come from the visible light source. Sweep the light against the camera move (orbit left, light right) for the richest glints, and pulse the glow when something lands.
+
+Defaults that look right: `ambient` 0.4–0.65, `spec` 0.55–0.75, `shininess` 22–30, with the key light above, to one side and in front (`y` ≈ −1000, `z` ≈ 1500–2600).
+
+## Avoiding the "stretched / smeared" look (learned the hard way)
+
+- **Keep curves gentle.** A curved wall should wrap **~25° per panel and ≤ 120° in total** (`C3.curvedWall` defaults to 70° and clamps at 120°). A 160° wrap reads as a drum, and its edges fold and stretch.
+- **Use a long lens for 3D scenes.** Use `fov` 1800–2400 for walls and card clouds; short lenses (≤ 1200) exaggerate perspective at the frame edges. Move the camera back instead (`cam.z = fov × objectWidth / desiredScreenWidth`).
+- **Respect the motion-blur speed limit.** Sub-frame blending (`--mb 4`) shows anything moving faster than ~40 px per frame as **stacked copies**, not a smear. For fast pans and whips, add a directional blur with `C3.motionBlur(el, 'x').swell(peak, duration)` (~20 px peak for a full-panel pan). For zoom-throughs, ramp an isotropic `blur()` on the moving layer. Pans of a full screen width should take **≥ 0.7 s** with `power2.inOut`.
+- **Don't swap a flat panel for a 3D one in a single frame.** Put the content on the flat panel first, then dissolve over 0.15–0.2 s into the 3D object, framed at the same size.
 
 ## Gotchas
 

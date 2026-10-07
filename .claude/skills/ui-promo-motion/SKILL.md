@@ -36,6 +36,7 @@ Read these before building:
 - **Depth through blur and shadow, not 3D clutter.** Out-of-focus elements blur 6–12 px; focused cards get big soft shadows (`0 30px 60px rgba(0,0,0,.12)`) and sometimes a coloured glow.
 - **Every cut is motivated.** Exit a shot by zooming through it, wiping with a shape, morphing a button into the next scene, or panning along a line. Hard cuts only on a strong beat (e.g. into a full-bleed brand-colour frame or a dark shot).
 - **Fast in, slow settle.** Entrances use `expo.out` (0.5–0.8 s); exits use `power3.in` (0.3–0.45 s). Nothing moves linearly except slow background drift.
+- **3D shots are lit and grounded.** The background lives in the world (parallax), there's a floor or backdrop that reacts to the camera, surfaces shade and glint from a key light, and fast moves get directional blur. Keep curves gentle and lenses long (see `references/style-3d-showcase.md`).
 - **Hold readable text ≥ 0.6 s** after it lands; hold the final logo ≥ 1.2 s.
 
 ## Choosing a variant
