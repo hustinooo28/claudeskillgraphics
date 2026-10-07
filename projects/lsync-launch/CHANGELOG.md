@@ -1,0 +1,7 @@
+# Changelog — launch film v-next (rebuilt from a clean composition, not iterated)
+
+1. Every gradient, glow, blur halo, shadow and 3D device mockup is gone. The film uses four flat fills from the site CSS (`--ink` #080D22, `--paper` #F4F6FC, `--brand` #526FF2, `--accent` #D6B05C); the composition code has no gradient, box-shadow or blur glow.
+2. The tone moves from promo to official launch. The copy is facts only (statement, purpose, site name, three features, NOW LIVE, URL, A.Y. 2026–2027), on a 12-column grid with two type scales and line-mask, per-word and per-character reveals.
+3. The live site is shown as-is: real captures of lsync.vercel.app (Records, Transparency Board, Feedback) in a flat 2 px browser frame, with one real interaction (the Transparency Board scrolling to Event Allocations in bar 9).
+4. Timing is locked to 60 fps and 120 BPM across 12 bars, each beat its own HyperFrames sub-composition, with every cut on a beat or an eighth. The site name staggers 1 f per character, there is an eighth-note silence before the reveal, and a 90-frame still endcard.
+5. All audio is generated locally (no copyrighted music): bed, whooshes high-passed at 150 Hz, riser, impact+sub, UI ticks and reverse cymbal. Each cue is placed by frame in `notes/sfx_cue_sheet.md`, with at most two stacked, the bed ducked under impacts and reverb only on the final tail, mastered to −14 LUFS / ≤ −1 dBTP. Delivered in vertical 1080×1920 and landscape 1920×1080.

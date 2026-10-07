@@ -1,0 +1,8 @@
+# regenerable or third-party material
+assets/audio/launch_premaster.wav
+capture/assets/
+capture/extracted/page.html
+snapshots/
+renders/
+.media/
+__pycache__/

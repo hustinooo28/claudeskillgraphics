@@ -1,0 +1,252 @@
+{
+  "bgm": {
+    "path": "assets/audio/launch_mix.wav",
+    "source": "host",
+    "note": "Generated locally (tools/sound.py + tools/master.sh): bed and all SFX premixed, -14 LUFS / TP <= -1 dBTP. No narration."
+  },
+  "sfx": [
+    {
+      "frame": 15,
+      "file": "assets/audio/sfx/tick_soft.wav",
+      "offset_s": 0,
+      "duration_s": 0.042,
+      "gain_db": -20,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 45,
+      "file": "assets/audio/sfx/tick_ui.wav",
+      "offset_s": 0,
+      "duration_s": 0.041,
+      "gain_db": -24,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 60,
+      "file": "assets/audio/sfx/tick_ui.wav",
+      "offset_s": 0,
+      "duration_s": 0.041,
+      "gain_db": -24,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 120,
+      "file": "assets/audio/sfx/whoosh_wipe.wav",
+      "offset_s": 0,
+      "duration_s": 0.597,
+      "gain_db": -9,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 240,
+      "file": "assets/audio/sfx/whoosh_wipe.wav",
+      "offset_s": 0,
+      "duration_s": 0.597,
+      "gain_db": -9,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 241,
+      "file": "assets/audio/sfx/riser.wav",
+      "offset_s": 0,
+      "duration_s": 1.9,
+      "gain_db": -13,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 360,
+      "file": "assets/audio/sfx/whoosh_wipe.wav",
+      "offset_s": 0,
+      "duration_s": 0.597,
+      "gain_db": -10,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 378,
+      "file": "assets/audio/sfx/whoosh_short.wav",
+      "offset_s": 0,
+      "duration_s": 0.338,
+      "gain_db": -13,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 480,
+      "file": "assets/audio/sfx/tick_soft.wav",
+      "offset_s": 0,
+      "duration_s": 0.042,
+      "gain_db": -20,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 578,
+      "file": "assets/audio/sfx/whoosh_short.wav",
+      "offset_s": 0,
+      "duration_s": 0.338,
+      "gain_db": -15,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 585,
+      "file": "assets/audio/sfx/rev_cymbal.wav",
+      "offset_s": 0,
+      "duration_s": 1.5,
+      "gain_db": -12,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 600,
+      "file": "assets/audio/sfx/impact_sub.wav",
+      "offset_s": 0,
+      "duration_s": 1.475,
+      "gain_db": -3,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 640,
+      "file": "assets/audio/sfx/tick_soft.wav",
+      "offset_s": 0,
+      "duration_s": 0.042,
+      "gain_db": -20,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 722,
+      "file": "assets/audio/sfx/whoosh_rise.wav",
+      "offset_s": 0,
+      "duration_s": 0.498,
+      "gain_db": -12,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 735,
+      "file": "assets/audio/sfx/tick_ui.wav",
+      "offset_s": 0,
+      "duration_s": 0.041,
+      "gain_db": -22,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 840,
+      "file": "assets/audio/sfx/tick_ui.wav",
+      "offset_s": 0,
+      "duration_s": 0.041,
+      "gain_db": -20,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 855,
+      "file": "assets/audio/sfx/tick_ui.wav",
+      "offset_s": 0,
+      "duration_s": 0.041,
+      "gain_db": -22,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 960,
+      "file": "assets/audio/sfx/tick_ui.wav",
+      "offset_s": 0,
+      "duration_s": 0.041,
+      "gain_db": -22,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 975,
+      "file": "assets/audio/sfx/tick_soft.wav",
+      "offset_s": 0,
+      "duration_s": 0.042,
+      "gain_db": -19,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 1035,
+      "file": "assets/audio/sfx/tick_soft.wav",
+      "offset_s": 0,
+      "duration_s": 0.042,
+      "gain_db": -19,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 1080,
+      "file": "assets/audio/sfx/tick_ui.wav",
+      "offset_s": 0,
+      "duration_s": 0.041,
+      "gain_db": -20,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 1095,
+      "file": "assets/audio/sfx/tick_ui.wav",
+      "offset_s": 0,
+      "duration_s": 0.041,
+      "gain_db": -22,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 1200,
+      "file": "assets/audio/sfx/whoosh_short.wav",
+      "offset_s": 0,
+      "duration_s": 0.338,
+      "gain_db": -14,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 1215,
+      "file": "assets/audio/sfx/tick_ui.wav",
+      "offset_s": 0,
+      "duration_s": 0.041,
+      "gain_db": -22,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 1230,
+      "file": "assets/audio/sfx/tick_ui.wav",
+      "offset_s": 0,
+      "duration_s": 0.041,
+      "gain_db": -22,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 1290,
+      "file": "assets/audio/sfx/whoosh_wipe.wav",
+      "offset_s": 0,
+      "duration_s": 0.597,
+      "gain_db": -11,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    },
+    {
+      "frame": 1320,
+      "file": "assets/audio/sfx/impact_final.wav",
+      "offset_s": 0,
+      "duration_s": 2.277,
+      "gain_db": -2,
+      "source": "host",
+      "premixed_into": "assets/audio/launch_mix.wav"
+    }
+  ]
+}

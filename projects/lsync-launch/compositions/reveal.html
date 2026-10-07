@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <link rel="stylesheet" href="assets/shared.css">
+      <style>
+        #reveal .lockup { position: absolute; left: var(--m); right: var(--m); top: 21cqh; transform-origin: 0 50%; }
+        #reveal .seal-mask { width: calc(var(--u) * 27.8); height: calc(var(--u) * 27.8); overflow: hidden; }
+        #reveal .seal { width: 100%; height: 100%; display: block; }
+        #reveal .name { margin-top: calc(var(--u) * 5.2); color: var(--paper); }
+        #reveal .name .row { display: block; }
+        #reveal .rule-a { position: relative; display: block; width: calc(var(--col) * 4 + var(--g) * 3); height: 4px; margin-top: calc(var(--u) * 4.4); background: var(--accent); transform-origin: 0 50%; }
+        #reveal .org { margin-top: calc(var(--u) * 3); color: var(--paper); }
+        @container (orientation: landscape) {
+          #reveal .lockup { top: 50cqh; transform: translateY(-50%); display: grid; grid-template-columns: calc(var(--col) * 3 + var(--g) * 2) 1fr; column-gap: var(--g); align-items: center; }
+          #reveal .seal-mask { width: calc(var(--col) * 3 + var(--g) * 2); height: calc(var(--col) * 3 + var(--g) * 2); }
+          #reveal .name { margin-top: 0; }
+        }
+      </style>
+      <!-- Bar 6. Hard cut to brand on f600: seal, then the site name staggered 1 frame per character. -->
+      <div data-hf-id="hf-cwru" id="reveal" class="beat" data-composition-id="reveal" data-width="1080" data-height="1920">
+        <div data-hf-id="hf-tan6" class="stage">
+          <div data-hf-id="hf-phek" class="fill brand"></div>
+          <div data-hf-id="hf-6jvi" class="lockup">
+            <div data-hf-id="hf-6e5w" class="seal-mask"><img data-hf-id="hf-ohfb" class="seal" src="assets/lsc-seal.png" alt="Local Student Council seal"></div>
+            <div data-hf-id="hf-kvio" class="txt">
+              <div data-hf-id="hf-2hlz" class="name display-s"><span data-hf-id="hf-u3a5" class="row">Digital</span><span data-hf-id="hf-y9w1" class="row">Transparency</span><span data-hf-id="hf-0onp" class="row">Board</span></div>
+              <span data-hf-id="hf-7h3p" class="rule-a"></span>
+              <div data-hf-id="hf-fj7r" class="org label">Local Student Council</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script>
+        (function () {
+          const T0 = 600;
+          const F = (n) => n / 60;
+          const L = (f) => F(f - T0);
+          const root = document.querySelector("#reveal");
+          const q = (s) => root.querySelector(s);
+          // Split the site name into masked characters (the only per-character text in the film).
+          const chars = [];
+          root.querySelectorAll(".name .row").forEach((row) => {
+            const t = row.textContent; row.textContent = "";
+            [...t].forEach((c) => {
+              const o = document.createElement("span"); o.className = "ch";
+              const n = document.createElement("span"); n.textContent = c;
+              o.appendChild(n); row.appendChild(o); chars.push(n);
+            });
+          });
+          const org = q(".org"); const ow = org.textContent.trim().split(" "); org.textContent = "";
+          const orgWords = ow.map((w, i) => {
+            const o = document.createElement("span"); o.className = "wd";
+            const n = document.createElement("span"); n.textContent = w;
+            o.appendChild(n); org.appendChild(o); if (i < ow.length - 1) org.appendChild(document.createTextNode(" "));
+            return n;
+          });
+
+          const tl = gsap.timeline({ paused: true });
+          // Whole lockup drifts 100% -> 102% across the bar. No punch, no overshoot.
+          tl.fromTo(q(".lockup"), { scale: 1 }, { scale: 1.02, duration: F(120), ease: "expo.out" }, 0);
+          // Seal rises out of its mask on the downbeat.
+          tl.fromTo(q(".seal"), { yPercent: 100 }, { yPercent: 0, duration: F(18), ease: "expo.out" }, L(600));
+          // Site name: 1 frame per character from f606.
+          tl.fromTo(chars, { yPercent: 115 }, { yPercent: 0, duration: F(14), ease: "expo.out", stagger: F(1) }, L(606));
+          // Accent rule f640-656.
+          tl.fromTo(q(".rule-a"), { scaleX: 0 }, { scaleX: 1, duration: F(16), ease: "expo.out" }, L(640));
+          tl.fromTo(orgWords, { yPercent: 110 }, { yPercent: 0, duration: F(14), ease: "expo.out", stagger: F(3) }, L(660));
+          tl.set({}, {}, L(720));
+          window.__timelines["reveal"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

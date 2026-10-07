@@ -1,0 +1,54 @@
+[span] DSSC — LSC
+[span] Santa Cruz
+[button] Transparency
+[span] Admin access
+[span] One Step Better Than Yesterday.
+[span] Digital
+[span] Transparency
+[span] Board
+[p] Track your contributions, attendance, and council finances in real-time. Transparency for a stronger student community.
+[span] View transparency board
+[a] Meet the council
+[span] Secure access
+[strong] 24/7
+[span] Always available
+[strong] LIVE
+[span] Council updates
+[h2] Find Your Records
+[p] Enter your student name and Student ID to verify your identity and view your contributions and attendance.
+[label] Student Name
+[label] Student ID (verification)
+[button] Search Records
+[span] Scroll down
+[span] Leadership • Service • Commitment
+[h2] LSC Preview
+[p] Meet the officers dedicated to serving the Local Student Council community.
+[span] DSSC — LSC
+[span] Santa Cruz
+[p] Built for transparency. Designed for students.
+[p] "One Step Better Than Yesterday."
+[span] Secure & Transparent
+[h4] Developers
+[li] Mark Louise Eyas - Back-end
+[li] Justine Renz Capapas - UI/UX Front-end
+[li] John Mark Mahidlawon - Dev Ops
+[h4] Quick Links
+[span] Search Record
+[span] Transparency Board
+[span] Complaint
+[span] Suggestion
+[span] Admin Login
+[h4] Contact Us
+[span] dsscsclsc@gmail.com
+[span] Not have a Number yet!
+[span] Student Council Office, Likod Sa SB 101
+[h4] Office Hours
+[span] Monday - Friday
+[span] 8:00 AM - 5:00 PM
+[span] Saturday
+[span] Data Privacy Notice:
+[p] All data is handled in compliance with the Data Privacy Act of 2012 (RA 10173).
+[p] © 2026 Student Council. All rights reserved.
+[button] Privacy Policy
+[button] Terms of Service
+[button] Help Center

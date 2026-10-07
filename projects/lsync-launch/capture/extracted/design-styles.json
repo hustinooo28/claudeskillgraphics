@@ -1,0 +1,266 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "Space Grotesk",
+      "fontSize": "60px",
+      "fontWeight": "800",
+      "lineHeight": "60px",
+      "letterSpacing": "1.2px",
+      "color": "#14244B",
+      "sampleText": "Digital Transparency Board"
+    },
+    {
+      "role": "heading",
+      "fontFamily": "Space Grotesk",
+      "fontSize": "36px",
+      "fontWeight": "700",
+      "lineHeight": "40px",
+      "letterSpacing": "-0.9px",
+      "color": "#FFFFFF",
+      "sampleText": "LSC Preview"
+    },
+    {
+      "role": "heading-2",
+      "fontFamily": "Space Grotesk",
+      "fontSize": "24px",
+      "fontWeight": "700",
+      "lineHeight": "32px",
+      "letterSpacing": "-0.6px",
+      "color": "#14244B",
+      "sampleText": "Find Your Records"
+    },
+    {
+      "role": "body",
+      "fontFamily": "DM Sans",
+      "fontSize": "20px",
+      "fontWeight": "400",
+      "lineHeight": "28px",
+      "letterSpacing": "normal",
+      "color": "#2F4B74",
+      "sampleText": "Track your contributions, attendance, and council finances i"
+    },
+    {
+      "role": "heading-4",
+      "fontFamily": "Space Grotesk",
+      "fontSize": "16px",
+      "fontWeight": "600",
+      "lineHeight": "24px",
+      "letterSpacing": "-0.4px",
+      "color": "#14244B",
+      "sampleText": "Developers"
+    },
+    {
+      "role": "label",
+      "fontFamily": "DM Sans",
+      "fontSize": "14px",
+      "fontWeight": "500",
+      "lineHeight": "20px",
+      "letterSpacing": "normal",
+      "color": "#15254C",
+      "sampleText": "Student Name"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      2,
+      4,
+      6,
+      8,
+      12,
+      16,
+      24,
+      32,
+      48,
+      64
+    ],
+    "baseUnit": 8
+  },
+  "radius": [
+    "11.2px",
+    "16px",
+    "9999px"
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+      "count": 5
+    },
+    {
+      "value": "rgba(82, 111, 242, 0.22) 0px 10px 25px 0px",
+      "count": 2
+    },
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px",
+      "count": 2
+    },
+    {
+      "value": "rgba(36, 65, 122, 0.1) 0px 8px 24px 0px",
+      "count": 1
+    },
+    {
+      "value": "rgba(36, 65, 122, 0.16) 0px 24px 70px 0px, rgba(33, 64, 129, 0.06) 0px 1px 0px 0px inset",
+      "count": 1
+    }
+  ],
+  "buttons": [
+    {
+      "label": "Admin access",
+      "background": "transparent",
+      "backgroundImage": "linear-gradient(135deg, rgb(49, 84, 216) 0%, rgb(82, 111, 242) 100%)",
+      "backdropFilter": "",
+      "color": "#FFFFFF",
+      "padding": "8px 16px",
+      "borderRadius": "11.2px",
+      "border": "1px solid rgb(156, 172, 255)",
+      "boxShadow": "rgba(82, 111, 242, 0.22) 0px 10px 25px 0px",
+      "fontSize": "12px",
+      "fontWeight": "600",
+      "height": "34px"
+    },
+    {
+      "label": "Meet the council",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#D6B05C",
+      "padding": "12px 24px",
+      "borderRadius": "11.2px",
+      "border": "1px solid rgb(214, 176, 92)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "600",
+      "height": "50px"
+    },
+    {
+      "label": "1 / 18",
+      "background": "#0E1A4D",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#172036",
+      "padding": "0px",
+      "borderRadius": "16px",
+      "border": "2px solid rgba(55, 79, 126, 0.34)",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.25) 0px 25px 50px -12px",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "400px"
+    },
+    {
+      "label": "button",
+      "background": "#0E1A4D",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#FFFFFF",
+      "padding": "12px",
+      "borderRadius": "9999px",
+      "border": "1px solid rgba(55, 79, 126, 0.34)",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "50px"
+    },
+    {
+      "label": "button",
+      "background": "color(srgb 1 1 1 / 0.92)",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#172036",
+      "padding": "0px",
+      "borderRadius": "9999px",
+      "border": "0px solid rgb(187, 200, 216)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "10px"
+    },
+    {
+      "label": "button",
+      "background": "#D6B05C",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#172036",
+      "padding": "0px",
+      "borderRadius": "9999px",
+      "border": "0px solid rgb(187, 200, 216)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "10px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "#F5F8FF",
+      "backgroundImage": "",
+      "backdropFilter": "blur(20px) saturate(1.4)",
+      "color": "#172036",
+      "padding": "32px",
+      "borderRadius": "20px",
+      "border": "1px solid rgba(55, 79, 126, 0.22)",
+      "boxShadow": "rgba(36, 65, 122, 0.16) 0px 24px 70px 0px, rgba(33, 64, 129, 0.06) 0px 1px 0px 0px inset",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "428px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "#F8FBFF",
+    "backgroundImage": "",
+    "backdropFilter": "blur(12px)",
+    "color": "#14244B",
+    "padding": "0px",
+    "borderRadius": "0px",
+    "border": "",
+    "boxShadow": "rgba(36, 65, 122, 0.1) 0px 8px 24px 0px",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "height": "77px"
+  },
+  "chips": [
+    {
+      "label": "\"One Step Better Than Ye",
+      "background": "transparent",
+      "color": "#D6B05C",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "0px solid rgb(187, 200, 216)",
+      "boxShadow": "none",
+      "fontSize": "11.52px",
+      "fontWeight": "700",
+      "height": "34.5312px"
+    }
+  ],
+  "statCells": [],
+  "tabs": [],
+  "backgrounds": [
+    {
+      "value": "radial-gradient(circle at 75% 20%, rgba(82, 111, 242, 0.18), rgba(0, 0, 0, 0) 32%), linear-gradient(135deg, rgb(233, 240, 255) 0%, rgb(248, 251, 255) 55%, rgb(219, 231, 255) 100%)",
+      "area": 2073600
+    },
+    {
+      "value": "radial-gradient(circle, rgba(58, 95, 224, 0.32), rgba(0, 0, 0, 0) 62%)",
+      "area": 1486080
+    }
+  ],
+  "glass": [
+    {
+      "backdropFilter": "blur(20px) saturate(1.4)",
+      "background": "rgb(245, 248, 255)",
+      "border": "1px solid rgba(55, 79, 126, 0.22)",
+      "borderRadius": "20px",
+      "boxShadow": "rgba(36, 65, 122, 0.16) 0px 24px 70px 0px, rgba(33, 64, 129, 0.06) 0px 1px 0px 0px inset",
+      "area": 232832
+    },
+    {
+      "backdropFilter": "blur(12px)",
+      "background": "rgba(248, 251, 255, 0.94)",
+      "border": "",
+      "borderRadius": "0px",
+      "boxShadow": "rgba(36, 65, 122, 0.1) 0px 8px 24px 0px",
+      "area": 147840
+    }
+  ]
+}

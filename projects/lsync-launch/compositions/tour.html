@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <link rel="stylesheet" href="assets/shared.css">
+      <style>
+        /* Vertical: labels on top (inside the 12% safe line), frame below. Landscape: labels cols 1-4, frame cols 5-12. */
+        #tour .head { position: absolute; left: var(--m); right: var(--m); top: 13cqh; }
+        #tour .idx { color: var(--accent); }
+        #tour .title { margin-top: calc(var(--u) * 1.6); color: var(--ink); position: relative; height: calc(var(--feature) * 1.05); }
+        #tour .title .lm { position: absolute; left: 0; top: 0; white-space: nowrap; }
+        #tour .idx-wrap { position: relative; height: calc(var(--label) * 1.25); }
+        #tour .idx-wrap .lm { position: absolute; left: 0; top: 0; }
+        #tour .sub { position: absolute; right: var(--m); top: 13cqh; color: var(--ink); text-align: right; }
+        #tour .rule-t { left: var(--m); right: var(--m); top: 21.6cqh; height: 2px; background: var(--ink); }
+        #tour .bframe { left: var(--m); width: calc(100cqw - 2 * var(--m)); top: 23.8cqh; height: 53.4cqh; }
+        @container (orientation: landscape) {
+          #tour .head { top: 30cqh; right: auto; width: calc(var(--col) * 4 + var(--g) * 3); }
+          #tour .title { height: calc(var(--feature) * 2.1); }
+          #tour .title .lm { white-space: normal; width: 100%; }
+          #tour .sub { top: calc(30cqh + var(--u) * 20.5); left: var(--m); right: auto; text-align: left; }
+          #tour .rule-t { right: auto; width: calc(var(--col) * 4 + var(--g) * 3); top: 26cqh; }
+          #tour .bframe { left: calc(var(--m) + (var(--col) + var(--g)) * 4); width: calc(var(--col) * 8 + var(--g) * 7); top: 50cqh; height: auto; aspect-ratio: auto; }
+        }
+      </style>
+      <!-- Bars 7-10. Paper field, flat browser frame with the real captures, index 01/02/03, one real scroll in bar 9. -->
+      <div data-hf-id="hf-kfpo" id="tour" class="beat" data-composition-id="tour" data-width="1080" data-height="1920">
+        <div data-hf-id="hf-tan6" class="stage">
+          <div data-hf-id="hf-hbf9" class="fill paper"></div>
+          <div data-hf-id="hf-5pn3" class="rule rule-t"></div>
+          <div data-hf-id="hf-z992" class="head">
+            <div data-hf-id="hf-nqnw" class="idx-wrap label">
+              <span data-hf-id="hf-jyj0" class="lm"><span data-hf-id="hf-tde2" class="ln i1">01 / 03</span></span>
+              <span data-hf-id="hf-p1gk" class="lm"><span data-hf-id="hf-tm4c" class="ln i2">02 / 03</span></span>
+              <span data-hf-id="hf-nujh" class="lm"><span data-hf-id="hf-dfoy" class="ln i3">03 / 03</span></span>
+            </div>
+            <div data-hf-id="hf-aa1g" class="title feature">
+              <span data-hf-id="hf-o8ui" class="lm"><span data-hf-id="hf-f5q1" class="ln t1">Your records</span></span>
+              <span data-hf-id="hf-q8dn" class="lm"><span data-hf-id="hf-5cfx" class="ln t2">Public finances</span></span>
+              <span data-hf-id="hf-qmoo" class="lm"><span data-hf-id="hf-kj3i" class="ln t3">Direct feedback</span></span>
+            </div>
+          </div>
+          <div data-hf-id="hf-9lec" class="sub label"><span data-hf-id="hf-pfrl" class="lm"><span data-hf-id="hf-rmcl" class="ln s2">Event allocations</span></span></div>
+          <svg data-hf-id="hf-6o47" width="0" height="0" style="position: absolute">
+            <filter data-hf-id="hf-c5ev" id="tour-mby" x="0" y="-20%" width="100%" height="140%"><fegaussianblur data-hf-id="hf-np0p" class="mby" stdDeviation="0 0" /></filter>
+          </svg>
+          <div data-hf-id="hf-rdnp" class="bframe">
+            <div data-hf-id="hf-i2gl" class="bbar"><span data-hf-id="hf-zq2w" class="label">lsync.vercel.app</span></div>
+            <div data-hf-id="hf-wd71" class="bview">
+              <img data-hf-id="hf-f69a" class="p1" src="assets/captures/01-landing.png" alt="">
+              <img data-hf-id="hf-f239" class="p2" src="assets/captures/02-transparency-full.png" alt="">
+              <img data-hf-id="hf-cffs" class="p3" src="assets/captures/03-inquiry.png" alt="">
+            </div>
+          </div>
+        </div>
+      </div>
+      <script>
+        (function () {
+          const T0 = 720;
+          const F = (n) => n / 60;
+          const L = (f) => F(f - T0);
+          const root = document.querySelector("#tour");
+          const q = (s) => root.querySelector(s);
+          const land = +root.dataset.width > +root.dataset.height;
+
+          // Frame geometry in px (container is exactly 1080x1920 or 1920x1080).
+          // Vertical: 950 x 1025 frame; landscape: 1119 wide, 16:10 view. Captures are 1440x900 CSS px pages.
+          const G = land
+            ? { fw: 1119, view: 1115 * 0.625, p1: [1115, 0], p2: [1115, 0], p3: [1115, 0], scroll: -600 }
+            : { fw: 950, view: null, p1: [1900, -950, -112], p2: [1180, -117], p3: [1540, -297], scroll: -420 };
+          const bar = 56 + 2; // toolbar + its rule
+          if (land) {
+            q(".bframe").style.height = Math.round(G.view + bar + 4) + "px";
+            q(".bframe").style.marginTop = -Math.round((G.view + bar + 4) / 2) + "px";
+          }
+          [["p1", G.p1], ["p2", G.p2], ["p3", G.p3]].forEach(([c, [w, x, y = 0]]) => {
+            const im = q("." + c); im.style.width = w + "px"; im.style.left = x + "px"; im.style.top = y + "px";
+          });
+
+          const tl = gsap.timeline({ paused: true });
+          const IN = { yPercent: 0, duration: F(16), ease: "expo.out" };
+          const OUT = { yPercent: -110, duration: F(10), ease: "expo.in", immediateRender: false };
+          const lineIn = (s, f) => tl.fromTo(q(s), { yPercent: 110 }, IN, L(f));
+          const lineOut = (s, f) => tl.fromTo(q(s), { yPercent: 0 }, OUT, L(f));
+          ["i1", "i2", "i3", "t1", "t2", "t3", "s2"].forEach((c) => gsap.set(q("." + c), { yPercent: 110 }));
+          // Each index/title line is only live inside its own bars.
+          const live = (cls, a, b) => { const el = q("." + cls).parentNode; tl.set(el, { autoAlpha: 0 }, 0).set(el, { autoAlpha: 1 }, L(a)).set(el, { autoAlpha: 0 }, L(b)); };
+          live("i1", 720, 840); live("t1", 720, 840); live("i2", 840, 1080); live("t2", 840, 1080); live("s2", 960, 1080); live("i3", 1080, 1200); live("t3", 1080, 1200);
+          // Captures: one visible at a time; the swaps are hard cuts on bar downbeats.
+          tl.set(q(".p2"), { autoAlpha: 0 }, 0).set(q(".p3"), { autoAlpha: 0 }, 0);
+
+          // f720: hard cut to paper; rule draws (linear hairline); frame rises from below with a vertical motion blur.
+          tl.fromTo(q(".rule-t"), { scaleX: 0 }, { scaleX: 1, duration: F(30), ease: "none" }, L(720));
+          tl.fromTo(q(".bframe"), { y: land ? 900 : 1250 }, { y: 0, duration: F(18), ease: "expo.out" }, L(720));
+          tl.set(q(".bframe"), { filter: "url(#tour-mby)" }, L(720));
+          tl.fromTo(q(".mby"), { attr: { stdDeviation: "0 36" } }, { attr: { stdDeviation: "0 0" }, duration: F(10), ease: "expo.out" }, L(720));
+          tl.set(q(".bframe"), { filter: "none" }, L(731));
+
+          // 01 Your records: index on the eighth, title on the beat.
+          lineIn(".i1", 735); lineIn(".t1", 750);
+          lineOut(".i1", 830); lineOut(".t1", 830);
+
+          // f840: 02 Public finances.
+          tl.set(q(".p1"), { autoAlpha: 0 }, L(840)).set(q(".p2"), { autoAlpha: 1 }, L(840));
+          lineIn(".i2", 855); lineIn(".t2", 870);
+          // Bar 9: the section label steps on the downbeat, then the real page scrolls to the allocations table.
+          lineIn(".s2", 960);
+          tl.fromTo(q(".p2"), { y: 0 }, { y: G.scroll, duration: F(60), ease: "power4.inOut" }, L(975));
+          lineOut(".i2", 1070); lineOut(".t2", 1070); lineOut(".s2", 1070);
+
+          // f1080: 03 Direct feedback.
+          tl.set(q(".p2"), { autoAlpha: 0 }, L(1080)).set(q(".p3"), { autoAlpha: 1 }, L(1080));
+          lineIn(".i3", 1095); lineIn(".t3", 1110);
+          lineOut(".i3", 1190); lineOut(".t3", 1190);
+          tl.fromTo(q(".rule-t"), { scaleX: 1 }, { scaleX: 0, duration: F(10), ease: "expo.in", immediateRender: false }, L(1190));
+          tl.set({}, {}, L(1200));
+          window.__timelines["tour"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

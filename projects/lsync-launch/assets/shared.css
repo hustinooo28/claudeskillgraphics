@@ -1,0 +1,60 @@
+/* Shared tokens for every beat. Flat solid fills only: four colours, nothing else. */
+@font-face { font-family: "Space Grotesk"; src: url("fonts/SpaceGrotesk-var.woff2") format("woff2"); font-weight: 300 700; font-style: normal; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Space Grotesk"; src: url("fonts/SpaceGrotesk-var-ext.woff2") format("woff2"); font-weight: 300 700; font-style: normal; unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+:root {
+  --ink: #080d22;
+  --paper: #f4f6fc;
+  --brand: #526ff2;
+  --accent: #d6b05c;
+}
+
+/* Every beat root is a size container; .stage (its only child) carries the grid and type tokens.
+   1u = 10.8 px in both 1080x1920 and 1920x1080. */
+.beat { position: absolute; inset: 0; overflow: hidden; container-type: size; }
+.stage {
+  position: absolute; inset: 0; overflow: hidden;
+  font-family: "Space Grotesk", sans-serif; -webkit-font-smoothing: antialiased;
+  --u: min(1cqw, 1cqh);
+  --m: 6cqw;                                  /* outer margin: 65 / 115 px */
+  --g: calc(var(--u) * 1.48);                 /* gutter: 16 px */
+  --col: calc((100cqw - 2 * var(--m) - 11 * var(--g)) / 12);
+  --display: calc(var(--u) * 20.37);          /* 220 px */
+  --display-s: calc(var(--u) * 12.593);       /* 136 px */
+  --feature: calc(var(--u) * 7.407);          /* 80 px */
+  --label: calc(var(--u) * 2.778);            /* 30 px */
+}
+@container (orientation: landscape) {
+  .stage {
+    --g: calc(var(--u) * 2.222);              /* gutter: 24 px */
+    --display: calc(var(--u) * 22.222);       /* 240 px */
+    --display-s: calc(var(--u) * 13.333);     /* 144 px */
+    --feature: calc(var(--u) * 5.926);        /* 64 px */
+    --label: calc(var(--u) * 2.407);          /* 26 px */
+  }
+}
+.fill { position: absolute; inset: 0; }
+.ink { background: var(--ink); } .paper { background: var(--paper); }
+.brand { background: var(--brand); } .accent { background: var(--accent); }
+
+.display { font-weight: 700; font-size: var(--display); line-height: 0.9; letter-spacing: -0.045em; }
+.display-s { font-weight: 700; font-size: var(--display-s); line-height: 0.92; letter-spacing: -0.04em; }
+.feature { font-weight: 600; font-size: var(--feature); line-height: 1; letter-spacing: -0.03em; }
+.label { font-weight: 500; font-size: var(--label); line-height: 1.2; letter-spacing: 0.12em; text-transform: uppercase; }
+
+/* Line mask: the inner line rises out of a clipped baseline. */
+.lm { display: block; overflow: hidden; padding-bottom: 0.14em; margin-bottom: -0.14em; }
+.lm > span, .lm > .ln { display: block; will-change: transform; }
+.wd { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.14em; margin-bottom: -0.14em; }
+.wd > span { display: inline-block; }
+.ch { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.16em; margin-bottom: -0.16em; }
+.ch > span { display: inline-block; }
+
+.rule { position: absolute; height: 2px; transform-origin: 0 50%; }
+
+/* Flat browser frame: 2 px ink border, solid paper toolbar, no shadow, no device. */
+.bframe { position: absolute; border: 2px solid var(--ink); background: var(--paper); overflow: hidden; }
+.bbar { position: absolute; left: 0; right: 0; top: 0; height: calc(var(--u) * 5.2); background: var(--paper); border-bottom: 2px solid var(--ink); display: flex; align-items: center; padding-left: calc(var(--u) * 2.2); z-index: 2; }
+.bbar .label { font-size: calc(var(--u) * 2.0); color: var(--ink); letter-spacing: 0.14em; }
+.bview { position: absolute; left: 0; right: 0; bottom: 0; top: calc(var(--u) * 5.2 + 2px); overflow: hidden; background: var(--paper); }
+.bview img { position: absolute; left: 0; top: 0; display: block; }
