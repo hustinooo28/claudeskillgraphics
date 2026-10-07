@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <link rel="stylesheet" href="assets/glow.css" />
+      <style>
+        #board .card { position: absolute; border-radius: 22px; overflow: hidden; border: 2px solid #6ea0ff; box-shadow: 0 0 30px rgba(47, 107, 255, 0.75), 0 0 120px rgba(47, 107, 255, 0.35); background: #070b1d; }
+        #board .card img { position: absolute; left: 0; top: 0; display: block; }
+        #board .hl { position: absolute; border-radius: 10px; border: 2.5px solid #ffc61a; background: rgba(255, 198, 26, 0.13); box-shadow: 0 0 22px rgba(255, 198, 26, 0.9), 0 0 70px rgba(255, 170, 0, 0.5), inset 0 0 18px rgba(255, 198, 26, 0.35); }
+        #board .ask { position: absolute; border-radius: 26px; }
+        #board .send { position: absolute; width: 58px; height: 58px; border-radius: 14px; background: #ffc61a; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 22px rgba(255, 198, 26, 0.85); }
+        #board .callout { position: absolute; border-radius: 18px; padding: 0 28px; height: 74px; display: flex; align-items: center; gap: 14px; font-size: 28px; font-weight: 600; white-space: nowrap; background: rgba(20, 15, 0, 0.92); border: 2px solid #ffc61a; box-shadow: 0 0 26px rgba(255, 198, 26, 0.8), 0 0 90px rgba(255, 170, 0, 0.4); }
+      </style>
+      <!-- 18-34 s (f1080-2040). REF_C 6.6-12 s: the real Transparency Board (dark theme) arrives white-hot on a tilted
+           glowing card over the data stream and turns to face us; the camera drops to a second prompt (the site's own
+           Ask a Question box), "How much did Intramurals collect?" types with Intramurals lit; the card answers — it
+           scrolls to the real Intramurals row, which lights up yellow, and the card's light turns yellow; then it
+           floats up and away into the dark. -->
+      <div id="board" class="beat" data-composition-id="board" data-width="1080" data-height="1920">
+        <div class="stage"></div>
+      </div>
+      <script>
+        (function () {
+          const root = document.querySelector("#board");
+          const st = root.querySelector(".stage");
+          const { W, H, land } = LK.dims(root);
+          const { F, el } = LK;
+          const T0 = 1080, L = (f) => F(f - T0);
+          const tl = gsap.timeline({ paused: true });
+
+          const CW = land ? 1180 : 960, CHh = CW * 0.625;
+          const IH = CW * (1917 / 1600);                 // full-page capture height at card width
+          const ROW = 0.5827 * IH, ROWH = CW * 0.0363;   // the Intramurals row (measured on the capture)
+          const persp = el(st, "div", "fill", { perspective: "1800px" });
+          const rig = el(persp, "div", "fill");          // camera pan (up/down)
+          const card = el(rig, "div", "card", { left: W / 2 - CW / 2, top: H / 2 - CHh / 2, width: CW, height: CHh });
+          const page = el(card, "div", "abs", { left: 0, top: 0, width: CW, height: IH });
+          const img = el(page, "img", null, { width: CW, height: IH }); img.src = "assets/dark/02-transparency-full.jpg"; img.alt = "";
+          const hl = el(page, "div", "hl", { left: CW * 0.046, width: CW * 0.908, top: ROW - ROWH / 2 - 3, height: ROWH + 6 });
+
+          // f1080: white-hot, tilted, from the right (REF_C 6.6 s).
+          tl.fromTo(card, { x: W * 0.62, rotationY: -38, rotationX: 10, z: -260 }, { x: land ? 300 : 120, rotationY: -26, rotationX: 8, z: -120, duration: F(70), ease: "expo.out" }, 0);
+          LK.hot(tl, card, 0, F(60), { b: 16, br: 2.8 });
+          // turns to face us while the page scrolls a touch (REF_C 7-8.4 s)
+          tl.to(card, { x: 0, rotationY: -5, rotationX: 3, z: 0, duration: F(200), ease: "power3.inOut" }, L(1150));
+          tl.fromTo(page, { y: 0 }, { y: -IH * 0.07, duration: F(220), ease: "power2.inOut" }, L(1150));
+
+          // f1380: camera drops to the second prompt (REF_C 8.4-9.6 s).
+          const AW = land ? 1040 : 940, AH = 330;
+          const ask = el(rig, "div", "ask glass", { left: W / 2 - AW / 2, top: H * 1.05 + 40, width: AW, height: AH });
+          const ic = el(ask, "div", "abs", { left: 34, top: 32, width: 58, height: 58, borderRadius: 14, background: "rgba(47,107,255,.2)", border: "1.5px solid rgba(110,160,255,.7)", display: "flex", alignItems: "center", justifyContent: "center" });
+          LK.svgIcon(ic, LK.ICON.inquiry, 28, "#9cc2ff");
+          el(ask, "div", "abs sg bloom", { left: 110, top: 30, fontSize: 30, fontWeight: 600 }, "Ask a Question");
+          el(ask, "div", "abs", { left: 110, top: 70, fontSize: 19, color: "#9fb2dc" }, "Have a question about council transactions or events?");
+          const msg = el(ask, "div", "abs", { left: 36, top: 128, width: AW - 72, height: 120, borderRadius: 14, background: "#04060d", border: "1.5px solid rgba(160,200,255,.9)", boxShadow: "0 0 16px rgba(47,107,255,.5)", padding: "20px 22px", fontSize: land ? 30 : 28 });
+          const q = el(msg, "span", null, null, "How much did Intramurals collect?");
+          const caret = el(msg, "span", null, { display: "inline-block", width: 3, height: "1.05em", marginLeft: 2, verticalAlign: "-0.16em", background: "#ffc61a", boxShadow: "0 0 10px rgba(255,198,26,.9)" });
+          el(ask, "div", "abs", { left: 36, top: 270, fontSize: 18, color: "#7f93c4" }, "Inquiry  ·  Feedback & Communication");
+          const send = el(ask, "div", "send", { left: AW - 36 - 58, top: 258 });
+          LK.svgIcon(send, LK.ICON.send, 28, "#140f00");
+
+          tl.to(rig, { y: -H * 0.62, duration: F(70), ease: "power3.inOut" }, L(1380));
+          LK.hot(tl, ask, L(1384), F(40), { b: 10, br: 2.2 });
+          const ty = LK.type(tl, q, L(1452), 16, { keep: (w) => w === "Intramurals" });
+          for (let f = 1440; f < 1600; f += 15) tl.set(caret, { opacity: Math.floor((f - 1440) / 15) % 2 === 0 || (f > 1450 && f < 1580) ? 1 : 0 }, L(f));
+          tl.set(caret, { opacity: 0 }, L(1600));
+          // send: pressed on the beat (f1590), flash
+          tl.fromTo(send, { scale: 1, filter: "brightness(1)" }, { scale: 0.88, filter: "brightness(2.2)", duration: F(5), ease: "power2.in", immediateRender: false }, L(1586))
+            .to(send, { scale: 1, filter: "brightness(1)", duration: F(14), ease: "expo.out" }, L(1591));
+          // the prompt sinks away and the camera rises back to the card, closer (REF_C 9.6-10.4 s)
+          LK.away(tl, ask, L(1604), F(40), { y: 220, b: 12 });
+          tl.to(rig, { y: 0, duration: F(80), ease: "power3.inOut" }, L(1604));
+          tl.to(card, { scale: land ? 1.22 : 1.12, rotationY: 0, rotationX: 0, duration: F(90), ease: "power3.inOut" }, L(1604));
+          tl.to(page, { y: CHh / 2 - ROW, duration: F(80), ease: "power3.inOut" }, L(1610));
+
+          // the answer (f1650): the real Intramurals row lights up; the card's light turns yellow.
+          LK.hot(tl, hl, L(1652), F(30), { b: 8, br: 2.6, scale: 1.04 });
+          tl.to(card, { borderColor: "#ffd95c", boxShadow: "0 0 30px rgba(255,198,26,.8), 0 0 130px rgba(255,170,0,.4)", duration: F(50), ease: "power2.inOut" }, L(1652));
+          const co = el(st, "div", "callout", { left: W / 2 - (land ? 330 : 300), top: land ? 120 : 430 });
+          el(co, "span", null, { width: 14, height: 14, borderRadius: "50%", background: "#ffc61a", boxShadow: "0 0 12px #ffc61a", display: "inline-block" });
+          el(co, "span", null, null, "Intramurals");
+          el(co, "span", "bloom-y", { color: "#ffc61a" }, "₱1,050 collected");
+          LK.hot(tl, co, L(1686), F(36), { b: 12, br: 3, y: 26 });
+          tl.to(card, { scale: land ? 1.29 : 1.18, duration: F(220), ease: "none" }, L(1694));
+
+          // f1880-2040: the answer floats up and away into the dark (REF_C 11.4-12 s).
+          LK.away(tl, co, L(1880), F(40), { y: -70, b: 12 });
+          tl.to(card, { y: -H * 1.15, rotationX: 24, filter: "blur(12px)", duration: F(100), ease: "power3.in" }, L(1915));
+          tl.to(card, { opacity: 0, duration: F(40), ease: "power2.in" }, L(1975));
+          tl.set({}, {}, L(2040));
+          window.__timelines["board"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <link rel="stylesheet" href="assets/glow.css" />
+      <!-- 0-40 s. REF_C's atmosphere: near-black field lit by a streaky curtain of light falling from the top.
+           Blue carries the film; yellow takes over for the answer and the finale. Pre-rendered PNGs, no live blur. -->
+      <div id="atmos" class="beat" data-composition-id="atmos" data-width="1080" data-height="1920">
+        <div class="stage"></div>
+      </div>
+      <script>
+        (function () {
+          const root = document.querySelector("#atmos");
+          const st = root.querySelector(".stage");
+          const { W, H, land } = LK.dims(root);
+          const { F, el } = LK;
+          const tl = gsap.timeline({ paused: true });
+          el(st, "div", "fill", { background: "#05060b" });
+          const CW = land ? 2700 : 2300, CH = CW * 0.625;
+          const cx = (dx) => (W - CW) / 2 + dx * (land ? 1 : 0.55);
+          const blue = el(st, "img", "pic", { width: CW, height: CH, left: 0, top: land ? -260 : -180, transformOrigin: "50% 0%" });
+          blue.src = "assets/fx/curtain-blue.png"; blue.alt = "";
+          const blue2 = el(st, "img", "pic", { width: CW, height: CH, left: 0, top: land ? -260 : -180, transformOrigin: "50% 0%" });
+          blue2.src = "assets/fx/curtain-blue.png"; blue2.alt = "";
+          const yel = el(st, "img", "pic", { width: CW, height: CH, left: 0, top: land ? -300 : -200, transformOrigin: "50% 0%" });
+          yel.src = "assets/fx/curtain-yellow.png"; yel.alt = "";
+          const floor = el(st, "img", "pic", { width: land ? 1800 : 1500, height: land ? 1800 : 1500, left: land ? 900 : 0, top: land ? 520 : 1250 });
+          floor.src = "assets/fx/glow-blue.png"; floor.alt = "";
+          [blue, blue2, yel, floor].forEach((e) => e.setAttribute("data-layout-allow-overflow", "")); // light sources are bigger than the frame on purpose
+
+          // Intro: the light fades up out of black and drifts.
+          tl.fromTo([blue, blue2], { opacity: 0, x: cx(-420), scaleY: 0.85 }, { opacity: (i) => (i ? 0.55 : 1), scaleY: 1, duration: F(100), ease: "power2.out" }, 0);
+          tl.to([blue, blue2], { x: cx(-260), duration: F(440), ease: "sine.inOut" }, F(100));
+          tl.fromTo(floor, { opacity: 0 }, { opacity: 0.32, duration: F(160), ease: "power2.out" }, F(40));
+          tl.set(yel, { opacity: 0, x: cx(380) }, 0);
+          // f540 hard cut: the light jumps to the top-right with the cut, then drifts back.
+          tl.set([blue, blue2], { x: cx(360), scale: 1.08 }, F(540));
+          tl.to([blue, blue2], { x: cx(120), duration: F(540), ease: "sine.inOut" }, F(540));
+          // Board: light settles behind the card.
+          tl.to([blue, blue2], { x: cx(-120), scale: 1, duration: F(120), ease: "power2.inOut" }, F(1080));
+          tl.to(floor, { x: land ? -300 : 0, opacity: 0.4, duration: F(400), ease: "sine.inOut" }, F(1080));
+          // The answer (f1640): yellow light pours in from the top-right; blue steps back.
+          tl.to(yel, { opacity: 0.9, duration: F(70), ease: "power2.out" }, F(1640));
+          tl.to([blue, blue2], { opacity: (i) => (i ? 0.2 : 0.5), duration: F(70), ease: "power2.out" }, F(1640));
+          tl.to([blue, blue2, yel], { opacity: 0.25, duration: F(120), ease: "power2.inOut" }, F(1910));
+          // Finale: warm light from the top centre, the floor glow turns to embers.
+          tl.to(yel, { x: cx(0), opacity: 1, duration: F(110), ease: "power2.inOut" }, F(2040));
+          tl.to([blue, blue2], { x: cx(-200), opacity: (i) => (i ? 0.25 : 0.55), duration: F(110), ease: "power2.inOut" }, F(2040));
+          tl.to([blue, blue2, yel, floor], { opacity: 0, duration: F(70), ease: "power2.in" }, F(2330));
+          tl.set({}, {}, F(2400));
+          window.__timelines["atmos"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

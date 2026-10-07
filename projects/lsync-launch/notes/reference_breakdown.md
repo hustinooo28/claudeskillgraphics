@@ -152,3 +152,13 @@
 6. **Solid fields as transitions**: inversions on the beat, crossing bars, offset stacked panels (A).
 
 The references disagree on surface (A is flat; B, C and the upload use glow and gradients). This brief sides with A.
+
+---
+
+## v3 addendum: REF_C frame study (12 fps strips), done for the glow rebuild
+
+- **Light:** the near-black field (#121212) carries a large warm light from the top: vertical, slat-like streaks, heavily blurred, drifting. It jumps position with the 3.2 s hard cut.
+- **Entrances are exposure moves.** The logo spark draws as glowing strokes, then sharpens. Wordmark letters arrive blurred and bright and resolve within about 4 frames each. The chips enter as overexposed capsules (near-white centres, orange bloom) and only then cool into readable UI.
+- **Exits are dissolves.** The prompt box leaves upward with blur; the card leaves upward out of frame; the end line lifts and fades to dark with blur. Nothing simply cuts out except the one hard cut.
+- **Text bloom everywhere.** The typed text's current word is orange with glow, and earlier words cool to white. Code lines glow and fade at the frame edges.
+- **The camera never parks.** Push-ins on the chips, an extreme close-up pull-back on the prompt box, a pan down to the second prompt and back up, and a 3D card that rotates to face us.

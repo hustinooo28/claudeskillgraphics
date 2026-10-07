@@ -9,65 +9,120 @@
 
 | Frame | Time (s) | Bar.beat | File | Gain | Aligned on | Marks |
 |---|---|---|---|---|---|---|
-| 2 | 0.033 | 1.1 | `assets/audio/sfx/tick_soft.wav` | -20 dB | onset | construction grid draws |
-| 20 | 0.333 | 1.1 | `assets/audio/sfx/tick_ui.wav` | -24 dB | onset | principle 01 types on |
-| 60 | 1.000 | 1.3 | `assets/audio/sfx/hit.wav` | -8 dB | onset | field cut to ink (principle 02) |
-| 120 | 2.000 | 2.1 | `assets/audio/sfx/hit.wav` | -8 dB | onset | field cut to brand (principle 03) |
-| 180 | 3.000 | 2.3 | `assets/audio/sfx/hit.wav` | -8 dB | onset | field cut to paper (principle 04) |
-| 240 | 4.000 | 3.1 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 01 lands |
-| 255 | 4.250 | 3.1 | `assets/audio/sfx/tick_soft.wav` | -21 dB | onset | collage piece 02 lands |
-| 270 | 4.500 | 3.2 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 03 lands |
-| 285 | 4.750 | 3.2 | `assets/audio/sfx/tick_soft.wav` | -21 dB | onset | collage piece 04 lands |
-| 300 | 5.000 | 3.3 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 05 lands |
-| 315 | 5.250 | 3.3 | `assets/audio/sfx/tick_soft.wav` | -21 dB | onset | collage piece 06 lands |
-| 330 | 5.500 | 3.4 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 07 lands |
-| 345 | 5.750 | 3.4 | `assets/audio/sfx/tick_soft.wav` | -21 dB | onset | collage piece 08 lands |
-| 360 | 6.000 | 4.1 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 09 lands |
-| 375 | 6.250 | 4.1 | `assets/audio/sfx/tick_soft.wav` | -21 dB | onset | collage piece 10 lands |
-| 390 | 6.500 | 4.2 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 11 lands |
-| 405 | 6.750 | 4.2 | `assets/audio/sfx/tick_soft.wav` | -21 dB | onset | collage piece 12 lands |
-| 420 | 7.000 | 4.3 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 13 lands |
-| 435 | 7.250 | 4.3 | `assets/audio/sfx/tick_soft.wav` | -21 dB | onset | collage piece 14 lands |
-| 450 | 7.500 | 4.4 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | collage piece 15 lands |
-| 465 | 7.750 | 4.4 | `assets/audio/sfx/whoosh_short.wav` | -15 dB | peak | collage clears: silence f465-480 |
-| 481 | 8.017 | 5.1 | `assets/audio/sfx/whoosh_rise.wav` | -19 dB | peak | LSynC wordmark wipes on, in the gap |
-| 506 | 8.433 | 5.1 | `assets/audio/sfx/tick_ui.wav` | -22 dB | onset | corner seals and gold dots |
-| 552 | 9.200 | 5.3 | `assets/audio/sfx/whoosh_wipe.wav` | -12 dB | peak | crop push into SynC |
-| 566 | 9.433 | 5.3 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | chip 1 (ink) |
-| 571 | 9.517 | 5.4 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | chip 2 (brand) |
-| 576 | 9.600 | 5.4 | `assets/audio/sfx/tick_ui.wav` | -21 dB | onset | chip 3 (outline) |
-| 600 | 10.000 | 6.1 | `assets/audio/sfx/impact_sub.wav` | -3 dB | onset | THE DROP: crossing bars slam in |
-| 636 | 10.600 | 6.2 | `assets/audio/sfx/tick_soft.wav` | -22 dB | onset | 'student' types on |
-| 690 | 11.500 | 6.4 | `assets/audio/sfx/whoosh_short.wav` | -15 dB | peak | grid re-positions |
-| 720 | 12.000 | 7.1 | `assets/audio/sfx/hit.wav` | -8 dB | onset | cut to OPEN |
-| 732 | 12.200 | 7.1 | `assets/audio/sfx/whoosh_wipe.wav` | -12 dB | peak | OPEN pulls back |
-| 770 | 12.833 | 7.2 | `assets/audio/sfx/whoosh_short.wav` | -14 dB | peak | ink field rises |
-| 840 | 14.000 | 8.1 | `assets/audio/sfx/whoosh_wipe.wav` | -11 dB | peak | brand field slides in |
-| 872 | 14.533 | 8.2 | `assets/audio/sfx/whoosh_short.wav` | -14 dB | peak | gold field arrives |
-| 960 | 16.000 | 9.1 | `assets/audio/sfx/hit.wav` | -9 dB | onset | cut to the typeface spec |
-| 992 | 16.533 | 9.2 | `assets/audio/sfx/whoosh_wipe.wav` | -12 dB | peak | stacked panels slide in |
-| 1082 | 18.033 | 10.1 | `assets/audio/sfx/whoosh_wipe.wav` | -12 dB | peak | live pages land as a stack |
-| 1112 | 18.533 | 10.2 | `assets/audio/sfx/whoosh_short.wav` | -14 dB | peak | pages fan out |
-| 1125 | 18.750 | 10.2 | `assets/audio/sfx/tick_ui.wav` | -22 dB | onset | index labels |
-| 1148 | 19.133 | 10.3 | `assets/audio/sfx/whoosh_rise.wav` | -13 dB | peak | push into the Transparency Board |
-| 1200 | 20.000 | 11.1 | `assets/audio/sfx/rev_cymbal.wav` | -12 dB | peak | reverse cymbal into the seal |
-| 1201 | 20.017 | 11.1 | `assets/audio/sfx/hit.wav` | -12 dB | onset | seal opens |
-| 1210 | 20.167 | 11.1 | `assets/audio/sfx/tick_soft.wav` | -22 dB | onset | construction rings draw |
-| 1276 | 21.267 | 11.3 | `assets/audio/sfx/whoosh_short.wav` | -17 dB | peak | construction retracts |
-| 1320 | 22.000 | 12.1 | `assets/audio/sfx/impact_final.wav` | -2 dB | onset | NOW LIVE: final impact with reverb tail |
+| 20 | 0.333 | 1.1 | `assets/audio/sfx/shimmer.wav` | -17 dB | onset | rings draw around the seal |
+| 44 | 0.733 | 1.2 | `assets/audio/sfx/hit.wav` | -11 dB | onset | seal arrives white-hot and lands |
+| 250 | 4.167 | 3.1 | `assets/audio/sfx/whoosh_wipe.wav` | -10 dB | peak | hot capsules slide in, push the logo away |
+| 290 | 4.833 | 3.2 | `assets/audio/sfx/shimmer.wav` | -20 dB | onset | capsules cool into the chips |
+| 390 | 6.500 | 4.2 | `assets/audio/sfx/click.wav` | -9 dB | onset | click: Records (turns yellow) |
+| 540 | 9.000 | 5.3 | `assets/audio/sfx/hit.wav` | -7 dB | onset | hard cut: Find Your Records close-up |
+| 560 | 9.333 | 5.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | name: 'J' |
+| 565 | 9.417 | 5.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | name: 'u' |
+| 569 | 9.483 | 5.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | name: 'a' |
+| 574 | 9.567 | 5.4 | `assets/audio/sfx/key.wav` | -27 dB | onset | name: 'n' |
+| 583 | 9.717 | 5.4 | `assets/audio/sfx/key.wav` | -27 dB | onset | name: 'D' |
+| 588 | 9.800 | 5.4 | `assets/audio/sfx/key.wav` | -27 dB | onset | name: 'e' |
+| 592 | 9.867 | 5.4 | `assets/audio/sfx/key.wav` | -27 dB | onset | name: 'l' |
+| 597 | 9.950 | 5.4 | `assets/audio/sfx/key.wav` | -27 dB | onset | name: 'a' |
+| 606 | 10.100 | 6.1 | `assets/audio/sfx/key.wav` | -27 dB | onset | name: 'C' |
+| 611 | 10.183 | 6.1 | `assets/audio/sfx/key.wav` | -27 dB | onset | name: 'r' |
+| 615 | 10.250 | 6.1 | `assets/audio/sfx/key.wav` | -27 dB | onset | name: 'u' |
+| 620 | 10.333 | 6.1 | `assets/audio/sfx/key.wav` | -27 dB | onset | name: 'z' |
+| 650 | 10.833 | 6.2 | `assets/audio/sfx/key.wav` | -27 dB | onset | ID: '2' |
+| 654 | 10.900 | 6.2 | `assets/audio/sfx/key.wav` | -27 dB | onset | ID: '0' |
+| 659 | 10.983 | 6.2 | `assets/audio/sfx/key.wav` | -27 dB | onset | ID: '2' |
+| 663 | 11.050 | 6.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | ID: '1' |
+| 667 | 11.117 | 6.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | ID: '-' |
+| 671 | 11.183 | 6.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | ID: '0' |
+| 676 | 11.267 | 6.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | ID: '0' |
+| 680 | 11.333 | 6.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | ID: '0' |
+| 684 | 11.400 | 6.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | ID: '0' |
+| 689 | 11.483 | 6.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | ID: '1' |
+| 750 | 12.500 | 7.2 | `assets/audio/sfx/click.wav` | -9 dB | onset | click: Search Records |
+| 751 | 12.517 | 7.2 | `assets/audio/sfx/pop.wav` | -16 dB | onset | button flashes yellow |
+| 800 | 13.333 | 7.3 | `assets/audio/sfx/whoosh_wipe.wav` | -11 dB | peak | box flies up; data stream rises |
+| 900 | 15.000 | 8.3 | `assets/audio/sfx/riser_long.wav` | -15 dB | onset | build into the card (ends f1078) |
+| 1080 | 18.000 | 10.1 | `assets/audio/sfx/impact_sub.wav` | -5 dB | onset | the Transparency Board card lands |
+| 1082 | 18.033 | 10.1 | `assets/audio/sfx/whoosh_rise.wav` | -14 dB | peak | card swings in, tilted |
+| 1160 | 19.333 | 10.3 | `assets/audio/sfx/whoosh_short.wav` | -20 dB | peak | card turns to face us |
+| 1400 | 23.333 | 12.3 | `assets/audio/sfx/whoosh_wipe.wav` | -13 dB | peak | camera drops to the prompt |
+| 1452 | 24.200 | 13.1 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'H' |
+| 1456 | 24.267 | 13.1 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'o' |
+| 1460 | 24.333 | 13.1 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'w' |
+| 1467 | 24.450 | 13.1 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'm' |
+| 1471 | 24.517 | 13.2 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'u' |
+| 1474 | 24.567 | 13.2 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'c' |
+| 1478 | 24.633 | 13.2 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'h' |
+| 1486 | 24.767 | 13.2 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'd' |
+| 1490 | 24.833 | 13.2 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'i' |
+| 1493 | 24.883 | 13.2 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'd' |
+| 1501 | 25.017 | 13.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'I' |
+| 1504 | 25.067 | 13.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'n' |
+| 1508 | 25.133 | 13.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 't' |
+| 1512 | 25.200 | 13.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'r' |
+| 1516 | 25.267 | 13.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'a' |
+| 1520 | 25.333 | 13.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'm' |
+| 1523 | 25.383 | 13.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'u' |
+| 1527 | 25.450 | 13.3 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'r' |
+| 1531 | 25.517 | 13.4 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'a' |
+| 1534 | 25.567 | 13.4 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'l' |
+| 1538 | 25.633 | 13.4 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 's' |
+| 1546 | 25.767 | 13.4 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'c' |
+| 1550 | 25.833 | 13.4 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'o' |
+| 1553 | 25.883 | 13.4 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'l' |
+| 1557 | 25.950 | 13.4 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'l' |
+| 1561 | 26.017 | 14.1 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'e' |
+| 1564 | 26.067 | 14.1 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 'c' |
+| 1568 | 26.133 | 14.1 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: 't' |
+| 1572 | 26.200 | 14.1 | `assets/audio/sfx/key.wav` | -27 dB | onset | question: '?' |
+| 1590 | 26.500 | 14.2 | `assets/audio/sfx/click.wav` | -9 dB | onset | send |
+| 1640 | 27.333 | 14.3 | `assets/audio/sfx/whoosh_wipe.wav` | -13 dB | peak | camera rises back to the card |
+| 1656 | 27.600 | 14.4 | `assets/audio/sfx/shimmer.wav` | -11 dB | onset | the Intramurals row lights up yellow |
+| 1690 | 28.167 | 15.1 | `assets/audio/sfx/pop.wav` | -15 dB | onset | callout: Intramurals, P1,050 collected |
+| 1880 | 31.333 | 16.3 | `assets/audio/sfx/whoosh_short.wav` | -19 dB | peak | callout drifts away |
+| 1960 | 32.667 | 17.2 | `assets/audio/sfx/whoosh_wipe.wav` | -12 dB | peak | card floats up into the dark |
+| 2040 | 34.000 | 18.1 | `assets/audio/sfx/rev_cymbal.wav` | -12 dB | peak | reverse swell into the finale |
+| 2042 | 34.033 | 18.1 | `assets/audio/sfx/hit.wav` | -12 dB | onset | seal arcs in |
+| 2100 | 35.000 | 18.3 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'O' |
+| 2104 | 35.067 | 18.3 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'n' |
+| 2108 | 35.133 | 18.3 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'e' |
+| 2116 | 35.267 | 18.3 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 's' |
+| 2120 | 35.333 | 18.3 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 't' |
+| 2124 | 35.400 | 18.3 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'e' |
+| 2128 | 35.467 | 18.3 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'p' |
+| 2136 | 35.600 | 18.4 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'b' |
+| 2140 | 35.667 | 18.4 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'e' |
+| 2144 | 35.733 | 18.4 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 't' |
+| 2148 | 35.800 | 18.4 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 't' |
+| 2152 | 35.867 | 18.4 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'e' |
+| 2156 | 35.933 | 18.4 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'r' |
+| 2164 | 36.067 | 19.1 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 't' |
+| 2168 | 36.133 | 19.1 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'h' |
+| 2172 | 36.200 | 19.1 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'a' |
+| 2176 | 36.267 | 19.1 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'n' |
+| 2184 | 36.400 | 19.1 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'y' |
+| 2188 | 36.467 | 19.1 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'e' |
+| 2192 | 36.533 | 19.2 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 's' |
+| 2196 | 36.600 | 19.2 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 't' |
+| 2200 | 36.667 | 19.2 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'e' |
+| 2204 | 36.733 | 19.2 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'r' |
+| 2208 | 36.800 | 19.2 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'd' |
+| 2212 | 36.867 | 19.2 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'a' |
+| 2216 | 36.933 | 19.2 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: 'y' |
+| 2220 | 37.000 | 19.3 | `assets/audio/sfx/key.wav` | -25 dB | onset | finale: '.' |
+| 2190 | 36.500 | 19.2 | `assets/audio/sfx/impact_final.wav` | -3 dB | onset | 'better' ignites: final impact with reverb tail |
+| 2234 | 37.233 | 19.3 | `assets/audio/sfx/pop.wav` | -17 dB | onset | NOW LIVE / lsync.vercel.app |
 
 ## Bed and mix
 
-- **Bed** (`assets/audio/bed.wav`, generated): a minimal percussive bed in D minor (Dm, Bb, F, C), 120 BPM, shaped on REF_A's structure.
-  - Bars 1–2 (principles): kick on quarters, plus a hit on every field cut.
-  - Bars 3–4 (collage): hats join, with one tick per piece landing on the eighths. f465–480 is total silence.
-  - Bar 5 (wordmark): pad and sub only; the wordmark lands in the gap.
-  - Bars 6–10 (crossing bars → interface): the drop, with rim on 2 and 4 and an eighth-note bass pluck.
-  - Bar 11 (seal): pad and sub only, with the reverse cymbal into the seal.
-  - Bar 12 (sign-off): the bed stops; only the final impact and its tail play.
+- **Bed** (`assets/audio/bed.wav`, generated): an ambient pulse following REF_C's arc (Fm9, Db maj7, Ab maj7, Eb; 120 BPM grid).
+  - 0–4 s: a pad fades up from silence.
+  - 4–18 s: a soft pulse arrives with the chips, and hats with the search; the bed dips out just before the hard cut at f540.
+  - 18–34 s: the board, with a fuller pulse and an eighth-note shimmer arpeggio.
+  - 34–40 s: a warm open pad swell under "One step better than yesterday.", dissolving with the picture.
+- **Typing:** one soft key tick per typed character, on the frame it appears.
 - **Processing**
   - Whooshes and the riser are high-passed at 150 Hz (4th / 2nd order).
-  - The bed ducks −5 dB under both impacts (8 ms attack, 120 ms hold, 350 ms release).
-  - Reverb (a generated 2.2 s impulse, 32 % wet) is on `impact_final.wav` only.
+  - The bed ducks −5 dB under the card impact (f1080) and the final impact (f2190) (8 ms attack, 120 ms hold, 350 ms release).
+  - Reverb (a generated 2.2 s impulse, 32 % wet) is on `impact_final.wav` only; it is the hit under "better".
 - **Loudness:** two-pass ffmpeg `loudnorm` to −14 LUFS integrated with true peak ≤ −1 dBTP, then verified with `ebur128` on the delivered MP4s.
 - No copyrighted audio. Every sound is synthesised from noise and oscillators with numpy/scipy.

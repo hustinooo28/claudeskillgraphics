@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <link rel="stylesheet" href="assets/glow.css" />
+      <style>
+        #finale .line { position: absolute; left: 0; text-align: center; font-weight: 600; letter-spacing: -0.035em; line-height: 1.08; }
+      </style>
+      <!-- 34-40 s (f2040-2400). REF_C 12-14 s, made the payoff: the seal arcs in white-hot under warm light, then
+           "One step better than yesterday." types on; "better" ignites yellow and stays lit; NOW LIVE and the URL
+           rise in beneath; everything lifts and dissolves into the dark. -->
+      <div id="finale" class="beat" data-composition-id="finale" data-width="1080" data-height="1920">
+        <div class="stage"></div>
+      </div>
+      <script>
+        (function () {
+          const root = document.querySelector("#finale");
+          const st = root.querySelector(".stage");
+          const { W, H, land } = LK.dims(root);
+          const { F, el } = LK;
+          const T0 = 2040, L = (f) => F(f - T0);
+          const tl = gsap.timeline({ paused: true });
+          const all = el(st, "div", "fill");
+          const cy = land ? 470 : 860;
+
+          const S = land ? 120 : 140;
+          const halo = el(all, "img", "pic", { width: S * 5, height: S * 5, left: W / 2 - S * 2.5, top: cy - 210 - S * 2.5 });
+          halo.src = "assets/fx/glow-yellow.png"; halo.alt = "";
+          const seal = el(all, "img", "pic", { width: S, height: S, left: W / 2 - S / 2, top: cy - 210 - S / 2 });
+          seal.src = "assets/lsc-seal.png"; seal.alt = "Local Student Council seal";
+          // the seal arcs in from the lower left, spinning down to rest (REF_C's spark arc)
+          tl.fromTo(seal, { x: -W * 0.22, y: H * 0.32, rotation: -220, scale: 0.5 }, { x: 0, y: 0, rotation: 0, scale: 1, duration: F(80), ease: "expo.out" }, 0);
+          LK.hot(tl, seal, 0, F(70), { b: 16, br: 4 });
+          tl.fromTo(halo, { opacity: 0, scale: 0.3 }, { opacity: 0.6, scale: 1, duration: F(80), ease: "power2.out" }, F(10));
+
+          // the line: types on (current word lit), "better" stays lit
+          const fs = land ? 104 : 108;
+          const ln = el(all, "div", "line sg bloom", { top: cy - 40, width: W, fontSize: fs, padding: land ? "0" : "0 60px" }, "One step better than yesterday.");
+          const ty = LK.type(tl, ln, F(60), 15, { keep: (w) => w === "better" });
+          const better = ty.chars.slice(9, 15);
+          // emphasis: "better" ignites — a hot flash, a lift, a held yellow bloom
+          tl.to(better, { color: "#ffd95c", textShadow: "0 0 16px rgba(255,210,60,1), 0 0 48px rgba(255,180,0,.8), 0 0 110px rgba(255,160,0,.45)", duration: F(24), ease: "power2.out" }, L(2190));
+          tl.fromTo(better, { filter: "brightness(1)" }, { filter: "brightness(1.9)", duration: F(10), ease: "power2.out", immediateRender: false }, L(2190))
+            .to(better, { filter: "brightness(1)", duration: F(40), ease: "power2.inOut" }, L(2200));
+          tl.fromTo(better, { y: 0 }, { y: -10, duration: F(30), ease: "expo.out", immediateRender: false }, L(2190));
+          tl.to(halo, { opacity: 0.85, duration: F(40), ease: "power2.out" }, L(2190));
+
+          // NOW LIVE + URL rise in under it
+          const sub = el(all, "div", "abs", { left: 0, width: W, top: cy + (land ? 130 : 290), textAlign: "center" });
+          const live = el(sub, "div", "nowrap", { display: "inline-flex", alignItems: "center", gap: "16px", fontSize: land ? 34 : 38, fontWeight: 600, letterSpacing: "0.02em" });
+          el(live, "span", null, { width: 16, height: 16, borderRadius: "50%", background: "#ffc61a", boxShadow: "0 0 14px #ffc61a", display: "inline-block" });
+          el(live, "span", "bloom-y", { color: "#ffc61a", letterSpacing: "0.16em" }, "NOW LIVE");
+          el(live, "span", null, { color: "#7f93c4" }, "·");
+          el(live, "span", "bloom", null, "lsync.vercel.app");
+          const small = el(sub, "div", null, { marginTop: 18, fontSize: land ? 22 : 26, color: "#9fb2dc" }, "Digital Transparency Board  ·  Local Student Council  ·  A.Y. 2026–2027");
+          LK.hot(tl, live, L(2232), F(30), { b: 12, br: 3, y: 24 });
+          LK.hot(tl, small, L(2244), F(30), { b: 10, br: 2.4, y: 18 });
+          tl.fromTo(all, { scale: 1 }, { scale: 1.03, duration: L(2340), ease: "none" }, 0);
+
+          // f2340: everything lifts and dissolves into the dark
+          // clear the per-element filters first so the parent dissolve composites cleanly
+          tl.set([seal, live, small, ...ty.chars], { filter: "none" }, L(2330));
+          tl.to(all, { y: -70, filter: "blur(12px)", opacity: 0, duration: F(60), ease: "power2.in" }, L(2340));
+          tl.set({}, {}, L(2400));
+          window.__timelines["finale"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

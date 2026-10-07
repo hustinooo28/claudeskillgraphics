@@ -1,0 +1,26 @@
+/* Launch film v3 — REF_C (glow) look. Saturated electric blue + yellow on near-black. */
+@font-face { font-family: "Space Grotesk"; src: url("fonts/SpaceGrotesk-var.woff2") format("woff2"); font-weight: 300 700; }
+@font-face { font-family: "Space Grotesk"; src: url("fonts/SpaceGrotesk-var-ext.woff2") format("woff2"); font-weight: 300 700; unicode-range: U+0100-02BA, U+20A0-20C0; }
+@font-face { font-family: "DM Sans"; src: url("fonts/DMSans-var.woff2") format("woff2"); font-weight: 100 1000; }
+
+:root {
+  --night: #05060b;      /* background */
+  --blue: #2f6bff;       /* electric blue */
+  --blue-hot: #7fb0ff;   /* blue highlight */
+  --blue-deep: #0a1f8f;
+  --yellow: #ffc61a;     /* signal yellow */
+  --yellow-hot: #fff1b0;
+  --white: #f3f6ff;
+}
+.beat { position: absolute; inset: 0; overflow: hidden; }
+.stage { position: absolute; inset: 0; overflow: hidden; font-family: "DM Sans", sans-serif; color: var(--white); -webkit-font-smoothing: antialiased; }
+.fill { position: absolute; inset: 0; }
+.abs { position: absolute; }
+.nowrap { white-space: nowrap; }
+.sg { font-family: "Space Grotesk", sans-serif; }
+.bloom { text-shadow: 0 0 10px rgba(90, 150, 255, 0.55), 0 0 34px rgba(47, 107, 255, 0.35); }
+.bloom-y { text-shadow: 0 0 10px rgba(255, 210, 60, 0.7), 0 0 34px rgba(255, 180, 0, 0.45); }
+.glass { background: rgba(8, 11, 22, 0.92); border: 1.5px solid rgba(110, 160, 255, 0.85); box-shadow: 0 0 18px rgba(47, 107, 255, 0.55), 0 0 60px rgba(47, 107, 255, 0.25), inset 0 0 22px rgba(47, 107, 255, 0.18); }
+.ch { display: inline-block; white-space: pre; }
+.ch:empty { display: none; }
+.pic { position: absolute; display: block; }

@@ -11,7 +11,7 @@ sys.path.insert(0, str(ROOT.parents[1] / ".claude/skills/ui-promo-motion/scripts
 import synth as S  # noqa: E402  (shared procedural primitives from the ui-promo-motion skill)
 
 SR, FPS, BPM = S.SR, 60, 120
-TOTAL_F = 1470
+TOTAL_F = 2400
 TOTAL = TOTAL_F / FPS
 BEAT = 60 / BPM
 fs = lambda f: f / FPS
@@ -80,8 +80,13 @@ SFX = {
     "whoosh_short.wav": (whoosh(0.34, 400, 6000, 0.6), 0.34 * 0.6),
     "whoosh_rise.wav": (whoosh(0.5, 200, 3500, 0.7), 0.5 * 0.7),
     "riser.wav": (riser(1.9), 0.0),
-    "rev_cymbal.wav": (reverse_cymbal(0.8), 0.8),
+    "rev_cymbal.wav": (reverse_cymbal(1.2), 1.2),
     "hit.wav": (hit(), 0.0),
+    "click.wav": (S.norm(S.click(0.9), 0.9), 0.0),
+    "key.wav": (tick(3200, 0.035), 0.0),
+    "pop.wav": (S.norm(S.pop(720, 0.14, 0.9), 0.9), 0.0),
+    "shimmer.wav": (S.norm(S.hp(S.shimmer(1.4, 0.9), 900, 2), 0.9), 0.0),
+    "riser_long.wav": (riser(3.0), 0.0),
     "impact_sub.wav": (impact_sub(1.5), 0.0),
     "impact_final.wav": (S.norm(reverb(impact_sub(1.4)), 0.95), 0.0),
     "tick_ui.wav": (tick(2400), 0.0),
@@ -92,39 +97,38 @@ for name, (x, _) in SFX.items():
 
 # ---------------- cue list: (frame the sound lands on, file, gain dB, what it marks) ----------------
 # For whooshes / reverse cymbal the frame is where the PEAK lands (the file starts earlier).
+def typing(start, cps, text, gain=-27, what="key"):
+    """One soft key tick per typed (non-space) character, on the frame it appears."""
+    return [(start + round(i * FPS / cps), "key.wav", gain, f"{what}: '{c}'") for i, c in enumerate(text) if c != " "]
+
 CUES = [
-    (2, "tick_soft.wav", -20, "construction grid draws"),
-    (20, "tick_ui.wav", -24, "principle 01 types on"),
-    (60, "hit.wav", -8, "field cut to ink (principle 02)"),
-    (120, "hit.wav", -8, "field cut to brand (principle 03)"),
-    (180, "hit.wav", -8, "field cut to paper (principle 04)"),
-] + [(240 + 15 * i, "tick_ui.wav" if i % 2 == 0 else "tick_soft.wav", -21, f"collage piece {i + 1:02d} lands") for i in range(15)] + [
-    (465, "whoosh_short.wav", -15, "collage clears: silence f465-480"),
-    (481, "whoosh_rise.wav", -19, "LSynC wordmark wipes on, in the gap"),
-    (506, "tick_ui.wav", -22, "corner seals and gold dots"),
-    (552, "whoosh_wipe.wav", -12, "crop push into SynC"),
-    (566, "tick_ui.wav", -21, "chip 1 (ink)"),
-    (571, "tick_ui.wav", -21, "chip 2 (brand)"),
-    (576, "tick_ui.wav", -21, "chip 3 (outline)"),
-    (600, "impact_sub.wav", -3, "THE DROP: crossing bars slam in"),
-    (636, "tick_soft.wav", -22, "'student' types on"),
-    (690, "whoosh_short.wav", -15, "grid re-positions"),
-    (720, "hit.wav", -8, "cut to OPEN"),
-    (732, "whoosh_wipe.wav", -12, "OPEN pulls back"),
-    (770, "whoosh_short.wav", -14, "ink field rises"),
-    (840, "whoosh_wipe.wav", -11, "brand field slides in"),
-    (872, "whoosh_short.wav", -14, "gold field arrives"),
-    (960, "hit.wav", -9, "cut to the typeface spec"),
-    (992, "whoosh_wipe.wav", -12, "stacked panels slide in"),
-    (1082, "whoosh_wipe.wav", -12, "live pages land as a stack"),
-    (1112, "whoosh_short.wav", -14, "pages fan out"),
-    (1125, "tick_ui.wav", -22, "index labels"),
-    (1148, "whoosh_rise.wav", -13, "push into the Transparency Board"),
-    (1200, "rev_cymbal.wav", -12, "reverse cymbal into the seal"),
-    (1201, "hit.wav", -12, "seal opens"),
-    (1210, "tick_soft.wav", -22, "construction rings draw"),
-    (1276, "whoosh_short.wav", -17, "construction retracts"),
-    (1320, "impact_final.wav", -2, "NOW LIVE: final impact with reverb tail"),
+    (20, "shimmer.wav", -17, "rings draw around the seal"),
+    (44, "hit.wav", -11, "seal arrives white-hot and lands"),
+    (250, "whoosh_wipe.wav", -10, "hot capsules slide in, push the logo away"),
+    (290, "shimmer.wav", -20, "capsules cool into the chips"),
+    (390, "click.wav", -9, "click: Records (turns yellow)"),
+    (540, "hit.wav", -7, "hard cut: Find Your Records close-up"),
+] + typing(560, 13, "Juan Dela Cruz", what="name") + typing(650, 14, "2021-00001", what="ID") + [
+    (750, "click.wav", -9, "click: Search Records"),
+    (751, "pop.wav", -16, "button flashes yellow"),
+    (800, "whoosh_wipe.wav", -11, "box flies up; data stream rises"),
+    (900, "riser_long.wav", -15, "build into the card (ends f1078)"),
+    (1080, "impact_sub.wav", -5, "the Transparency Board card lands"),
+    (1082, "whoosh_rise.wav", -14, "card swings in, tilted"),
+    (1160, "whoosh_short.wav", -20, "card turns to face us"),
+    (1400, "whoosh_wipe.wav", -13, "camera drops to the prompt"),
+] + typing(1452, 16, "How much did Intramurals collect?", what="question") + [
+    (1590, "click.wav", -9, "send"),
+    (1640, "whoosh_wipe.wav", -13, "camera rises back to the card"),
+    (1656, "shimmer.wav", -11, "the Intramurals row lights up yellow"),
+    (1690, "pop.wav", -15, "callout: Intramurals, P1,050 collected"),
+    (1880, "whoosh_short.wav", -19, "callout drifts away"),
+    (1960, "whoosh_wipe.wav", -12, "card floats up into the dark"),
+    (2040, "rev_cymbal.wav", -12, "reverse swell into the finale"),
+    (2042, "hit.wav", -12, "seal arcs in"),
+] + typing(2100, 15, "One step better than yesterday.", gain=-25, what="finale") + [
+    (2190, "impact_final.wav", -3, "'better' ignites: final impact with reverb tail"),
+    (2234, "pop.wav", -17, "NOW LIVE / lsync.vercel.app"),
 ]
 
 def cue_span(frame, name):
@@ -137,51 +141,60 @@ edges = sorted([(cue_span(f, n)[0], 1) for f, n, *_ in CUES] + [(cue_span(f, n)[
 live = peak_stack = 0
 for _, d in edges:
     live += d; peak_stack = max(peak_stack, live)
+if peak_stack > 2:
+    spans = [(cue_span(f, nm), f, nm) for f, nm, *_ in CUES]
+    for (a0, a1), f, nm in spans:
+        live_here = [(f2, n2) for (b0, b1), f2, n2 in spans if b0 <= a0 < b1]
+        if len(live_here) > 2: print("stack at", f, live_here)
 assert peak_stack <= 2, f"{peak_stack} SFX stacked"
 
-# ---------------- music bed: minimal percussive, 120 BPM ----------------
+# ---------------- music bed: ambient pulse, 120 BPM grid, shaped to the REF_C arc ----------------
 n = int((TOTAL + 0.5) * SR)
 bed = np.zeros(n)
-prog = [[50, 57, 62, 65], [46, 53, 58, 62], [53, 57, 60, 65], [48, 55, 60, 64]]  # Dm  Bb  F  C
-bass = [38, 34, 41, 36]
-def rim(peak):
-    t = S.t_(0.08)
-    return (np.sin(2 * np.pi * 1650 * t) * 0.4 + S.hp(rng.standard_normal(len(t)), 1800)) * np.exp(-t * 70) * peak
-for b in range(12):
-    t0 = b * 4 * BEAT; bar = b + 1; ci = b % 4
-    if bar == 12:
-        break  # the sign-off is the final impact and its tail only
-    S.place(bed, S.pad_chord(prog[ci], 4 * BEAT + 0.4, 1400) * (0.03 if bar < 6 else 0.04), t0)
+prog = [[53, 60, 63, 67, 72], [49, 56, 60, 63, 68], [56, 60, 63, 67, 72], [51, 58, 62, 65, 70]]  # Fm9  Dbmaj7  Abmaj7  Eb
+bass = [41, 37, 44, 39]
+def section(t):
+    f = t * FPS
+    if f < 240: return "open"
+    if f < 540: return "chips"
+    if f < 1080: return "search"
+    if f < 1640: return "board"
+    if f < 2040: return "answer"
+    return "finale"
+for b in range(20):  # 20 bars of 2 s
+    t0 = b * 4 * BEAT; ci = (b // 1) % 4; sec = section(t0 + 0.01)
+    lvl = {"open": 0.035, "chips": 0.04, "search": 0.04, "board": 0.05, "answer": 0.055, "finale": 0.07}[sec]
+    S.place(bed, S.pad_chord(prog[ci], 4 * BEAT + 0.6, 1100 if sec != "finale" else 1800) * lvl, t0)
     bt = S.t_(4 * BEAT)
-    sub = np.sin(2 * np.pi * S.note_hz(bass[ci] - 12) * bt) * S.env(len(bt), a=0.02, d=0.1, s=0.9, r=0.2, sus_len=4 * BEAT - 0.35)
-    S.place(bed, sub * (0.06 if bar in (5, 11) else 0.13), t0)
-    if bar in (5, 11):
-        continue  # wordmark and seal: pad + sub only (REF_A's gaps around the reveals)
-    for e in range(8):  # eighths
+    sub = np.sin(2 * np.pi * S.note_hz(bass[ci] - 12) * bt) * S.env(len(bt), a=0.05, d=0.1, s=0.9, r=0.3, sus_len=4 * BEAT - 0.45)
+    S.place(bed, sub * (0.05 if sec == "open" else 0.11), t0)
+    for e in range(8):
         te = t0 + e * BEAT / 2
-        if e % 2 == 0:
-            S.place(bed, S.kick(0.42 if bar >= 6 else 0.34), te)
-        if bar >= 3:
-            S.place(bed, S.hat(0.035 if e % 2 == 0 else 0.055), te)
-        if bar >= 6 and e in (2, 6):
-            S.place(bed, rim(0.09), te)
-        if bar >= 6 and e % 2 == 1:
-            S.place(bed, S.pluck(bass[ci] + 24, 0.18, 0.04), te)
+        if sec in ("chips", "search") and e % 2 == 0:
+            S.place(bed, S.kick(0.22), te)
+        if sec in ("board", "answer") and e % 2 == 0:
+            S.place(bed, S.kick(0.34), te)
+        if sec in ("search", "board", "answer"):
+            S.place(bed, S.hat(0.022 if e % 2 == 0 else 0.034), te)
+        if sec in ("board", "answer"):
+            S.place(bed, S.pluck(prog[ci][(e * 2) % 5] + 12, 0.22, 0.03), te)
 bed = S.hp(bed, 30, 2)
-# hard silence for the last eighth of bar 4 (f465-480): the wordmark lands in space; nothing under the sign-off
-bed[int(fs(465) * SR): int(fs(480) * SR)] = 0
-cut = int(fs(1320) * SR); bed[cut:] = 0
-bed[cut - int(0.01 * SR): cut] *= np.linspace(1, 0, int(0.01 * SR))
+fade_in = int(1.2 * SR); bed[:fade_in] *= np.linspace(0, 1, fade_in)
+# REF_C's hard cut lands in a breath: the bed dips out for the last eighth before f540
+bed[int(fs(526) * SR): int(fs(540) * SR)] *= np.linspace(1, 0.05, int(fs(540) * SR) - int(fs(526) * SR))
+# the finale dissolves with the picture
+fo0, fo1 = int(fs(2330) * SR), int(fs(2400) * SR)
+bed[fo0:fo1] *= np.linspace(1, 0, fo1 - fo0); bed[fo1:] = 0
 
 # ---------------- SFX bus ----------------
 sfx = np.zeros(n)
 for f, name, g, _ in CUES:
     x, pk = SFX[name]
-    S.place(sfx, trim(x) * db(g), fs(f) - pk)
+    S.place(sfx, trim(x) * db(g), max(0.0, fs(f) - pk))
 
 # light sidechain duck of the bed under the two impacts (-5 dB, 8 ms attack, 350 ms release)
 duck = np.ones(n)
-for f in (600, 1320):
+for f in (1080, 2190):
     i = int(fs(f) * SR); a, r = int(0.008 * SR), int(0.35 * SR)
     seg = np.r_[np.linspace(1, db(-5), a), np.full(int(0.12 * SR), db(-5)), np.linspace(db(-5), 1, r)]
     duck[i - a: i - a + len(seg)] = np.minimum(duck[i - a: i - a + len(seg)], seg[: n - (i - a)])
@@ -211,17 +224,16 @@ rows = "\n".join(
 
 ## Bed and mix
 
-- **Bed** (`assets/audio/bed.wav`, generated): a minimal percussive bed in D minor (Dm, Bb, F, C), 120 BPM, shaped on REF_A's structure.
-  - Bars 1–2 (principles): kick on quarters, plus a hit on every field cut.
-  - Bars 3–4 (collage): hats join, with one tick per piece landing on the eighths. f465–480 is total silence.
-  - Bar 5 (wordmark): pad and sub only; the wordmark lands in the gap.
-  - Bars 6–10 (crossing bars → interface): the drop, with rim on 2 and 4 and an eighth-note bass pluck.
-  - Bar 11 (seal): pad and sub only, with the reverse cymbal into the seal.
-  - Bar 12 (sign-off): the bed stops; only the final impact and its tail play.
+- **Bed** (`assets/audio/bed.wav`, generated): an ambient pulse following REF_C's arc (Fm9, Db maj7, Ab maj7, Eb; 120 BPM grid).
+  - 0–4 s: a pad fades up from silence.
+  - 4–18 s: a soft pulse arrives with the chips, and hats with the search; the bed dips out just before the hard cut at f540.
+  - 18–34 s: the board, with a fuller pulse and an eighth-note shimmer arpeggio.
+  - 34–40 s: a warm open pad swell under "One step better than yesterday.", dissolving with the picture.
+- **Typing:** one soft key tick per typed character, on the frame it appears.
 - **Processing**
   - Whooshes and the riser are high-passed at 150 Hz (4th / 2nd order).
-  - The bed ducks −5 dB under both impacts (8 ms attack, 120 ms hold, 350 ms release).
-  - Reverb (a generated 2.2 s impulse, 32 % wet) is on `impact_final.wav` only.
+  - The bed ducks −5 dB under the card impact (f1080) and the final impact (f2190) (8 ms attack, 120 ms hold, 350 ms release).
+  - Reverb (a generated 2.2 s impulse, 32 % wet) is on `impact_final.wav` only; it is the hit under "better".
 - **Loudness:** two-pass ffmpeg `loudnorm` to −14 LUFS integrated with true peak ≤ −1 dBTP, then verified with `ebur128` on the delivered MP4s.
 - No copyrighted audio. Every sound is synthesised from noise and oscillators with numpy/scipy.
 """)

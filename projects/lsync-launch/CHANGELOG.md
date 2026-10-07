@@ -1,7 +1,7 @@
-# Changelog — launch film, v-next 2 (rebuilt on the Strava / REF_A brand-system film)
+# Changelog — launch film v3 (REF_C / Claude-film glow style, 40 s)
 
-1. The structure now follows REF_A shot for shot: construction-grid principles with field inversions on the beat; a collage landing on eighths; a wordmark build with guides, corner marks, spec text, crop push and chips; crossing bars; a giant cropped word pulling back into the palette fields; a type spec with stacked panels; the mark; a small signature.
-2. It is motion graphics, not slides: something moves on every beat (grids redraw and re-position, layers push and drift, pieces land, fields slide). The only still frames are the deliberate silence at f465–480 and the final 90-frame hold.
-3. All material is real: the council's officer cards and crops of lsync.vercel.app in the collage, the live pages in the interface beat, the official seal as the mark, and the site's own typeface and colours as the spec.
-4. The palette stays solid (ink #080D22, paper #F4F6FC, royal blue #526FF2, gold #D6B05C), with no gradients, glows, shadows or 3D mockups in the composition code.
-5. The score was re-cut to the new edit: a hit on every field cut, a tick per collage landing, silence before the wordmark, the drop on the crossing bars, a reverse cymbal into the seal, and a final impact. There are 46 cues placed by frame (max two stacked), mastered to −14.4 LUFS integrated and −2.2 dBTP in the delivered MP4s.
+1. Rebuilt on REF_C (@mythiqmotion) as directed: dark field under a curtain of light; every element arrives white-hot and blurred, cools into place, and dissolves away into the dark; one hard cut; a glowing 3D card; typing with a lit current word; a cursor click that turns the chip yellow.
+2. The pale palette is gone: saturated electric blue and signal yellow on near-black, with the light itself turning from blue to yellow when the board answers.
+3. Runs 40 s and tells a product story with the real site: choose Records, search Find Your Records, the real allocation rows stream in, the dark-theme Transparency Board arrives, a student asks "How much did Intramurals collect?", and the board lights up the real Intramurals row (₱1,050 collected).
+4. The ending is the payoff: "One step better than yesterday." types on, "better" ignites yellow on the final impact and stays lit, then NOW LIVE · lsync.vercel.app · A.Y. 2026–2027.
+5. New score cut to the picture (102 frame-placed cues, max two stacked), with local audio only; −13.8 LUFS, −2.7 dBTP; delivered in landscape 1920×1080 and vertical 1080×1920 at 60 fps.

@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <link rel="stylesheet" href="assets/glow.css" />
+      <style>
+        #search .box { position: absolute; border-radius: 26px; }
+        #search .fld { position: absolute; border-radius: 14px; background: #04060d; border: 1.5px solid rgba(110, 160, 255, 0.5); box-shadow: inset 0 0 18px rgba(47, 107, 255, 0.15); display: flex; align-items: center; padding: 0 22px; font-size: 27px; }
+        #search .lab { position: absolute; font-size: 20px; font-weight: 600; color: #d8e3ff; }
+        #search .caret { display: inline-block; width: 3px; height: 1.05em; margin-left: 2px; vertical-align: -0.16em; background: var(--yellow); box-shadow: 0 0 10px rgba(255, 198, 26, 0.9); }
+        #search .btn { position: absolute; border-radius: 16px; background: var(--blue); display: flex; align-items: center; justify-content: center; gap: 14px; font-size: 27px; font-weight: 600; box-shadow: 0 0 26px rgba(47, 107, 255, 0.8), 0 0 80px rgba(47, 107, 255, 0.35); }
+        #search .row { position: absolute; left: 0; right: 0; display: flex; font-size: 25px; height: 58px; align-items: center; border-bottom: 1px solid rgba(110, 160, 255, 0.18); }
+        #search .row span { display: block; }
+        #search .amt { color: var(--yellow); text-shadow: 0 0 10px rgba(255, 198, 26, 0.7); }
+      </style>
+      <!-- 9-19.5 s (f540-1170). Hard cut (REF_C 3.2 s) to an extreme close-up of the site's Find Your Records box with
+           a glowing rim; the name types on with the current word lit yellow while the camera pulls back; the ID; a click
+           on Search Records; the box flies up and the board's real allocation rows stream up out of the dark. -->
+      <div id="search" class="beat" data-composition-id="search" data-width="1080" data-height="1920">
+        <div class="stage"></div>
+      </div>
+      <script>
+        (function () {
+          const root = document.querySelector("#search");
+          const st = root.querySelector(".stage");
+          const { W, H, land } = LK.dims(root);
+          const { F, el } = LK;
+          const T0 = 540, L = (f) => F(f - T0);
+          const tl = gsap.timeline({ paused: true });
+
+          // ---------- the box ----------
+          const BW = land ? 1000 : 940, BH = 590;
+          const bx = W / 2 - BW / 2, by = H / 2 - BH / 2;
+          const cam = el(st, "div", "fill");
+          const box = el(cam, "div", "box glass", { left: bx, top: by, width: BW, height: BH });
+          el(box, "div", "abs", { left: 44, top: 42, width: 72, height: 6, borderRadius: 3, background: "#ffc61a", boxShadow: "0 0 14px rgba(255,198,26,.9)" });
+          el(box, "div", "abs sg bloom", { left: 44, top: 66, fontSize: 40, fontWeight: 600, letterSpacing: "-0.02em" }, "Find Your Records");
+          el(box, "div", "abs", { left: 44, top: 122, width: BW - 88, fontSize: 20, lineHeight: 1.4, color: "#9fb2dc" }, "Enter your student name and Student ID to verify your identity and view your contributions and attendance.");
+          el(box, "div", "lab", { left: 44, top: 196 }, "Student Name");
+          const f1 = el(box, "div", "fld", { left: 44, top: 230, width: BW - 88, height: 72 });
+          el(box, "div", "lab", { left: 44, top: 326 }, "Student ID (verification)");
+          const f2 = el(box, "div", "fld", { left: 44, top: 360, width: BW - 88, height: 72 });
+          const btn = el(box, "div", "btn", { left: 44, top: 464, width: BW - 88, height: 80 });
+          LK.svgIcon(btn, LK.ICON.search, 28, "#ffffff");
+          el(btn, "span", null, null, "Search Records");
+          const t1 = el(f1, "span", null, null, "Juan Dela Cruz"), c1 = el(f1, "span", "caret");
+          const t2 = el(f2, "span", null, null, "2021-00001"), c2 = el(f2, "span", "caret");
+
+          // f540 hard cut: start 3.4x in on the first field's corner, then pull back while it types (REF_C 3.2-4.6 s).
+          const ox = bx + 60, oy = by + 250;
+          tl.fromTo(cam, { scale: 3.4, x: W * 0.28 - ox, y: H * 0.42 - oy, transformOrigin: `${ox}px ${oy}px` },
+            { scale: 1, x: 0, y: 0, duration: F(160), ease: "power3.inOut" }, 0);
+          LK.hot(tl, box, 0, F(18), { b: 6, br: 1.8 });
+          const ty1 = LK.type(tl, t1, L(560), 13);
+          const ty2 = LK.type(tl, t2, L(650), 14);
+          // carets: blink on the eighths, hop to the second field.
+          tl.set(c2, { opacity: 0 }, 0);
+          for (let f = 540; f < 760; f += 15) {
+            const on = Math.floor((f - 540) / 15) % 2 === 0;
+            if (f < 640) tl.set(c1, { opacity: on || (f >= 556 && f < 625) ? 1 : 0 }, L(f));
+            else if (f < 760) tl.set(c2, { opacity: on || (f >= 646 && f < 700) ? 1 : 0 }, L(f));
+          }
+          tl.set(c1, { opacity: 0 }, L(640)).set(c2, { opacity: 0 }, L(760));
+          tl.to(f1, { borderColor: "rgba(160,200,255,.95)", boxShadow: "0 0 16px rgba(47,107,255,.6), inset 0 0 18px rgba(47,107,255,.25)", duration: F(10) }, L(556))
+            .to(f1, { borderColor: "rgba(110,160,255,.5)", boxShadow: "inset 0 0 18px rgba(47,107,255,.15)", duration: F(10) }, L(640))
+            .to(f2, { borderColor: "rgba(160,200,255,.95)", boxShadow: "0 0 16px rgba(47,107,255,.6), inset 0 0 18px rgba(47,107,255,.25)", duration: F(10) }, L(644));
+
+          // cursor to the button, click on the beat (f750): the button flashes yellow-hot.
+          const cur = LK.cursor(cam);
+          const bcx = bx + BW / 2 + 40, bcy = by + 504;
+          tl.fromTo(cur, { x: W * 0.8, y: H + 60, opacity: 0 }, { x: bcx, y: bcy, opacity: 1, duration: F(44), ease: "power3.inOut" }, L(700));
+          tl.to(cur, { scale: 0.82, duration: F(4), transformOrigin: "0 0" }, L(746)).to(cur, { scale: 1, duration: F(8) }, L(750));
+          tl.set(btn, { background: "#ffc61a", color: "#140f00", boxShadow: "0 0 34px rgba(255,198,26,.95), 0 0 120px rgba(255,170,0,.55)" }, L(750));
+          tl.set(btn.querySelector("svg"), { attr: { stroke: "#140f00" } }, L(750));
+          tl.fromTo(btn, { filter: "brightness(2.4) blur(3px)" }, { filter: "brightness(1) blur(0px)", duration: F(22), ease: "expo.out", immediateRender: false }, L(750));
+          // f780: the box flies up and out, blurring away (REF_C 4.6-5.4 s).
+          tl.to(cam, { y: -H * 1.05, filter: "blur(10px)", opacity: 0, duration: F(34), ease: "power3.in" }, L(780));
+
+          // ---------- the data stream (real Event Allocations from the Transparency Board) ----------
+          const ROWS = [
+            ["Acquaintance Party", "₱300", "₱240,000", "₱108,620", "₱108,620"], ["Asean Day", "₱30", "₱24,000", "₱90", "₱90"],
+            ["Buwan ng Wika", "₱30", "₱24,000", "₱11,490", "₱11,490"], ["Feb-Ibig", "₱50", "₱40,000", "₱150", "₱150"],
+            ["Foundation Day", "₱50", "₱40,000", "₱150", "₱150"], ["General Assembly", "₱0", "₱0", "₱0", "₱0"],
+            ["Institutional Fee [1st Semester]", "₱40", "₱32,000", "₱15,040", "₱15,040"], ["Institutional Fee [2nd Semester]", "₱40", "₱32,000", "₱120", "₱120"],
+            ["Intramural T-Shirts", "₱350", "₱280,000", "₱0", "₱0"], ["Intramurals", "₱500", "₱400,000", "₱1,050", "₱1,050"],
+            ["Mini Olympics", "₱100", "₱80,000", "₱300", "₱300"], ["Paskuhan", "₱30", "₱24,000", "₱90", "₱90"], ["Santa Cruz Day", "₱30", "₱24,000", "₱90", "₱90"],
+          ];
+          const SW = land ? 1240 : 960;
+          const persp = el(st, "div", "fill", { perspective: "1600px" });
+          const stream = el(persp, "div", "abs", {
+            left: W / 2 - SW / 2, top: 0, width: SW, height: H,
+            WebkitMaskImage: "linear-gradient(to bottom, transparent 4%, #000 26%, #000 70%, transparent 96%)",
+            maskImage: "linear-gradient(to bottom, transparent 4%, #000 26%, #000 70%, transparent 96%)",
+          });
+          const list = el(stream, "div", "abs", { left: 0, top: 0, width: SW });
+          const head = el(list, "div", "abs sg bloom-y nowrap", { left: 0, top: 0, fontSize: 30, fontWeight: 600, letterSpacing: "0.14em", color: "#ffc61a" }, "EVENT ALLOCATIONS");
+          el(list, "div", "abs nowrap", { left: 0, top: 44, fontSize: 21, color: "#9fb2dc" }, "Council finances — live on the Digital Transparency Board");
+          const cols = land ? [0.4, 0.1, 0.17, 0.17, 0.16] : [0.5, 0, 0, 0.25, 0.25];
+          ROWS.forEach((r, i) => {
+            const rw = el(list, "div", "row bloom", { top: 110 + i * 58 });
+            r.forEach((v, k) => { if (cols[k]) el(rw, "span", k === 3 ? "amt" : null, { width: SW * cols[k], textAlign: k ? "right" : "left", color: k === 0 ? "#f3f6ff" : k === 3 ? undefined : "#a9c3ff" }, v); });
+          });
+          tl.set(persp, { opacity: 0 }, 0).set(persp, { opacity: 1 }, L(776));
+          tl.fromTo(stream, { rotationX: 24, rotationY: land ? -10 : -6, z: -120 }, { rotationX: 14, rotationY: land ? -4 : -2, z: 0, duration: L(1170) - L(776), ease: "none" }, L(776));
+          tl.fromTo(list, { y: H * 0.95 }, { y: -(110 + ROWS.length * 58) + H * 0.25, duration: L(1170) - L(776), ease: "none" }, L(776));
+          LK.hot(tl, list, L(776), F(30), { b: 10, br: 2.4 });
+          // f1080: the card arrives over it — the stream slides left and sinks into the dark.
+          tl.to(stream, { x: land ? -520 : -200, opacity: 0.25, filter: "blur(4px)", duration: F(90), ease: "power2.inOut" }, L(1080));
+          tl.set({}, {}, L(1170));
+          window.__timelines["search"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

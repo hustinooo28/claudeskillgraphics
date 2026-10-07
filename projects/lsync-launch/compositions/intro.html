@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <link rel="stylesheet" href="assets/glow.css" />
+      <style>
+        #intro .chip { position: absolute; height: 112px; border-radius: 28px; display: flex; align-items: center; justify-content: center; gap: 16px; font-weight: 600; font-size: 40px; letter-spacing: -0.01em; color: var(--white); }
+        #intro .chip .face { position: absolute; inset: 0; border-radius: 28px; }
+        #intro .chip .hotl { position: absolute; inset: -2px; border-radius: 30px; background: linear-gradient(90deg, #fff4c9 0%, #ffc61a 45%, #ffd95c 70%, #fff8de 100%); box-shadow: 0 0 34px rgba(255, 198, 26, 0.9), 0 0 90px rgba(255, 170, 0, 0.55); }
+        #intro .chip .lbl { position: relative; display: flex; align-items: center; gap: 12px; }
+      </style>
+      <!-- 0-9 s (f0-540). REF_C open: the mark draws itself in light and the seal arrives white-hot, the wordmark
+           builds per character out of blur; white-hot capsules slide in, push the logo away and cool into the site's
+           sections; a cursor clicks Records (it turns yellow) and the camera leans in. -->
+      <div id="intro" class="beat" data-composition-id="intro" data-width="1080" data-height="1920">
+        <div class="stage"></div>
+      </div>
+      <script>
+        (function () {
+          const root = document.querySelector("#intro");
+          const st = root.querySelector(".stage");
+          const { W, H, land } = LK.dims(root);
+          const { F, el } = LK;
+          const tl = gsap.timeline({ paused: true });
+          const cam = el(st, "div", "fill");
+          const CY = H / 2;
+
+          // ---------- logo ----------
+          const S = land ? 200 : 150, WF = land ? 176 : 128;
+          const logoW = S + 34 + WF * 2.75;
+          const logo = el(cam, "div", "abs", { left: W / 2 - logoW / 2, top: CY - S / 2, width: logoW, height: S });
+          const halo = el(logo, "img", "pic", { width: S * 4, height: S * 4, left: S / 2 - S * 2, top: S / 2 - S * 2 });
+          halo.src = "assets/fx/glow-blue.png"; halo.alt = "";
+          const g = LK.svg(logo, logoW, S);
+          const rings = [S * 0.62, S * 0.76].map((r) => {
+            const c = LK.ring(g, S / 2, S / 2, r, "#9cc2ff");
+            const len = 2 * Math.PI * r;
+            c.setAttribute("stroke-width", "2.5"); c.setAttribute("stroke-dasharray", `${len} ${len}`); c.setAttribute("stroke-dashoffset", len);
+            c.style.filter = "drop-shadow(0 0 6px #4d8bff)";
+            return { c, len };
+          });
+          const seal = el(logo, "img", "pic", { width: S, height: S, left: 0, top: 0 });
+          seal.src = "assets/lsc-seal.png"; seal.alt = "Local Student Council seal";
+          const wm = el(logo, "div", "abs sg nowrap bloom", { left: S + 34, top: S / 2 - WF * 0.62, fontSize: WF, fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1.2, color: "#f3f6ff" }, "LSynC");
+          const wch = LK.split(wm, "char");
+
+          tl.fromTo(halo, { opacity: 0, scale: 0.4 }, { opacity: 0.9, scale: 1, duration: F(80), ease: "power2.out" }, F(10));
+          rings.forEach(({ c, len }, i) => tl.fromTo(c, { attr: { "stroke-dashoffset": len }, rotation: -120, transformOrigin: `${S / 2}px ${S / 2}px` }, { attr: { "stroke-dashoffset": 0 }, rotation: 0, duration: F(46), ease: "power3.out" }, F(18 + i * 8)));
+          tl.to(rings.map((r) => r.c), { opacity: 0, filter: "drop-shadow(0 0 6px #4d8bff) blur(6px)", duration: F(30), ease: "power2.in" }, F(96));
+          LK.hot(tl, seal, F(40), F(60), { b: 20, br: 4, scale: 0.55 });
+          tl.fromTo(seal, { rotation: -100 }, { rotation: 0, duration: F(70), ease: "expo.out" }, F(40));
+          LK.hot(tl, wch, F(86), F(30), { b: 14, br: 3.4, x: -14, stagger: F(4) });
+          tl.to(halo, { opacity: 0.55, duration: F(120), ease: "sine.inOut" }, F(110));
+          tl.fromTo(cam, { scale: 1 }, { scale: 1.05, duration: F(230), ease: "none" }, 0);
+
+          // ---------- chips ----------
+          const CH = [["council", "Council"], ["records", "Records"], ["transparency", "Transparency"], ["inquiry", "Inquiry"], ["updates", "Updates"]];
+          const gap = 26, widths = CH.map(([, t]) => 138 + t.length * 23.5);
+          const rowW = widths.reduce((a, b) => a + b, 0) + gap * (CH.length - 1);
+          const lean = el(st, "div", "fill");
+          // landscape: row centred; vertical: centred on Records so the chosen chip is in frame (the rest crop off the edges, as in REF_C)
+          const rowL = land ? W / 2 - rowW / 2 : W / 2 - (widths[0] + gap + widths[1] / 2);
+          const row = el(lean, "div", "abs", { left: rowL, top: CY - 56, width: rowW, height: 112 });
+          let x = 0;
+          const chips = CH.map(([ic, t], i) => {
+            const c = el(row, "div", "chip", { left: x, top: 0, width: widths[i] });
+            const face = el(c, "div", "face glass");
+            const lbl = el(c, "div", "lbl");
+            const icon = LK.svgIcon(lbl, LK.ICON[ic], 38, "#9cc2ff");
+            el(lbl, "span", null, null, t);
+            const hotl = el(c, "div", "hotl");
+            x += widths[i] + gap;
+            return { c, face, lbl, icon, hotl };
+          });
+          // f232: the logo is shoved off to the right as white-hot capsules slide in from the left.
+          tl.to(logo, { x: W * 0.95, filter: "blur(10px)", opacity: 0, duration: F(56), ease: "power2.in" }, F(236));
+          chips.forEach(({ c, hotl, lbl }, i) => {
+            const at = F(232 + (CH.length - 1 - i) * 6);
+            tl.fromTo(c, { x: -2700 - i * 40, filter: "blur(12px) brightness(1.6)" }, { x: 0, filter: "blur(0px) brightness(1)", duration: F(60), ease: "expo.out" }, at);
+            // ...and cool down into the real chips.
+            tl.fromTo(hotl, { opacity: 1 }, { opacity: 0, duration: F(34), ease: "power2.inOut" }, F(282 + i * 7));
+            tl.fromTo(lbl, { opacity: 0 }, { opacity: 1, duration: F(20), ease: "power2.out" }, F(292 + i * 7));
+          });
+          tl.fromTo(row, { scale: 1.06 }, { scale: 1, duration: F(120), ease: "power2.out" }, F(232));
+
+          // ---------- cursor + click on Records (f390, on the beat) ----------
+          const rec = chips[1];
+          const recCx = rowL + widths[0] + gap + widths[1] / 2;
+          const cur = LK.cursor(lean);
+          tl.fromTo(cur, { x: W * 0.66, y: H + 80, opacity: 0 }, { x: recCx + 6, y: CY + 10, opacity: 1, duration: F(56), ease: "power3.inOut" }, F(322));
+          tl.to(rec.face, { borderColor: "#c8dcff", boxShadow: "0 0 26px rgba(80,140,255,.9), 0 0 80px rgba(47,107,255,.45), inset 0 0 22px rgba(47,107,255,.3)", duration: F(10) }, F(372));
+          tl.to(cur, { scale: 0.82, duration: F(4), ease: "power2.in", transformOrigin: "0 0" }, F(386)).to(cur, { scale: 1, duration: F(8), ease: "power2.out" }, F(390));
+          tl.set(rec.face, { background: "#ffc61a", borderColor: "#fff1b0", boxShadow: "0 0 30px rgba(255,198,26,.95), 0 0 110px rgba(255,170,0,.55)" }, F(390));
+          tl.set(rec.c, { color: "#140f00" }, F(390)).set(rec.icon, { attr: { stroke: "#140f00" } }, F(390));
+          tl.fromTo(rec.c, { filter: "brightness(2.2) blur(3px)" }, { filter: "brightness(1) blur(0px)", duration: F(24), ease: "expo.out", immediateRender: false }, F(390));
+          const burst = el(lean, "img", "pic", { width: 900, height: 900, left: recCx - 450, top: CY - 450, opacity: 0 });
+          burst.src = "assets/fx/glow-yellow.png"; burst.alt = "";
+          lean.insertBefore(burst, row); // glow sits behind the chips
+          tl.fromTo(burst, { opacity: 0, scale: 0.4 }, { opacity: 0.85, scale: 1, duration: F(14), ease: "expo.out" }, F(390)).to(burst, { opacity: 0.35, duration: F(80), ease: "power2.out" }, F(404));
+          // The camera leans in on the chosen chip; the others sink back.
+          tl.to([chips[0].c, chips[2].c, chips[3].c, chips[4].c], { opacity: 0.5, filter: "blur(1.5px)", duration: F(60), ease: "power2.out" }, F(400));
+          tl.to(lean, { scale: 1.16, x: (W / 2 - recCx) * 0.6, transformOrigin: `${recCx}px ${CY}px`, duration: F(140), ease: "power2.inOut" }, F(400));
+          tl.set({}, {}, F(540));
+          window.__timelines["intro"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
