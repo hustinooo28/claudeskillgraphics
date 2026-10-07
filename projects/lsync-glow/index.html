@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LSC Transparency Reel</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/space-grotesk@5/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/dm-sans@5/index.css">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="motion-kit.js"></script>
+<script src="camera3d.js"></script>
+<style>
+  :root {
+    --bg: #050A1C; --blue: #526FF2; --blue-2: #3D5BFF; --metal: #6682FF; --hi: #9CACFF; --gold: #D6B05C;
+    --green: #54D98B; --red: #F17777; --amber: #E9BD5C; --ink-2: #9AA6C8;
+    --display: 'Space Grotesk Variable', 'Space Grotesk', sans-serif; --body: 'DM Sans Variable', 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: #000; overflow: hidden; }
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: #fff; font-family: var(--body); }
+  .layer { position: absolute; inset: 0; }
+  .shot { position: absolute; inset: 0; visibility: hidden; overflow: hidden; }
+  .mid { position: absolute; inset: 0; display: grid; place-items: center; }
+  .w, .c { display: inline-block; }
+  .display { font-family: var(--display); letter-spacing: -0.035em; font-weight: 700; }
+  .gold { color: var(--gold); }
+  .acc { color: var(--gold); text-decoration: underline; text-decoration-thickness: 5px; text-underline-offset: 14px; text-decoration-color: rgba(214,176,92,.85); }
+  .grain { position: absolute; inset: 0; pointer-events: none; opacity: .06; background-image: radial-gradient(rgba(255,255,255,.5) 1px, transparent 1px); background-size: 3px 3px; mix-blend-mode: overlay; }
+
+  /* kinetic lines */
+  .kline { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; font-family: var(--display); font-size: 124px; font-weight: 700; letter-spacing: -0.035em; opacity: 0; }
+  .lightline { position: absolute; left: 50%; top: 50%; height: 6px; margin-top: -3px; border-radius: 6px; background: #EEF2FF; box-shadow: 0 0 18px 4px var(--blue), 0 0 70px 18px rgba(82,111,242,.5); transform: translateX(-50%); opacity: 0; }
+  .dot { position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: #F2F5FF; box-shadow: 0 0 30px 10px var(--blue), 0 0 90px 30px rgba(82,111,242,.45); opacity: 0; }
+  .ring { position: absolute; left: 50%; top: 50%; border-radius: 50%; border: 2px solid rgba(180,195,255,.85); opacity: 0; pointer-events: none; }
+
+  /* logo */
+  .logo { display: flex; align-items: center; }
+  .seal { width: 168px; height: 168px; border-radius: 50%; background: #fff url(assets/lsc-seal-hd.png) center / 104% no-repeat; box-shadow: 0 0 0 6px rgba(255,255,255,.06), 0 0 80px rgba(82,111,242,.65); flex: none; }
+  .wordmark { font-family: var(--display); font-size: 92px; font-weight: 700; letter-spacing: -0.04em; padding-left: 40px; white-space: nowrap; display: inline-block; line-height: 1; }
+  .eyebrow { font-family: var(--display); font-size: 26px; letter-spacing: .26em; text-transform: uppercase; font-weight: 600; color: var(--gold); }
+
+  /* phone app screen */
+  .app { position: absolute; inset: 0; background: linear-gradient(170deg, #0D1640 0%, #070C24 60%, #050918 100%); padding: 64px 26px 0; font-family: var(--body); }
+  .app .sb { position: absolute; top: 18px; left: 34px; right: 30px; display: flex; justify-content: space-between; font-size: 17px; font-weight: 600; }
+  .app .hdr { display: flex; align-items: center; gap: 12px; margin-top: 18px; font-family: var(--display); font-weight: 600; font-size: 19px; }
+  .app .hdr i { width: 40px; height: 40px; border-radius: 50%; background: #fff url(assets/lsc-seal-hd.png) center / 104% no-repeat; }
+  .app h3 { font-family: var(--display); font-size: 40px; letter-spacing: -0.03em; margin-top: 44px; line-height: 1.05; }
+  .app p { font-size: 16px; color: var(--ink-2); margin-top: 10px; line-height: 1.4; }
+  .app label { display: block; font-size: 15px; color: var(--ink-2); margin: 26px 0 8px; }
+  .app .in { height: 58px; border-radius: 14px; background: rgba(255,255,255,.06); border: 1.5px solid rgba(156,172,255,.22); display: flex; align-items: center; padding: 0 16px; font-size: 20px; font-weight: 500; }
+  .app .in.on { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(82,111,242,.22); }
+  .app .caret { display: inline-block; width: 2px; height: 24px; background: var(--hi); margin-left: 2px; }
+  .app .btn { margin-top: 30px; height: 60px; border-radius: 16px; background: linear-gradient(135deg, var(--blue), var(--blue-2)); display: grid; place-items: center; font-family: var(--display); font-weight: 600; font-size: 20px; box-shadow: 0 10px 30px rgba(82,111,242,.45); }
+  .app .lock { position: absolute; inset: 0; z-index: 3; background: radial-gradient(70% 50% at 50% 30%, #2A3E9C, #0A1033 70%, #050918); text-align: center; }
+  .app .lock .t { font-family: var(--display); font-size: 96px; font-weight: 500; margin-top: 120px; letter-spacing: -0.03em; }
+  .app .lock .d { font-size: 20px; opacity: .8; }
+  .app .lock .widget { margin: 380px auto 0; width: 300px; padding: 16px 18px; border-radius: 22px; background: rgba(255,255,255,.14); backdrop-filter: blur(10px); display: flex; gap: 12px; align-items: center; text-align: left; font-size: 15px; }
+  .app .lock .widget i { width: 42px; height: 42px; border-radius: 12px; background: #fff url(assets/lsc-seal-hd.png) center / 104% no-repeat; flex: none; }
+
+  /* glass panels */
+  .gp { border-radius: 30px; background: linear-gradient(160deg, rgba(40,52,105,.78), rgba(14,20,48,.82)); border: 1px solid rgba(156,172,255,.18); box-shadow: 0 30px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08); color: #fff; padding: 34px 40px; overflow: hidden; }
+  .gp .k { font-size: 24px; color: var(--ink-2); font-weight: 500; }
+  .gp .v { font-family: var(--display); font-weight: 700; letter-spacing: -0.035em; }
+  .chip { display: inline-flex; align-items: center; gap: 12px; padding: 12px 24px; border-radius: 999px; font-family: var(--display); font-weight: 600; font-size: 30px; }
+  .row { display: flex; align-items: center; gap: 26px; }
+  .ri { width: 70px; height: 70px; border-radius: 18px; display: grid; place-items: center; font-size: 34px; flex: none; }
+  .bar { height: 20px; border-radius: 10px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 89%; border-radius: 10px; background: linear-gradient(90deg, var(--blue), var(--hi)); transform-origin: 0 50%; }
+  .ico { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* scanner screen (warped into the angled mockup) */
+  .scan { position: absolute; background: radial-gradient(50% 40% at 30% 30%, #4a3a22, transparent), radial-gradient(50% 40% at 70% 70%, #1d2a66, transparent), #0c0f1c; color: #fff; font-family: var(--body); overflow: hidden; }
+  .scan .ttl { position: absolute; top: 120px; width: 100%; text-align: center; font-family: var(--display); font-size: 44px; font-weight: 600; }
+  .scan .qr { position: absolute; left: 170px; top: 400px; width: 300px; height: 300px; background: #fff; padding: 16px; border-radius: 18px; transform: rotate(-4deg); }
+  .scan .vf { position: absolute; left: 130px; top: 360px; width: 380px; height: 380px; }
+  .scan .vf i { position: absolute; width: 84px; height: 84px; border: 9px solid #fff; }
+  .scan .vf i:nth-child(1) { left: 0; top: 0; border-right: 0; border-bottom: 0; border-radius: 26px 0 0 0; }
+  .scan .vf i:nth-child(2) { right: 0; top: 0; border-left: 0; border-bottom: 0; border-radius: 0 26px 0 0; }
+  .scan .vf i:nth-child(3) { left: 0; bottom: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 26px; }
+  .scan .vf i:nth-child(4) { right: 0; bottom: 0; border-left: 0; border-top: 0; border-radius: 0 0 26px 0; }
+  .scan .sl { position: absolute; left: 130px; top: 360px; width: 380px; height: 6px; background: var(--metal); box-shadow: 0 0 30px 8px rgba(102,130,255,.8); }
+  .scan .toast { position: absolute; left: 40px; right: 40px; bottom: 170px; padding: 28px 30px; border-radius: 30px; background: rgba(255,255,255,.94); color: #14244B; display: flex; gap: 22px; align-items: center; }
+  .scan .toast .ok { width: 74px; height: 74px; border-radius: 50%; background: #1FA463; color: #fff; display: grid; place-items: center; font-size: 40px; flex: none; }
+  .scan .toast b { font-family: var(--display); font-size: 34px; display: block; } .scan .toast span { font-size: 26px; color: #5B6788; }
+
+  .sync { display: flex; align-items: center; gap: 22px; height: 112px; padding: 0 44px 0 28px; border-radius: 999px; font-family: var(--display); font-size: 36px; font-weight: 600; white-space: nowrap; border: 2px solid rgba(233,189,92,.4); background: rgba(40,32,10,.6); color: var(--amber); overflow: hidden; }
+  .sync .sd { width: 62px; height: 62px; border-radius: 50%; display: grid; place-items: center; flex: none; font-size: 32px; background: var(--amber); color: var(--bg); }
+  .sync .st { position: relative; width: 640px; height: 46px; }
+  .sync .st span { position: absolute; left: 0; top: 0; }
+
+  .notif { position: absolute; left: 50%; top: 50%; width: 860px; height: 140px; margin: -70px 0 0 -430px; display: flex; align-items: center; gap: 26px; padding: 0 34px; border-radius: 40px;
+    background: linear-gradient(160deg, rgba(40,52,105,.86), rgba(14,20,48,.9)); border: 1px solid rgba(156,172,255,.25); box-shadow: 0 30px 80px rgba(0,0,0,.5); opacity: 0; }
+  .notif i { width: 80px; height: 80px; border-radius: 22px; background: #fff url(assets/lsc-seal-hd.png) center / 104% no-repeat; flex: none; }
+  .notif b { display: block; font-family: var(--display); font-size: 34px; }
+  .notif span { font-size: 26px; color: var(--ink-2); }
+
+  .spot { position: absolute; left: 50%; top: 50%; width: 1300px; height: 620px; margin: -310px 0 0 -650px; background: radial-gradient(50% 50% at 50% 50%, rgba(255,226,180,.30), transparent 70%); filter: blur(30px); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v12M6.5 10.5L12 16l5.5-5.5M5 20h14"/></symbol>
+  <symbol id="i-wifioff" viewBox="0 0 24 24"><path d="M3 3l18 18M8.5 16.4a5 5 0 017 0M5 12.9a10 10 0 015.3-2.8M19 12.9a10 10 0 00-2.4-1.7M2 9.3a15 15 0 015-2.9M22 9.3A15 15 0 0011.5 5"/></symbol>
+  <symbol id="i-sync" viewBox="0 0 24 24"><path d="M20 11a8 8 0 00-14.6-4.3M4 4v3.5h3.5M4 13a8 8 0 0014.6 4.3M20 20v-3.5h-3.5"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></symbol>
+</svg>
+
+<div id="stage">
+  <div class="layer"><div id="glowA"></div><div id="glowB"></div></div>
+
+  <!-- A: every peso / event / student → streak → seal + wordmark -->
+  <section class="shot" id="sA">
+    <div class="kline" id="k1"><div><span class="trk">Every</span> <span class="accw"><span class="acc">peso.</span></span></div></div>
+    <div class="kline" id="k2"><div><span class="trk">Every</span> <span class="accw"><span class="acc">event.</span></span></div></div>
+    <div class="kline" id="k3"><div><span class="trk">Every</span> <span class="accw"><span class="acc">student.</span></span></div></div>
+    <div class="lightline" id="lineA"></div>
+    <div class="dot" id="dotA"></div>
+    <div class="ring" id="ringA" style="width:260px;height:260px;margin:-130px 0 0 -130px"></div>
+    <div class="mid"><div id="brandA" style="text-align:center">
+      <div class="logo" id="logoA"><div class="seal" id="sealA"></div><div class="wclip"><span class="wordmark" id="wordA">Digital Transparency <span class="gold">Board</span></span></div></div>
+      <div class="eyebrow" id="subA" style="margin-top:44px">Local Student Council · DSSC Santa Cruz</div>
+    </div></div>
+  </section>
+
+  <!-- B: lit 3D phone with the records search -->
+  <section class="shot" id="sB"><div class="layer" id="vB"></div></section>
+  <div id="scr">
+    <div class="app">
+      <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+      <div class="hdr"><i></i>LSC Digital Board</div>
+      <h3>Find Your<br>Records</h3>
+      <p>Enter your name and Student ID to view your contributions and attendance.</p>
+      <label>Student name</label><div class="in" id="in1"><span id="t1">Juan Dela Cruz</span><i class="caret" id="c1"></i></div>
+      <label>Student ID (verification)</label><div class="in" id="in2"><span id="t2">2023-01458</span><i class="caret" id="c2" style="opacity:0"></i></div>
+      <div class="btn" id="go">Search Records</div>
+      <div class="lock" id="lock"><div class="t">9:41</div><div class="d">Tuesday, October 7</div>
+        <div class="widget"><i></i><div><b>LSC Digital Board</b><br><span style="opacity:.8">Contribution deadline · Fri</span></div></div></div>
+    </div>
+  </div>
+
+  <!-- C: one continuous camera through glass panels (records → receipt/QR → funds) -->
+  <section class="shot" id="sC"><div class="layer" id="vC"></div></section>
+
+  <!-- D: officers — QR scan in the angled mockup + offline sync -->
+  <section class="shot" id="sD"><div class="layer" id="vD"></div></section>
+
+  <!-- E: see where every peso goes → streak → notification → dot → seal -->
+  <section class="shot" id="sE">
+    <div class="kline" id="k8" style="font-size:100px;line-height:1.12;opacity:1"><div><div id="k8a">So everyone can see</div><div id="k8b">where every <span class="acc">peso</span> goes.</div></div></div>
+    <div class="lightline" id="lineE"></div>
+    <div class="notif" id="notif"><i></i><div><b>Payment confirmed</b><span>₱150.00 received · Org Shirt Contribution</span></div><span style="margin-left:auto;font-size:24px">now</span></div>
+    <div class="ring" id="ringN" style="width:1000px;height:260px;margin:-130px 0 0 -500px;border-radius:130px"></div>
+    <div class="dot" id="dotE"></div>
+    <div class="ring" id="ringE" style="width:260px;height:260px;margin:-130px 0 0 -130px"></div>
+    <div class="mid"><div id="brandE" style="text-align:center;opacity:0">
+      <div class="logo"><div class="seal" id="sealE"></div><div class="wclip"><span class="wordmark" id="wordE">Digital Transparency <span class="gold">Board</span></span></div></div>
+      <div class="eyebrow" id="tagE" style="margin-top:46px;font-size:32px;letter-spacing:.2em">One Step Better Than Yesterday.</div>
+    </div></div>
+  </section>
+
+  <!-- F: spotlight credits (revealed through a seal-shaped mask) -->
+  <section class="shot" id="sF" style="background:#04060C">
+    <div class="spot"></div>
+    <div class="mid"><div style="text-align:center">
+      <div style="font-size:24px;letter-spacing:.24em;color:#BDB4A3;text-transform:uppercase">Local Student Council · DSSC – Santa Cruz Extension Campus</div>
+      <div class="display" style="font-size:72px;margin-top:26px">Digital Transparency <span class="gold">Board</span></div>
+      <div style="font-size:30px;color:#A9A397;margin-top:46px">Built by Mark Louise Eyas · Justine Renz Capapas · John Mark Mahidlawon</div>
+    </div></div>
+  </section>
+
+  <div id="appZoom" style="opacity:0"></div>
+</div>
+
+<script>
+const tl = gsap.timeline({ defaults: { ease: MK.EASE.out } });
+const E = MK.EASE;
+const fmt = (v) => Math.round(v).toLocaleString('en-US');
+
+/* ---------------- light: the blue glow is the key light for every 3D rig ---------------- */
+const glowA = C3.glow('#glowA', { color: '#3D5BFF', size: 1700, x: 960, y: 620, strength: 0.0 });
+const glowB = C3.glow('#glowB', { color: '#D6B05C', size: 1000, x: 1550, y: 180, strength: 0.0 });
+tl.to(glowA, { opacity: 0.8, duration: 1.4, ease: 'sine.out' }, 0);
+tl.to(glowB, { opacity: 0.22, duration: 2, ease: 'sine.out' }, 0.4);
+tl.to(glowA, { x: 700, y: 560, duration: 6, ease: 'sine.inOut' }, 1.4);
+tl.to(glowA, { x: 1250, y: 520, duration: 8, ease: 'sine.inOut' }, 7.4);
+tl.to(glowA, { x: 800, y: 600, duration: 9, ease: 'sine.inOut' }, 15.4);
+tl.to(glowA, { x: 1100, y: 560, duration: 8, ease: 'sine.inOut' }, 24.4);
+tl.to(glowA, { x: 960, y: 560, duration: 6, ease: 'sine.inOut' }, 32.4);
+tl.to(glowB, { x: 300, y: 900, duration: 20, ease: 'sine.inOut' }, 0);
+tl.to(glowB, { x: 1600, y: 160, duration: 20, ease: 'sine.inOut' }, 20);
+const rigs = [];
+MK.onFrame(() => {
+  const gx = gsap.getProperty(glowA, 'x'), gy = gsap.getProperty(glowA, 'y');
+  for (const r of rigs) Object.assign(r.light, { x: r.cam.x + (gx - 960) * 3, y: r.cam.y + (gy - 540) * 3 - 900, z: r.cam.z + 400 });
+});
+
+/* ---------------- A (0 – 6.8) ---------------- */
+MK.cut(tl, '#sA', 0);
+// VO "every" at 0.5: peso @0.74, event @1.72, student @2.54
+[['#k1', 0.45, 1.4], ['#k2', 1.45, 2.25], ['#k3', 2.28, null]].forEach(([id, at, out]) => {
+  tl.set(id, { opacity: 1 }, at);
+  tl.add(C3.track(`${id} .trk`, { from: '0.5em', to: '-0.035em', duration: 0.6 }), at);
+  tl.add(MK.wordsIn(`${id} .accw`, { from: 'below', blur: 12 }), at + 0.22); // split the wrapper so the underlined span stays whole
+  if (out) tl.to(id, { opacity: 0, filter: 'blur(10px)', y: -30, duration: 0.18, ease: 'power2.in' }, out - 0.1);
+});
+tl.add(C3.streak('#k3', '#lineA', { width: 440, duration: 0.35 }), 3.25);
+tl.to('#lineA', { width: 26, height: 26, marginTop: -13, opacity: 0, duration: 0.3, ease: 'power3.in' }, 3.62);
+tl.fromTo('#dotA', { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.25, ease: 'power2.out', immediateRender: false }, 3.6);
+tl.to('#dotA', { scale: 6, opacity: 0, duration: 0.3, ease: 'power2.in' }, 3.82);
+// VO "meet" at 4.0: Digital @4.4, Board @5.14
+tl.add(C3.logoReveal('#sealA', '#wordA', '#ringA', { wordAt: 0.45 }), 3.85);
+tl.add(C3.pulse(glowA, { scale: 1.3 }), 3.9);
+tl.add(MK.wordsIn('#subA', { stagger: 0.07, from: 'below', blur: 8 }), 5.35);
+tl.add(MK.drift('#brandA', { scale: 1.04, duration: 2.6 }), 4.2);
+tl.to('#brandA', { y: -240, scale: 1.25, opacity: 0, filter: 'blur(20px)', duration: 0.45, ease: 'power3.in' }, 6.35);
+
+/* ---------------- B: phone (6.8 – 10.1) ---------------- */
+MK.cut(tl, '#sB', 6.8);
+const rB = C3.rig('#vB', { fov: 1350, dof: 0, light: { ambient: 0.4, spec: 0.8, shininess: 24 } }); rigs.push(rB);
+const phone = C3.phone(rB, { screen: '#scr', w: 390, h: 844, frame: ['#9AA7BE', '#2B3246'] });
+const floorB = C3.floor(rB, { y: 520, z: -200, size: 5600, pool: 'rgba(61,91,255,.45)', line: 'rgba(156,172,255,.06)' });
+rB.addShadow(phone, floorB, { w: 360, h: 110, opacity: 0.8 });
+tl.fromTo(phone, { y: -1500, rx: -75, ry: 55, rz: -35 }, { y: 30, rx: 20, ry: -20, rz: 0, duration: 0.95, ease: 'expo.out' }, 6.8);
+tl.fromTo('#vB', { filter: 'blur(16px)' }, { filter: 'blur(0px)', duration: 0.45, ease: 'power2.out', immediateRender: false }, 6.8);
+tl.add(C3.pulse(glowA, { scale: 1.22 }), 7.25);
+tl.fromTo(rB.cam, { z: 1350 }, { z: 1120, duration: 2.6, ease: 'sine.inOut' }, 6.8);
+tl.to(phone, { ry: 12, rx: 10, duration: 1.6, ease: 'sine.inOut' }, 7.75);
+tl.to('#lock', { y: -900, duration: 0.4, ease: 'power3.in' }, 7.45);
+// VO "enter" at 7.3: name @8.04, student ID @8.72
+tl.set('#in1', { attr: { class: 'in on' } }, 7.85);
+tl.add(MK.typeIn('#t1', { cps: 17 }), 7.9);
+tl.set('#c1', { opacity: 0 }, 8.75); tl.set('#in1', { attr: { class: 'in' } }, 8.75);
+tl.set('#in2', { attr: { class: 'in on' } }, 8.75); tl.set('#c2', { opacity: 1 }, 8.75);
+tl.add(MK.typeIn('#t2', { cps: 17 }), 8.8);
+tl.to('#go', { scale: 0.95, duration: 0.08, yoyo: true, repeat: 1 }, 9.5);
+tl.to(phone, { rx: 0, ry: 0, y: 0, duration: 0.5, ease: E.inOut }, 9.35);
+tl.to(rB.cam, { z: 430, duration: 0.55, ease: 'power3.in' }, 9.55);         // push into the screen…
+tl.fromTo('#vB', { filter: 'blur(0px)' }, { filter: 'blur(14px)', duration: 0.55, ease: 'power3.in', immediateRender: false }, 9.55);
+
+/* ---------------- C: glass-panel world (10.0 – 24.3) ---------------- */
+MK.cut(tl, '#sC', 10.0);
+tl.set('#sB', { visibility: 'visible' }, 10.0);
+tl.fromTo('#vC', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'none', immediateRender: false }, 10.0); // …and the screen dissolves into panels
+tl.set('#sB', { visibility: 'hidden' }, 10.32);
+const rC = C3.rig('#vC', { fov: 1700, dof: 9, maxBlur: 9, light: { ambient: 0.55, spec: 0.7, shininess: 28 } }); rigs.push(rC);
+const glowC = document.createElement('div');
+glowC.style.background = 'radial-gradient(28% 32% at 22% 55%, rgba(61,91,255,.55), transparent 70%), radial-gradient(24% 28% at 52% 40%, rgba(214,176,92,.18), transparent 70%), radial-gradient(28% 32% at 82% 55%, rgba(61,91,255,.5), transparent 70%)';
+C3.backdrop(rC, glowC, { x: 3200, z: -4200, cover: 3.2, camZ: 2600 });
+const floorC = C3.floor(rC, { x: 3200, y: 640, z: -300, size: 14000, grid: 160, pool: 'rgba(61,91,255,.35)', line: 'rgba(156,172,255,.06)', fade: 0.5 });
+const panel = (html, w, h, p, extra = '') => {
+  const el = document.createElement('div'); el.className = 'gp'; el.style.width = `${w}px`; el.style.height = `${h}px`; el.style.cssText += extra; el.innerHTML = html;
+  return rC.add(el, { lit: 'glare', ...p }); // panels float high above the floor: no contact shadows (they'd be invisible and cost a layer each)
+};
+// cluster 1: records (x ≈ 0)
+const pProfile = panel(`<div class="row"><div style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--hi));display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:38px">JD</div><div><div class="v" style="font-size:46px">Juan Dela Cruz</div><div class="k">BSIT · 3rd Year · 2023-01458</div></div></div>`, 760, 170, { x: -430, y: -330, z: 0, ry: 9 });
+const pPaid = panel(`<div class="k">Total Paid</div><div class="v" style="font-size:112px;line-height:1.05;margin-top:8px">₱<span id="paid">0</span>.00</div><div class="k" style="margin-top:6px">3 contributions · 3 receipts</div>`, 600, 300, { x: -520, y: 40, z: 140, ry: 11 });
+const pAtt = panel(`<div style="display:flex;justify-content:space-between" class="k"><span>Attendance</span><span><b style="color:#fff">8</b> Present · <b style="color:#fff">1</b> Absent</span></div><div class="bar" style="margin-top:22px"><i id="att"></i></div><div class="k" style="margin-top:18px">Intramurals · Acquaintance Party · Assembly</div>`, 680, 220, { x: 380, y: -150, z: -160, ry: -13 });
+const pStatus = panel(`<div class="chip" id="fully" style="background:rgba(84,217,139,.16);color:var(--green)"><svg class="ico"><use href="#i-check"/></svg>Fully Paid</div>`, 360, 130, { x: 440, y: 190, z: 210, ry: -10 }, 'display:grid;place-items:center;padding:0');
+// cluster 2: receipt + QR (x ≈ 3300)
+const pReceipt = panel(`<div class="row"><div class="seal" style="width:84px;height:84px;box-shadow:none"></div><div><div class="eyebrow" style="font-size:18px;color:var(--ink-2)">Official Receipt</div><div class="v" style="font-size:44px">OR-2026-000001</div></div></div>
+  <div style="margin-top:30px;border-top:2px dashed rgba(156,172,255,.25);padding-top:24px;font-size:28px;line-height:2.05">
+  <div style="display:flex;justify-content:space-between"><span class="k" style="font-size:28px">Received from</span><b>Juan Dela Cruz</b></div>
+  <div style="display:flex;justify-content:space-between"><span class="k" style="font-size:28px">For</span><b>Org Shirt Contribution</b></div>
+  <div style="display:flex;justify-content:space-between"><span class="k" style="font-size:28px">Date</span><b>Sept 12, 2026</b></div></div>
+  <div style="margin-top:18px;border-top:2px dashed rgba(156,172,255,.25);padding-top:20px;display:flex;justify-content:space-between;align-items:baseline"><span class="k" style="font-size:28px">Amount</span><span class="v" style="font-size:76px">₱150.00</span></div>
+  <div id="dl1" style="margin-top:26px;height:76px;border-radius:20px;background:linear-gradient(135deg,var(--blue),var(--blue-2));display:flex;align-items:center;justify-content:center;gap:14px;font-family:var(--display);font-weight:600;font-size:28px"><svg class="ico"><use href="#i-down"/></svg><span>Download receipt</span></div>`, 700, 780, { x: 2950, y: -10, z: 0, ry: 12 });
+const pQR = panel(`<div class="eyebrow" style="font-size:18px;color:var(--ink-2);text-align:center">Your attendance QR</div>
+  <div id="qrbox" style="margin:26px auto 0;width:380px;height:380px;padding:18px;border-radius:26px;background:#fff"><img src="assets/qr.svg" style="width:100%;height:100%"></div>
+  <div class="v" style="font-size:38px;text-align:center;margin-top:24px">Juan Dela Cruz</div>
+  <div id="dl2" style="margin-top:22px;height:70px;border-radius:20px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;gap:14px;font-family:var(--display);font-weight:600;font-size:26px"><svg class="ico"><use href="#i-down"/></svg><span>Save QR</span></div>`, 540, 720, { x: 3700, y: 30, z: -220, ry: -15 });
+// cluster 3: transparency board (x ≈ 6400)
+const statHTML = (k, id, color = '#fff') => `<div class="k">${k}</div><div class="v" style="font-size:84px;margin-top:10px;color:${color}">₱<span id="${id}">0</span></div>`;
+const pHead = panel(`<div style="display:flex;align-items:center;gap:22px"><div class="eyebrow" style="color:var(--hi)">Transparency Board</div><div class="chip" id="live" style="background:rgba(241,119,119,.16);color:var(--red);font-size:22px;padding:8px 18px"><i id="liveDot" style="width:12px;height:12px;border-radius:50%;background:var(--red)"></i>LIVE</div></div><div class="v" style="font-size:70px;margin-top:14px">Real-time financial transparency.</div>`, 1460, 220, { x: 6400, y: -560, z: -260, ry: 0, rx: 4 });
+const pS1 = panel(statHTML('Funds Collected', 'f1'), 560, 230, { x: 5800, y: -250, z: 40, ry: 10 });
+const pS2 = panel(statHTML('Funds Spent', 'f2'), 560, 230, { x: 6400, y: -270, z: -80, ry: 0 });
+const pS3 = panel(statHTML('Remaining Budget', 'f3', '#9CACFF'), 560, 230, { x: 7000, y: -250, z: 40, ry: -10 });
+const ledger = [
+  ['+ ₱22,500', 'Org Shirt Contributions', '150 students · OR-2026-000001 – 000150', 'var(--green)', 'rgba(84,217,139,.16)'],
+  ['− ₱12,000', 'Acquaintance Party · Venue & sound', 'Receipt attached · approved by Treasurer', 'var(--red)', 'rgba(241,119,119,.16)'],
+  ['− ₱8,450', 'Intramurals · Sports equipment', 'Receipt attached · audited', 'var(--red)', 'rgba(241,119,119,.16)'],
+].map(([amt, t, s, c, bg], i) => panel(`<div class="row"><div class="ri" style="background:${bg};color:${c}"><svg class="ico"><use href="#i-receipt"/></svg></div><div style="flex:1"><div class="v" style="font-size:34px;letter-spacing:-0.02em">${t}</div><div class="k">${s}</div></div><div class="v" style="font-size:44px;color:${c}">${amt}</div></div>`,
+  1380, 130, { x: 6400, y: 40 + i * 160, z: 160, rx: -6 }, 'padding:30px 40px'));
+
+// camera path. Shot 1: records (10.0 – 13.6) — starts tight on the Total Paid panel, pulls back to reveal the cluster
+const blurC = C3.motionBlur('#vC', 'x');
+tl.fromTo(rC.cam, { x: -470, y: 20, z: 900, ry: 6, rx: 0, focus: 760 }, { x: -60, y: -150, z: 1850, ry: 2, rx: 0, focus: 1800, duration: 1.4, ease: 'expo.out', immediateRender: false }, 10.0);
+tl.to(rC.cam, { x: 60, ry: -3, z: 1750, duration: 2.2, ease: 'sine.inOut' }, 11.4);
+[pProfile, pPaid, pAtt, pStatus].forEach((o, i) => tl.fromTo(o, { z: o.z - 700, s: 0.85 }, { z: o.z, s: 1, duration: 0.9, ease: E.out, immediateRender: false }, 10.05 + i * 0.08));
+// VO "appear" at 9.9: contributions @10.08, attendance @11.04, instantly @12.38
+tl.add(MK.counter('#paid', 0, 350, { duration: 1.0 }), 10.2);
+tl.to(rC.cam, { focus: 1900, duration: 0.5, ease: E.inOut }, 11.0);
+tl.fromTo('#att', { scaleX: 0 }, { scaleX: 1, duration: 1.0, ease: 'power3.out', immediateRender: false }, 11.05);
+tl.fromTo('#fully', { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: E.pop, immediateRender: false }, 12.38);
+tl.add(C3.pulse(glowA, { scale: 1.15 }), 12.4);
+tl.to(pStatus, { s: 1.12, z: 320, duration: 0.5, ease: E.pop }, 12.38);
+tl.to(rC.cam, { focus: 1560, duration: 0.4, ease: E.inOut }, 12.38);
+
+// Shot 2: truck to receipt + QR (13.55 – 18.4)
+tl.to(rC.cam, { x: 3300, y: -20, z: 1840, ry: 0, rx: 0, focus: 1850, duration: 0.85, ease: 'power2.inOut' }, 13.55);
+tl.add(blurC.swell(26, 0.85), 13.55);
+tl.add(rC.orbit({ cx: 3300, cz: -60, radius: 1900, from: 0, to: -16, duration: 4.1, ease: 'sine.inOut' }), 14.4);
+tl.fromTo(pQR, { y: 900, rz: 10 }, { y: 30, rz: 0, duration: 0.8, ease: E.settle }, 15.9);
+tl.fromTo(pQR.el, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'none' }, 15.9);
+tl.fromTo('#qrbox img', { clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)', duration: 0.6, ease: 'power2.inOut', immediateRender: false }, 16.2);
+// VO "receipt" at 13.8: download @17.52
+[['#dl1', 17.4], ['#dl2', 17.65]].forEach(([id, at]) => {
+  tl.to(`${id} .ico`, { y: 7, duration: 0.14, yoyo: true, repeat: 1, ease: 'power2.inOut' }, at);
+  tl.to(id, { background: '#1FA463', duration: 0.25 }, at + 0.28);
+  tl.set(`${id} span`, { textContent: 'Saved' }, at + 0.28);
+  tl.set(`${id} use`, { attr: { href: '#i-check' } }, at + 0.28);
+});
+
+// Shot 3: truck to the transparency board (18.5 – 24.3)
+tl.to(rC.cam, { x: 6400, y: -200, z: 2300, ry: 0, rx: 0, focus: 2350, duration: 0.85, ease: 'power2.inOut' }, 18.5);
+tl.add(blurC.swell(26, 0.85), 18.5);
+// VO "funds" at 18.6: finances @19.4, real time @20.28, every contribution @21.7, every expense @22.76
+tl.add(MK.counter('#f1', 0, 48500, { duration: 1.4, format: fmt }), 19.2);
+tl.add(MK.counter('#f2', 0, 31240, { duration: 1.4, format: fmt }), 19.32);
+tl.add(MK.counter('#f3', 0, 17260, { duration: 1.4, format: fmt }), 19.44);
+tl.fromTo('#live', { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: E.pop, immediateRender: false }, 20.28);
+tl.to('#liveDot', { opacity: 0.2, duration: 0.45, yoyo: true, repeat: 7, ease: 'sine.inOut' }, 20.7);
+tl.to(rC.cam, { y: 120, z: 1850, rx: -2, focus: 1700, duration: 1.3, ease: E.inOut }, 21.1);   // crane down to the ledger
+tl.to(ledger[0], { s: 1.05, z: 300, duration: 0.5, ease: E.inOut }, 21.7);
+tl.to(ledger[0], { s: 1, z: 160, duration: 0.5, ease: E.inOut }, 22.7);
+tl.to(ledger[1], { s: 1.05, z: 300, duration: 0.5, ease: E.inOut }, 22.76);
+tl.to(rC.cam, { x: 6520, ry: -4, duration: 1.4, ease: 'sine.inOut' }, 22.6);
+tl.add(C3.whip('#vC', { x: -1500, duration: 0.32, blur: 30 }), 23.95);
+
+/* ---------------- D: officers (24.27 – 28.4) ---------------- */
+MK.cut(tl, '#sD', 24.27);
+const rD = C3.rig('#vD', { fov: 1500, dof: 0, light: { ambient: 0.5, spec: 0.75, shininess: 26 } }); rigs.push(rD);
+const mock = document.createElement('div');
+mock.style.cssText = 'width:772px;height:1467px;';
+mock.innerHTML = '<div class="scan" id="scanUI"><div class="ttl">Scan Attendance</div><div class="qr"><img src="assets/qr.svg" style="width:100%;height:100%"></div><div class="vf" id="vf"><i></i><i></i><i></i><i></i></div><div class="sl" id="sl"></div>' +
+  '<div class="toast" id="toast"><div class="ok"><svg class="ico"><use href="#i-check"/></svg></div><div><b>Present · Juan Dela Cruz</b><span>Intramurals Day 1 · 7:42 AM</span></div></div></div>' +
+  '<img src="assets/mockups/phone-angled.png" style="position:absolute;left:0;top:0;width:772px;height:1467px">';
+document.getElementById('vD').appendChild(mock);
+C3.fitQuad(mock.querySelector('#scanUI'), 640, 1380, { tl: [80, 36], tr: [577, 110], br: [732, 1403], bl: [207, 1364] });
+const oMock = rD.add(mock, { x: -380, y: 0, z: 0, s: 0.66, backface: true });
+const syncEl = document.createElement('div'); syncEl.className = 'sync';
+syncEl.innerHTML = '<div class="sd" id="sd"><svg class="ico" id="sico"><use href="#i-wifioff"/></svg></div><div class="st"><span id="s1">Offline — 12 changes will sync</span><span id="s2" style="opacity:0">Syncing 12 changes…</span><span id="s3" style="opacity:0">All changes synced</span></div>';
+const oSync = rD.add(syncEl, { x: 520, y: 120, z: 120, ry: -14, lit: 'glare' });
+const ttl = document.createElement('div'); ttl.innerHTML = '<div class="eyebrow" style="color:var(--hi)">For officers</div><div class="display" style="font-size:96px;line-height:1.02;margin-top:16px">Scan at events.<br><span class="gold">Even offline.</span></div>';
+ttl.style.width = '900px';
+const oTtl = rD.add(ttl, { x: 560, y: -190, z: 0, ry: -10, dof: false });
+const floorD = C3.floor(rD, { y: 560, z: -200, size: 6000, pool: 'rgba(61,91,255,.4)', line: 'rgba(156,172,255,.06)' });
+rD.addShadow(oMock, floorD, { w: 420, h: 120, opacity: 0.7 });
+tl.fromTo(rD.cam, { x: 900, z: 2100, ry: 10 }, { x: 140, z: 1720, ry: -4, duration: 4.1, ease: 'expo.out', immediateRender: false }, 24.27);
+tl.fromTo(oMock, { x: 600, ry: -30 }, { x: -380, ry: 6, duration: 1.0, ease: 'expo.out', immediateRender: false }, 24.27);
+tl.fromTo(ttl, { opacity: 0 }, { opacity: 1, duration: 0.5 }, 24.6);
+// VO "officer" at 24.5: scan @24.82, events @25.88, even offline @26.66
+tl.fromTo('#sl', { y: 0 }, { y: 374, duration: 0.5, ease: 'sine.inOut', yoyo: true, repeat: 1, immediateRender: false }, 24.9);
+tl.to('#vf i', { borderColor: '#54D98B', duration: 0.12 }, 25.9);
+tl.set('#sl', { opacity: 0 }, 25.9);
+tl.fromTo('#toast', { y: 220, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: E.settle }, 25.92);
+tl.fromTo(oSync, { y: 420, s: 0.7 }, { y: 120, s: 1, duration: 0.7, ease: E.settle }, 26.5);
+tl.fromTo(syncEl, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 26.5);
+tl.to('#s1', { opacity: 0, y: -40, filter: 'blur(6px)', duration: 0.25, ease: E.in }, 27.35);
+tl.fromTo('#s2', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.3 }, 27.5);
+tl.to(syncEl, { borderColor: 'rgba(102,130,255,.5)', background: 'rgba(20,30,80,.6)', color: '#9CACFF', duration: 0.3 }, 27.35);
+tl.to('#sd', { background: '#526FF2', color: '#fff', duration: 0.3 }, 27.35);
+tl.set('#sico use', { attr: { href: '#i-sync' } }, 27.35);
+tl.to('#sico', { rotation: 540, duration: 0.8, ease: 'power1.inOut' }, 27.35);
+tl.to('#s2', { opacity: 0, y: -40, filter: 'blur(6px)', duration: 0.22, ease: E.in }, 28.0);
+tl.fromTo('#s3', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.3 }, 28.12);
+tl.to(syncEl, { borderColor: 'rgba(84,217,139,.5)', background: 'rgba(16,50,34,.6)', color: '#54D98B', duration: 0.25 }, 28.1);
+tl.to('#sd', { background: '#54D98B', color: '#050A1C', duration: 0.25 }, 28.1);
+tl.set('#sico use', { attr: { href: '#i-check' } }, 28.12); tl.set('#sico', { rotation: 0 }, 28.12);
+tl.fromTo('#sd', { scale: 0.6 }, { scale: 1, duration: 0.45, ease: E.pop, immediateRender: false }, 28.12);
+tl.to(rD.cam, { z: 520, duration: 0.45, ease: 'power3.in' }, 28.35);
+tl.fromTo('#vD', { filter: 'blur(0px)', opacity: 1 }, { filter: 'blur(16px)', opacity: 0, duration: 0.45, ease: 'power3.in', immediateRender: false }, 28.35);
+
+/* ---------------- E: peso line → streak → notification → seal (28.8 – 37.2) ---------------- */
+MK.cut(tl, '#sE', 28.8);
+// VO "peso" at 28.5: see @29.24, every @29.64, peso @29.9, goes @30.4
+tl.add(MK.wordsIn('#k8a', { stagger: 0.12, from: 'below', blur: 12 }), 28.55);
+tl.add(MK.wordsIn('#k8b', { stagger: 0.13, from: 'below', blur: 12 }), 29.4);
+tl.add(C3.pulse(glowA, { scale: 1.12 }), 29.9);
+tl.add(C3.streak('#k8', '#lineE', { width: 520, duration: 0.35 }), 31.15);
+tl.add(C3.streakToPill('#lineE', '#notif', { ring: '#ringN' }), 31.55);
+tl.add(C3.pulse(glowA, { scale: 1.2 }), 31.6);
+tl.to('#notif', { scaleX: 0.1, scaleY: 0.4, opacity: 0, filter: 'blur(8px) brightness(2)', duration: 0.35, ease: 'power3.in' }, 32.45);
+tl.fromTo('#dotE', { opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1, duration: 0.2, ease: 'power2.out', immediateRender: false }, 32.7);
+tl.to('#dotE', { scale: 6, opacity: 0, duration: 0.3, ease: 'power2.in' }, 32.88);
+tl.set('#brandE', { opacity: 1 }, 32.9);
+// VO "end" at 33.0: Board @33.64, one step @34.82
+tl.add(C3.logoReveal('#sealE', '#wordE', '#ringE', { wordAt: 0.35 }), 32.9);
+tl.add(C3.pulse(glowA, { scale: 1.3 }), 32.95);
+tl.add(MK.wordsIn('#tagE', { stagger: 0.12, from: 'below', blur: 8 }), 34.75);
+tl.add(MK.drift('#brandE', { scale: 1.035, duration: 4.2 }), 33.2);
+tl.to(glowB, { opacity: 0.4, duration: 1.2 }, 34.8);
+
+/* ---------------- F: seal-shaped mask wipe into credits (37.2 – 40) ---------------- */
+const circleMask = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#000"/></svg>');
+MK.cut(tl, '#sF', 37.2);
+tl.set('#sE', { visibility: 'visible' }, 37.2);
+// the wipe opens out of the seal itself (centre measured when the wipe starts)
+const sealCentre = () => { const r = document.getElementById('sealE').getBoundingClientRect(), st = document.getElementById('stage').getBoundingClientRect(), k = MK.stageScale();
+  return [(r.left - st.left + r.width / 2) / k, (r.top - st.top + r.height / 2) / k]; };
+tl.add(C3.maskWipe('#sF', circleMask, { from: 150, to: 5200, duration: 0.75, center: sealCentre }), 37.2);
+tl.add(C3.pulse('#sealE', { scale: 1.12, duration: 0.4 }), 36.85);
+tl.set('#sE', { visibility: 'hidden' }, 38.0);
+tl.to({}, { duration: 0.1 }, 39.9);
+
+MK.mount(tl);
+</script>
+</body>
+</html>

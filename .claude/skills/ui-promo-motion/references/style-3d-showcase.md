@@ -87,6 +87,16 @@ Defaults that look right: `ambient` 0.4–0.65, `spec` 0.55–0.75, `shininess` 
 - **Respect the motion-blur speed limit.** Sub-frame blending (`--mb 4`) shows anything moving faster than ~40 px per frame as **stacked copies**, not a smear. For fast pans and whips, add a directional blur with `C3.motionBlur(el, 'x').swell(peak, duration)` (~20 px peak for a full-panel pan). For zoom-throughs, ramp an isotropic `blur()` on the moving layer. Pans of a full screen width should take **≥ 0.7 s** with `power2.inOut`.
 - **Don't swap a flat panel for a 3D one in a single frame.** Put the content on the flat panel first, then dissolve over 0.15–0.2 s into the 3D object, framed at the same size.
 
+## Render performance (headless Chromium paints on the CPU)
+
+Measured on the LSC reel, where these fixes took section C from 2.5 s to under 0.4 s per frame:
+- **No large CSS blur filters.** A `filter: blur(130px)` on a 1400 px glow costs ~0.3 s per frame. Use a many-stop radial gradient (`C3.glow` does this by default).
+- **No `mix-blend-mode`** on full-screen layers (grain, glare). Use plain alpha.
+- **Don't lay out giant planes.** Floors and backdrops are rasterized small and scaled up in 3D (`C3.floor` `res`, `C3.backdrop`).
+- **Shadows only where they show.** Skip contact shadows for objects floating far above the floor, and soften shadows with gradients, not `blur()`.
+- Keep box-shadows on many 3D panels moderate (~60 px blur).
+- Time each section with `--start/--end` at `--fps 10` before a full render.
+
 ## Gotchas
 
 - The rig updates through `MK.onFrame`, so **every** tween on `rig.cam` or a placed object is frame-exact. Don't rely on `onUpdate` ordering.

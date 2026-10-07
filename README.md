@@ -19,7 +19,8 @@ Claude Code skills for 3D, animation, and visual design, vendored under `.claude
 
 ## Projects
 
-- [`projects/lsync-promo`](projects/lsync-promo): a 48 s promo for the LSC Digital Transparency Board (LSynC)
+- [`projects/lsync-glow`](projects/lsync-glow): a 40 s brand-glow 3D reel for the LSC Digital Transparency Board (LSynC)
+- [`projects/lsync-promo`](projects/lsync-promo): the first, bright 48 s promo for LSynC
 
 ## Rendering videos (`ui-promo-motion`)
 

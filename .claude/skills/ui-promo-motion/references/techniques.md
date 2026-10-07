@@ -7,6 +7,7 @@ Each move lists where it appears in the references (A = ride-hailing ad, B = mot
 ### 1. Word-by-word grow-in — `MK.wordsIn(el, { from: 'small', tint })`
 A 0.1–1.0 s, C 0.0–0.3 s, D 6.8–7.3 s.
 Each word starts **tiny (≈40 %), blurred (≈14 px) and transparent**, then grows into place with `expo.out` over ~0.6 s, stagger 0.12–0.2 s. In A the words begin in the brand green and settle to near-black (`tint`). The finished line is readable by ~1.0 s.
+Gotcha: splitting wraps every word in an `inline-block`, and a parent's `text-decoration` (accent underline) does not reach inside inline-blocks. Put the underline class on an inner element and split its wrapper: `<span class="accw"><span class="acc">peso.</span></span>` → `MK.wordsIn('.accw')`.
 Variants: `from: 'below'` for sub-lines (they rise 60 px), `from: 'drop'` for C's falling, vertically smeared words.
 
 ### 2. Word-by-word exit — `MK.wordsOut(el)`
