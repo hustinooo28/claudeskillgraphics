@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brand Glow Template</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="motion-kit.js"></script>
+<script src="camera3d.js"></script>
+<style>
+  :root { --brand: #2BD96B; --bg: #070A0E; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: #000; overflow: hidden; }
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: #fff;
+    font-family: 'Inter Variable', 'Inter', sans-serif; letter-spacing: -0.02em; }
+  .layer { position: absolute; inset: 0; }
+  .shot { position: absolute; inset: 0; visibility: hidden; overflow: hidden; }
+  .mid { position: absolute; inset: 0; display: grid; place-items: center; }
+  .w, .c { display: inline-block; }
+  .logo { display: flex; align-items: center; gap: 0; font-size: 92px; font-weight: 700; letter-spacing: -0.04em; }
+  .icon { width: 120px; height: 120px; border-radius: 30px; background: linear-gradient(145deg, #5BF08F, #18B455); display: grid; place-items: center; color: #04210f; font-size: 72px; font-weight: 800; box-shadow: 0 0 60px rgba(43,217,107,.5); }
+  .word { padding-left: 30px; white-space: nowrap; display: inline-block; }
+  .ring { position: absolute; width: 180px; height: 180px; border-radius: 50%; border: 2px solid rgba(160,255,190,.8); left: 50%; top: 50%; margin: -90px 0 0 -90px; opacity: 0; }
+  .screen { background: #000; }
+  .lock { position: absolute; inset: 0; z-index: 2; background: radial-gradient(80% 60% at 30% 20%, #1c5e36, #06140b 70%); color: #fff; text-align: center; }
+  .lock .time { font-size: 92px; font-weight: 300; margin-top: 110px; letter-spacing: -0.02em; }
+  .home { position: absolute; inset: 0; background: radial-gradient(90% 70% at 70% 10%, #1b3a2a, #050807 70%); display: grid; grid-template-columns: repeat(4, 64px); gap: 26px 22px; padding: 120px 34px; align-content: start; }
+  .app { width: 64px; height: 64px; border-radius: 16px; }
+  .glass { background: rgba(26,31,36,.78); border: 1px solid rgba(255,255,255,.09); border-radius: 26px; backdrop-filter: blur(18px); box-shadow: 0 30px 60px rgba(0,0,0,.45); }
+  .row { width: 980px; height: 132px; display: flex; align-items: center; gap: 28px; padding: 0 34px; font-size: 38px; font-weight: 600; }
+  .row .th { width: 84px; height: 84px; border-radius: 18px; }
+  .row small { display: block; font-size: 24px; color: #8b97a3; font-weight: 500; margin-top: 4px; }
+  .row .pill { margin-left: auto; font-size: 22px; color: var(--brand); background: rgba(43,217,107,.12); padding: 8px 18px; border-radius: 999px; }
+  .line { position: absolute; left: 50%; top: 50%; height: 6px; margin-top: -3px; border-radius: 6px; background: #eaffef; box-shadow: 0 0 18px 4px var(--brand), 0 0 60px 14px rgba(43,217,107,.45); transform: translateX(-50%); opacity: 0; }
+  .notif { position: absolute; left: 50%; top: 50%; width: 760px; height: 128px; margin: -64px 0 0 -380px; display: flex; align-items: center; gap: 24px; padding: 0 30px; font-size: 30px; }
+  .notif b { display: block; font-size: 32px; }
+  .notif span { color: #a3afbb; font-size: 25px; }
+  .spot { position: absolute; left: 50%; top: 50%; width: 1100px; height: 520px; margin: -260px 0 0 -550px; background: radial-gradient(50% 50% at 50% 50%, rgba(255,226,180,.32), transparent 70%); filter: blur(30px); }
+  .accent { color: var(--brand); text-decoration: underline; text-decoration-thickness: 5px; text-underline-offset: 14px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="layer"><div id="glowA"></div><div id="glowB"></div></div>
+
+  <!-- 1 logo -->
+  <section class="shot" id="s1">
+    <div class="mid"><div class="logo" id="logo1"><div class="icon" id="icon1">N</div><div class="wclip"><span class="word" id="word1">nova</span></div></div></div>
+    <div class="ring" id="ring1"></div>
+  </section>
+
+  <!-- 2 phone -->
+  <section class="shot" id="s2">
+    <div class="layer" id="v2"></div>
+  </section>
+  <div id="phoneScreen" class="screen">
+    <div class="lock" id="lock"><div class="time">9:41</div><div style="font-size:24px;opacity:.8">Tuesday, October 7</div></div>
+    <div class="home" id="home"></div>
+  </div>
+
+  <!-- 3 mockup with warped UI -->
+  <section class="shot" id="s3">
+    <div id="mockWrap" style="position:absolute;left:640px;top:40px;width:772px;height:1467px;transform-origin:0 0">
+      <div id="mockUI" style="background:linear-gradient(160deg,#0c1712,#030504);color:#fff;padding:60px 46px;font-size:46px;font-weight:700">
+        Products<div style="margin-top:30px;display:grid;gap:22px">
+          <div class="glass" style="height:150px;border-radius:30px"></div><div class="glass" style="height:150px;border-radius:30px;border-color:rgba(43,217,107,.6)"></div><div class="glass" style="height:150px;border-radius:30px"></div><div class="glass" style="height:150px;border-radius:30px"></div></div>
+      </div>
+      <img src="assets/mockups/phone-angled.png" style="position:absolute;left:0;top:0;width:772px;height:1467px">
+    </div>
+  </section>
+
+  <!-- 4 floating glass rows with focus pulls -->
+  <section class="shot" id="s4">
+    <div class="layer" id="v4"></div>
+  </section>
+
+  <!-- 5 type → streak → notification → logo -->
+  <section class="shot" id="s5">
+    <div class="mid"><div id="t1" style="font-size:84px;font-weight:650"><span id="t1a">Sell</span> <span id="t1b">what you <span class="accent">make</span></span></div></div>
+    <div class="line" id="line"></div>
+    <div class="notif glass" id="notif"><div class="icon" style="width:72px;height:72px;font-size:42px;border-radius:18px">N</div><div><b>Order #1001</b><span>$38.00 · 1 item from Online Store</span></div><span style="margin-left:auto">now</span></div>
+    <div class="ring" id="ring5" style="width:900px;height:240px;margin:-120px 0 0 -450px;border-radius:120px"></div>
+    <div class="mid"><div class="logo" id="logo5" style="opacity:0"><div class="icon" id="icon5">N</div><div class="wclip"><span class="word" id="word5">nova</span></div></div></div>
+    <div class="ring" id="ring5b"></div>
+  </section>
+
+  <!-- 6 spotlight end card (revealed through a logo-shaped mask) -->
+  <section class="shot" id="s6" style="background:#050505">
+    <div class="spot"></div>
+    <div class="mid"><div style="text-align:center"><div style="font-size:22px;color:#b9b2a4">made with</div><div style="font-size:40px;font-weight:650;margin-top:6px">ui-promo-motion</div></div></div>
+  </section>
+</div>
+
+<script>
+const tl = gsap.timeline({ defaults: { ease: MK.EASE.out } });
+const E = MK.EASE;
+const glowA = C3.glow('#glowA', { color: '#2BD96B', size: 1300, x: 960, y: 640 });
+const glowB = C3.glow('#glowB', { color: '#2BD96B', size: 900, x: 1500, y: 200, strength: 0.35 });
+tl.fromTo(glowA, { opacity: 0, scale: 0.6 }, { opacity: 0.85, scale: 1, duration: 1.2, ease: 'sine.out' }, 0);
+tl.to(glowA, { x: 700, y: 520, duration: 5, ease: 'sine.inOut' }, 1.2);
+tl.to(glowA, { x: 1150, y: 600, duration: 6, ease: 'sine.inOut' }, 6.2);
+tl.to(glowB, { x: 400, y: 900, duration: 12, ease: 'sine.inOut' }, 0);
+
+/* 1 logo (0 – 1.8) */
+MK.cut(tl, '#s1', 0);
+tl.add(C3.logoReveal('#icon1', '#word1', '#ring1'), 0.3);
+tl.add(C3.pulse(glowA), 0.35);
+tl.to('#logo1', { scale: 1.6, y: -200, opacity: 0, filter: 'blur(18px)', duration: 0.45, ease: 'power3.in' }, 1.55);
+
+/* 2 phone tumbles in, lock → home, app opens (1.8 – 4.6) */
+MK.cut(tl, '#s2', 1.8);
+const rig = C3.rig('#v2', { fov: 1300, dof: 0 });
+const home = document.getElementById('home');
+['#ff5a5f', '#2BD96B', '#4c8dff', '#ffc94a', '#b46bff', '#ff8a3d', '#30d5c8', '#ff4fa3', '#9aa3ad', '#2BD96B', '#4c8dff', '#ffc94a']
+  .forEach((c, i) => { const a = document.createElement('div'); a.className = 'app'; a.style.background = c; if (i === 5) a.id = 'appIcon'; home.appendChild(a); });
+const phone = C3.phone(rig, { screen: '#phoneScreen', x: 0, y: 0, z: 0 });
+tl.fromTo(phone, { y: -1400, rx: -70, ry: 50, rz: -30 }, { y: 40, rx: 22, ry: -18, rz: 0, duration: 0.95, ease: 'expo.out' }, 1.8);
+tl.fromTo(rig.cam, { z: 1350 }, { z: 1150, duration: 2.2, ease: 'sine.inOut' }, 1.8); // slow push; the low angle comes from the phone's own tilt
+tl.to(phone, { ry: 14, rx: 14, duration: 1.3, ease: 'sine.inOut' }, 2.75);
+tl.to('#lock', { y: -900, duration: 0.45, ease: 'power3.in' }, 3.05);
+tl.fromTo('#home .app', { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, stagger: 0.02, ease: E.pop }, 3.25);
+tl.to(phone, { rx: 0, ry: 0, y: 0, duration: 0.5, ease: E.inOut }, 4.0);
+tl.to(rig.cam, { z: 520, y: 0, rx: 0, duration: 0.6, ease: 'power3.in' }, 4.0); // push into the icon area
+tl.to('#appIcon', { scale: 14, borderRadius: '4px', duration: 0.5, ease: 'power3.in' }, 4.1);
+
+/* 3 angled mockup with UI warped into its screen (4.6 – 6.2) */
+MK.cut(tl, '#s3', 4.6);
+const MQ = { tl: [80, 36], tr: [577, 110], br: [732, 1403], bl: [207, 1364] }; // from assets/mockups/mockups.json
+C3.fitQuad('#mockUI', 640, 1380, MQ);
+tl.fromTo('#mockWrap', { scale: 0.62, x: 0, y: 260, rotation: 8, opacity: 0, filter: 'blur(16px)' }, { scale: 0.68, y: 30, rotation: 0, opacity: 1, filter: 'blur(0px)', duration: 0.8, ease: 'expo.out' }, 4.6);
+tl.to('#mockWrap', { x: -60, scale: 0.72, duration: 1.2, ease: 'sine.inOut' }, 5.2);
+
+/* 4 floating glass rows in 3D with DOF focus pulls (6.2 – 8.6) */
+MK.cut(tl, '#s4', 6.2);
+const rig4 = C3.rig('#v4', { fov: 1300, dof: 16, maxBlur: 10 });
+const rows = ['Heavy Cotton Tee|$38.00 · 24 in stock', 'Suede Chelsea Boot|$128.00 · 11 in stock', 'Bomber Jacket|$148.00 · 7 in stock', 'Wool Beanie|$24.00 · 52 in stock']
+  .map((t, i) => {
+    const [a, b] = t.split('|');
+    const el = document.createElement('div'); el.className = 'row glass';
+    el.innerHTML = `<div class="th" style="background:${['#d9cbb4', '#8a5a35', '#a8552d', '#6b2f2f'][i]}"></div><div>${a}<small>${b}</small></div><div class="pill">Active</div>`;
+    return rig4.add(el, { x: 0, y: -240 + i * 165, z: -i * 60, rx: 0, ry: -14 });
+  });
+tl.fromTo(rig4.cam, { x: -200, y: -120, z: 1700, ry: -10, rx: 6, focus: 1450 }, { x: 140, y: 120, z: 1500, ry: 6, rx: 4, duration: 2.4, ease: 'sine.inOut' }, 6.2);
+rows.forEach((r, i) => tl.fromTo(r, { x: 600, s: 0.9 }, { x: 0, s: 1, duration: 0.7, ease: E.out }, 6.2 + i * 0.08));
+[0, 1, 2].forEach((k, j) => {
+  rows.forEach((r, i) => tl.to(r, { s: i === k ? 1.12 : 0.96, z: i === k ? 140 : -i * 60, duration: 0.5, ease: E.inOut }, 6.8 + j * 0.55));
+});
+
+/* 5 type → streak → notification → dot → logo (8.6 – 13.2) */
+MK.cut(tl, '#s5', 8.6);
+tl.add(C3.track('#t1a', { duration: 0.8 }), 8.65);
+tl.add(MK.wordsIn('#t1b', { stagger: 0.12, from: 'below', blur: 10 }), 9.15);
+tl.add(C3.streak('#t1', '#line', { width: 380 }), 10.3);
+tl.add(C3.streakToPill('#line', '#notif', { ring: '#ring5' }), 10.7);
+tl.add(C3.pulse(glowA), 10.75);
+tl.to('#notif', { scaleX: 0.12, scaleY: 0.5, borderRadius: '60px', opacity: 0, filter: 'blur(8px) brightness(2)', duration: 0.35, ease: 'power3.in' }, 11.6);
+tl.set('#logo5', { opacity: 1 }, 11.9);
+tl.add(C3.logoReveal('#icon5', '#word5', '#ring5b'), 11.9);
+
+/* 6 logo-mask wipe into the spotlight end card (13.2 – 15) */
+const iconMask = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="25" fill="#000"/></svg>');
+MK.cut(tl, '#s6', 13.2);
+tl.set('#s5', { visibility: 'visible' }, 13.2); // keep the logo shot underneath while the mask grows
+tl.add(C3.maskWipe('#s6', iconMask, { from: 120, to: 6000, duration: 0.7 }), 13.2);
+tl.set('#s5', { visibility: 'hidden' }, 13.95);
+tl.to({}, { duration: 0.1 }, 14.9);
+
+MK.mount(tl);
+</script>
+</body>
+</html>

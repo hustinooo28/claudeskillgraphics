@@ -341,6 +341,13 @@
 
   /* ---------- stage, preview and render plumbing ---------- */
 
+  // Functions run after every seek (render) and every tick (preview), e.g. a 3D camera rig's update.
+  MK._frameHooks = [];
+  MK.onFrame = function (fn) {
+    MK._frameHooks.push(fn);
+  };
+  const runHooks = (t) => MK._frameHooks.forEach((fn) => fn(t));
+
   MK.stage = function () {
     const st = $('#stage');
     return { el: st, w: st.offsetWidth, h: st.offsetHeight };
@@ -367,7 +374,7 @@
     global.__tl = tl;
     global.__duration = tl.duration();
     global.__size = { w: st.offsetWidth, h: st.offsetHeight };
-    global.__seek = (t) => { tl.seek(t, false); };
+    global.__seek = (t) => { tl.seek(t, false); runHooks(t); };
     global.__ready = document.fonts ? document.fonts.ready : Promise.resolve();
     if (rendering) {
       document.documentElement.classList.add('rendering');
@@ -382,6 +389,7 @@
     };
     fit();
     addEventListener('resize', fit);
+    gsap.ticker.add(() => runHooks(tl.time()));
     global.__ready.then(() => {
       tl.seek(parseFloat(params.get('t')) || 0, false);
       tl.repeat(-1).repeatDelay(0.8).play();

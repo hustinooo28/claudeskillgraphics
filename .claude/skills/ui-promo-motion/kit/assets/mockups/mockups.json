@@ -1,0 +1,100 @@
+{
+ "phone-angled": {
+  "file": "phone-angled.png",
+  "size": [
+   772,
+   1467
+  ],
+  "screen_bbox": [
+   60,
+   28,
+   747,
+   1419
+  ],
+  "screen_quad": {
+   "tl": [
+    80,
+    36
+   ],
+   "br": [
+    732,
+    1403
+   ],
+   "tr": [
+    577,
+    110
+   ],
+   "bl": [
+    207,
+    1364
+   ]
+  }
+ },
+ "phone-front-top": {
+  "file": "phone-front-top.png",
+  "size": [
+   1044,
+   1125
+  ],
+  "screen_bbox": [
+   55,
+   47,
+   991,
+   1124
+  ],
+  "screen_quad": {
+   "tl": [
+    93,
+    84
+   ],
+   "br": [
+    991,
+    1124
+   ],
+   "tr": [
+    948,
+    80
+   ],
+   "bl": [
+    55,
+    1124
+   ]
+  }
+ },
+ "phone-front": {
+  "file": "phone-front.png",
+  "size": [
+   468,
+   964
+  ],
+  "screen_bbox": [
+   21,
+   19,
+   446,
+   944
+  ],
+  "screen_quad": {
+   "tl": [
+    39,
+    34
+   ],
+   "tr": [
+    427,
+    33
+   ],
+   "br": [
+    430,
+    927
+   ],
+   "bl": [
+    36,
+    926
+   ]
+  }
+ },
+ "_notes": {
+  "phone-angled": "Blue iPhone 13 at a 3/4 angle, transparent outside and in the screen. Warp UI into screen_quad with C3.fitQuad.",
+  "phone-front-top": "Top half of an iPhone 15 Pro, front-on; status bar + nav buttons kept on transparent screen. Bottom edge is cropped: use it bleeding off the bottom of frame.",
+  "phone-front": "Full black iPhone, front-on, no shadow (add with CSS drop-shadow)."
+ }
+}

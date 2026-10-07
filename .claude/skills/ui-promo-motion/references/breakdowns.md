@@ -1,6 +1,6 @@
 # Reference breakdowns
 
-Shot-by-shot timelines of the four reference videos, studied as frame strips at 2–10 fps. Times are in seconds. The source videos are not stored here; credit goes to the creators named below.
+Shot-by-shot timelines of the four 2D reference videos (the fifth, a 3D showcase, is broken down in `style-3d-showcase.md`), studied as frame strips at 2–10 fps. Times are in seconds. The source videos are not stored here; credit goes to the creators named below.
 
 ---
 

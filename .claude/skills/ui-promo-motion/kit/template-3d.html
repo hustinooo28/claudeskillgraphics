@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D Showcase Template</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/index.css">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="motion-kit.js"></script>
+<script src="camera3d.js"></script>
+<style>
+  :root { --glow: #FF5A1F; --red: #E5322D; --cyan: #3EC6D3; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: #000; overflow: hidden; }
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; background: #000; color: #fff;
+    font-family: 'Inter Variable', 'Inter', sans-serif; letter-spacing: -0.02em; }
+  .shot { position: absolute; inset: 0; visibility: hidden; overflow: hidden; }
+  .white { background: #fff; color: #111; }
+  .black { background: #000; }
+  .mid { position: absolute; inset: 0; display: grid; place-items: center; }
+  .small { font-size: 44px; font-weight: 550; }
+  .red { color: var(--red); }
+  .w, .c { display: inline-block; }
+  .view { position: absolute; inset: 0; }
+  .beam { position: absolute; left: 300px; top: -400px; width: 520px; height: 2000px; transform: rotate(32deg);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); filter: blur(40px); }
+  .ambient { position: absolute; inset: -20%; background: radial-gradient(40% 40% at 60% 55%, rgba(255,90,31,.55), transparent 70%), radial-gradient(30% 30% at 25% 30%, rgba(255,90,31,.25), transparent 70%); filter: blur(30px); }
+  .gcard { width: 620px; height: 380px; border-radius: 22px; overflow: hidden; border: 2px solid rgba(255,150,110,.95);
+    box-shadow: 0 0 26px 4px rgba(255,90,31,.9), 0 0 120px 24px rgba(255,80,20,.38); background: #fff; color: #111; padding: 26px 30px; }
+  .gcard.dark { background: linear-gradient(160deg, #141422, #07070c); color: #fff; }
+  .gcard .bar { display: flex; gap: 8px; margin-bottom: 20px; } .gcard .bar i { width: 12px; height: 12px; border-radius: 50%; background: #d4d4d8; }
+  .gcard h3 { font-size: 40px; letter-spacing: -0.03em; }
+  .gcard .blk { height: 26px; border-radius: 8px; background: #ececf1; margin-top: 14px; }
+  .gcard.dark .blk { background: #24243a; }
+  #panel2d { position: absolute; left: 580px; top: 325px; width: 760px; height: 430px; background: #fff; border-radius: 10px; transform-origin: 50% 50%; }
+  #wave { position: absolute; inset: 0; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <section class="shot white" id="sA">
+    <div class="mid"><div class="small" id="a1">Welcome</div></div>
+    <div class="mid"><div class="small" id="a2">to the <span class="red">Showreel</span></div></div>
+  </section>
+
+  <section class="shot black" id="sB">
+    <svg id="wave"></svg>
+    <div id="guides" style="position:absolute;inset:0"></div>
+    <div class="mid"><div class="small" id="b1" style="font-size:52px">Showreel</div></div>
+    <div id="panel2d"></div>
+    <div class="view" id="view3d"></div>
+  </section>
+
+  <section class="shot black" id="sD">
+    <div class="beam" id="beam"></div>
+    <div class="mid"><div class="small" id="d1" style="color:#e8e8ea">Got a project in mind?</div></div>
+  </section>
+
+  <section class="shot black" id="sE">
+    <div class="ambient" id="ambient"></div>
+    <div class="view" id="cloud"></div>
+  </section>
+
+  <section class="shot white" id="sF">
+    <div class="mid"><div class="small" id="f1">Let's build your ideas</div></div>
+    <div class="mid"><div class="small red" id="f2" style="font-size:64px;font-weight:650"></div></div>
+  </section>
+
+  <section class="shot black" id="sG">
+    <div class="mid"><div id="g1" style="font-size:72px;font-weight:700;text-shadow:0 0 30px rgba(255,255,255,.6)">Nova.</div></div>
+  </section>
+</div>
+
+<script>
+const tl = gsap.timeline({ defaults: { ease: MK.EASE.out } });
+const E = MK.EASE;
+
+/* A — white minimal type (0 – 1.6) */
+MK.cut(tl, '#sA', 0);
+tl.add(MK.wordsIn('#a1', { from: 'small', blur: 10 }), 0.05);
+tl.add(MK.wordsOut('#a1', { x: 0 }), 0.6);
+tl.add(MK.wordsIn('#a2', { stagger: 0.16, from: 'small', blur: 10 }), 0.8);
+tl.to('#sA', { backgroundColor: '#cfcfcf', duration: 0.1 }, 1.45);
+
+/* B — neon wave, guides, panel, curved wall (1.6 – 6.4) */
+MK.cut(tl, '#sB', 1.6);
+C3.invertFlash(tl, '#stage', 1.6);
+const wave = C3.neonWave('#wave', { y: 560, amp: 34, thickness: 9 });
+tl.to(wave, { phase: Math.PI * 5, duration: 4.8, ease: 'none', onUpdate: wave.draw }, 1.6);
+tl.fromTo('#b1', { opacity: 0, filter: 'blur(10px)', scale: 1.2 }, { opacity: 1, filter: 'blur(0px)', scale: 1, duration: 0.5 }, 1.6);
+tl.to('#b1', { opacity: 0, filter: 'blur(8px)', duration: 0.25, ease: E.in }, 2.1);
+tl.add(C3.guides('#guides', { x: 580, y: 325, w: 760, h: 430 }), 1.95);
+tl.fromTo('#panel2d', { scale: 0, opacity: 1 }, { scale: 1, duration: 0.45, ease: 'expo.out' }, 2.2);
+tl.set('#panel2d', { opacity: 0 }, 2.65);
+
+// Curved wall: three panels tiled into one texture, mapped onto a convex cylinder.
+const P = 1400, H = 800;
+const wallSrc = C3.panelSVG(P * 3, H, '#ffffff', [
+  { x: 0, y: 0, w: P, h: H, fill: '#E5322D' },
+  { x: P / 2, y: 410, text: 'Where do great ideas begin?', size: 54, color: '#fff', anchor: 'middle', weight: 700 },
+  ...[[90, 90], [330, 140], [980, 80], [1120, 470], [160, 520], [760, 560]].map(([x, y]) => ({ x, y, w: 180, h: 230, fill: '#f4f1ea', r: 6 })),
+  { x: P, y: 0, w: P, h: H, fill: '#0d0d12' },
+  { x: P + P / 2, y: 430, text: '◆ Studio', size: 110, color: '#fff', anchor: 'middle', weight: 800 },
+  { x: P * 2, y: 0, w: P, h: H, fill: '#eef2ff' },
+  { x: P * 2 + 120, y: 140, w: 520, h: 520, fill: '#ffffff', r: 28, stroke: '#d9def0' },
+  { x: P * 2 + 740, y: 140, w: 540, h: 250, fill: '#111', r: 28 },
+  { x: P * 2 + 740, y: 410, w: 540, h: 250, fill: '#d9f7e6', r: 28 },
+  { x: P * 2 + 1010, y: 560, text: '38 GB', size: 70, color: '#127a4a', anchor: 'middle', weight: 800 },
+  { x: P * 2 + 380, y: 420, text: 'Endless cycle', size: 48, color: '#2d52d6', anchor: 'middle', weight: 700 },
+]);
+const rig = C3.rig('#view3d', { fov: 1100, dof: 0 });
+const wall = C3.curvedWall(rig, wallSrc, { width: P * 3, height: H, radius: 1500, strips: 72, border: '3px dashed rgba(255,255,255,.85)' });
+const centre = wall.panTo(-P); // first panel (left third) at centre
+gsap.set(wall, { ry: centre });
+tl.set('#view3d', { opacity: 0 }, 0);
+tl.set('#view3d', { opacity: 1 }, 2.65);
+// match the 2D panel (760 px wide) then dolly in so the panel fills the frame
+tl.fromTo(rig.cam, { z: (1100 * P) / 760 }, { z: 1250, duration: 0.7, ease: E.inOut }, 2.65);
+tl.to(wall, { ry: wall.panTo(0), duration: 0.45, ease: 'power3.inOut' }, 3.5);   // pan to panel 2
+tl.to(wall, { ry: wall.panTo(P), duration: 0.45, ease: 'power3.inOut' }, 4.3);   // pan to panel 3
+tl.to(rig.cam, { z: 3900, rx: -6, ry: 8, duration: 1.0, ease: E.inOut }, 5.0);    // pull back: reveal the wall
+tl.to(wall, { ry: wall.panTo(0), duration: 1.0, ease: E.inOut }, 5.0);
+tl.to(rig.cam, { z: 200, rx: 0, ry: 0, duration: 0.45, ease: 'power3.in' }, 5.95); // punch through
+
+/* D — dark beam text (6.4 – 7.6) */
+MK.cut(tl, '#sD', 6.4);
+C3.invertFlash(tl, '#stage', 6.4);
+tl.fromTo('#beam', { x: -300 }, { x: 260, duration: 1.2, ease: 'none' }, 6.4);
+tl.add(MK.wordsIn('#d1', { stagger: 0.09, blur: 8 }), 6.45);
+
+/* E — glowing card cloud, orbit, fly into a screen (7.6 – 10.9) */
+MK.cut(tl, '#sE', 7.6);
+const cloud = C3.rig('#cloud', { fov: 1100, dof: 10, maxBlur: 10 });
+const spots = [[-700, -330, -200, 18], [40, -420, -700, 12], [720, -260, -150, 22], [-520, 140, 150, 16], [300, 60, -350, 20],
+  [880, 330, -650, 24], [-120, 430, -900, 14], [-980, 420, -1100, 20], [520, -720, -1300, 16]];
+const cards = spots.map(([x, y, z, ry], i) => {
+  const el = document.createElement('div');
+  el.className = 'gcard' + (i % 3 === 1 ? ' dark' : '');
+  el.innerHTML = `<div class="bar"><i></i><i></i><i></i></div><h3>${['Moodboard', 'Dashboard', 'Storage', 'Chat', 'Launch', 'Analytics', 'Files', 'Inbox', 'Design'][i]}</h3>
+    <div class="blk" style="width:${60 + (i * 13) % 35}%"></div><div class="blk" style="width:${40 + (i * 29) % 45}%"></div><div class="blk" style="width:${50 + (i * 7) % 30}%"></div>`;
+  return cloud.add(el, { x, y, z, ry, rx: -6 });
+});
+tl.add(cloud.orbit({ cx: 0, cz: -300, radius: 1750, from: -24, to: 14, duration: 2.6, ease: 'sine.inOut' }), 7.6);
+tl.fromTo(cloud.cam, { y: -160 }, { y: 120, duration: 2.6, ease: 'sine.inOut' }, 7.6);
+cards.forEach((c, i) => tl.fromTo(c, { z: c.z - 1400, s: 0.6 }, { z: c.z, s: 1, duration: 0.9, ease: E.out }, 7.65 + i * 0.07));
+tl.fromTo('#cloud', { opacity: 0 }, { opacity: 1, duration: 0.3 }, 7.6);
+tl.fromTo('#ambient', { opacity: 0.4, x: -100 }, { opacity: 1, x: 100, duration: 3.3, ease: 'none' }, 7.6);
+// fly into the "Launch" card
+const target = cards[4];
+const shot = cloud.frame(target, 1.25);
+tl.to(cloud.cam, { ...shot, duration: 0.75, ease: 'expo.inOut' }, 10.2);
+
+/* F — white type with scramble (10.9 – 12.3) */
+MK.cut(tl, '#sF', 10.95);
+tl.add(MK.wordsIn('#f1', { stagger: 0.1, blur: 8 }), 10.95);
+tl.add(MK.wordsOut('#f1', { x: 0 }), 11.55);
+tl.add(C3.scramble('#f2', 'to life', { duration: 0.5 }), 11.95);
+
+/* G — end (12.4 – 13.6) */
+MK.cut(tl, '#sG', 12.45);
+C3.invertFlash(tl, '#stage', 12.45);
+tl.fromTo('#g1', { opacity: 0, filter: 'blur(14px)', scale: 1.15 }, { opacity: 1, filter: 'blur(0px)', scale: 1, duration: 0.6 }, 12.5);
+tl.to({}, { duration: 0.1 }, 13.5);
+
+MK.mount(tl);
+</script>
+</body>
+</html>

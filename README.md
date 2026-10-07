@@ -9,13 +9,17 @@ Claude Code skills for 3D, animation, and visual design, vendored under `.claude
 | `design-dna` | [zanwei/design-dna](https://github.com/zanwei/design-dna) |
 | `motion-design` | [lottiefiles/motion-design-skill](https://github.com/lottiefiles/motion-design-skill) |
 | `genjutsu` | [genjutsu.athevon.dev](https://genjutsu.athevon.dev) |
-| `ui-promo-motion` | Original. Learned from four reference promo videos: style guide, GSAP motion kit, and an HTML → MP4 frame-by-frame renderer |
+| `ui-promo-motion` | Original. Learned from nine reference promo videos: style guide, GSAP motion kit, a CSS 3D camera rig, an HTML → MP4 frame-by-frame renderer, and voice-over / music / SFX tools |
 
 ## Using them
 
 - **In this repo:** open it with Claude Code and the skills load automatically.
 - **In another project:** copy the folders you want into that project's `.claude/skills/`.
 - **Everywhere on your machine:** copy them into `~/.claude/skills/`.
+
+## Projects
+
+- [`projects/lsync-promo`](projects/lsync-promo): a 48 s promo for the LSC Digital Transparency Board (LSynC)
 
 ## Rendering videos (`ui-promo-motion`)
 

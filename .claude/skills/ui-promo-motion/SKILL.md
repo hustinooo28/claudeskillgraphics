@@ -1,6 +1,6 @@
 ---
 name: ui-promo-motion
-description: Make Apple-style UI promo videos — short (10–50 s) product/app motion graphics with kinetic typography, floating UI cards, depth-of-field blur, and motivated transitions (zoom-through, shape wipe, button-to-circle wipe, swoosh reveal, camera-follow line) — built in HTML/GSAP and rendered frame-by-frame to MP4. Use when the user asks for a motion graphics video, app promo, product teaser, kinetic typography, "Apple style" animation, TikTok/Reels/Shorts promo, logo reveal, or wants an HTML animation exported as MP4.
+description: Make Apple-style UI promo videos — short (10–50 s) product/app motion graphics with kinetic typography, floating UI cards, depth-of-field blur, and motivated transitions (zoom-through, shape wipe, button-to-circle wipe, swoosh reveal, camera-follow line), plus two dark variants with a real 3D camera rig (curved screen walls, orbiting card clouds, fly-into-screen; a brand-glow phone reel with a 3D iPhone, glass UI panels and light-streak transitions) — built in HTML/GSAP and rendered frame-by-frame to MP4 with voice-over, music and SFX. Use when the user asks for a motion graphics video, app promo, product teaser, kinetic typography, "Apple style" animation, 3D camera moves / viewing angles, TikTok/Reels/Shorts promo, logo reveal, or wants an HTML animation exported as MP4.
 ---
 
 # UI Promo Motion
@@ -11,6 +11,8 @@ Read these before building:
 - `references/style-dna.md` — palette, type, depth, pacing, and easing numbers measured from the references.
 - `references/techniques.md` — every signature move, with its measured timing and the `motion-kit.js` call that reproduces it.
 - `references/breakdowns.md` — shot-by-shot timelines of the four references. Use them as storyboard templates.
+- `references/style-3d-showcase.md` — the **3D variant**: black stage, emissive glow, curved screen walls, card clouds, orbit / dolly / fly-into-screen camera moves. Read it whenever the user wants 3D, camera movement or viewing angles; build with `kit/camera3d.js` starting from `kit/template-3d.html`.
+- `references/style-brand-glow-reel.md` — the **brand-glow phone reel**: dark stage lit by one drifting brand-colour glow, a 3D phone hero, the app's UI as floating glass panels, no hard cuts (text → light streak → notification → logo). Start from `kit/template-glow.html`. Phone mockups with transparent screens and their screen corners are in `kit/assets/mockups/` (`mockups.json`; warp UI in with `C3.fitQuad`).
 - `references/audio.md` — voice-over (local TTS), procedural music/SFX, ducking and loudness. Read it whenever the video needs sound.
 
 ## Workflow
@@ -35,6 +37,16 @@ Read these before building:
 - **Every cut is motivated.** Exit a shot by zooming through it, wiping with a shape, morphing a button into the next scene, or panning along a line. Hard cuts only on a strong beat (e.g. into a full-bleed brand-colour frame or a dark shot).
 - **Fast in, slow settle.** Entrances use `expo.out` (0.5–0.8 s); exits use `power3.in` (0.3–0.45 s). Nothing moves linearly except slow background drift.
 - **Hold readable text ≥ 0.6 s** after it lands; hold the final logo ≥ 1.2 s.
+
+## Choosing a variant
+
+| The user wants… | Variant | Start from |
+|---|---|---|
+| clean, bright, Apple-keynote feel; explainer; light UI | main style | `kit/template.html` |
+| 3D, camera movement, viewing angles, techy/dark, a showreel | 3D showcase | `kit/template-3d.html` |
+| a premium brand/app ad, a phone hero, one brand colour, VO-driven | brand-glow reel | `kit/template-glow.html` |
+
+The variants share `motion-kit.js`, `camera3d.js`, the renderer and the audio tools, so moves can be mixed (e.g. the brand-glow reel's logo reveal inside the main style).
 
 ## Format defaults
 
