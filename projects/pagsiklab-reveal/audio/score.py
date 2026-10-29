@@ -16,7 +16,7 @@ rng = np.random.default_rng(11)
 BAR = R.HOUSE_LEN / 6
 BEAT = BAR / 3
 THEME_START = R.HOUSE_START - 3 * BAR          # 3 bars of ostinato under the descent onto the map
-BUS = {k: np.zeros((N, 2)) for k in ('music', 'drums', 'sfx', 'hits', 'verb')}
+BUS = {k: np.zeros((N, 2)) for k in ('music', 'drums', 'sfx', 'hits', 'vo', 'verb')}
 
 
 # ---------------- primitives ----------------
@@ -347,9 +347,9 @@ _vo = signal.resample(_vo, int(len(_vo) / 2 ** (-3 / 12)))          # -3 semiton
 _vo = filt(_vo, 'highpass', 55) + filt(_vo, 'lowpass', 220) * 0.6     # chest warmth
 _vo = np.tanh(_vo / np.abs(_vo).max() * 1.6) / np.tanh(1.6)
 VO_AT = 1.75
-add('sfx', _vo, VO_AT, 0.55, send=0.9)
-add('sfx', np.concatenate([np.zeros(int(0.32 * SR)), filt(_vo, 'lowpass', 1800)]), VO_AT, 0.10, pan=-0.4, send=1.0)   # hall echo
-add('sfx', np.concatenate([np.zeros(int(0.55 * SR)), filt(_vo, 'lowpass', 1200)]), VO_AT, 0.06, pan=0.4, send=1.0)
+add('vo', _vo, VO_AT, 0.55, send=0.9)
+add('vo', np.concatenate([np.zeros(int(0.32 * SR)), filt(_vo, 'lowpass', 1800)]), VO_AT, 0.10, pan=-0.4, send=1.0)   # hall echo
+add('vo', np.concatenate([np.zeros(int(0.55 * SR)), filt(_vo, 'lowpass', 1200)]), VO_AT, 0.06, pan=0.4, send=1.0)
 
 # ---------------- mix ----------------
 ir_t = tt(3.5)
@@ -362,10 +362,12 @@ _d0, _d1 = int((VO_AT - 0.2) * SR), int((VO_AT + len(_vo) / SR + 0.3) * SR)
 _duck[_d0:_d1] = 0.55
 _duck = np.convolve(_duck, np.ones(4800) / 4800, mode='same')
 BUS['music'] *= _duck[:, None]
-mix = BUS['music'] * 2.0 + BUS['drums'] * 0.65 + BUS['sfx'] * 1.1 + BUS['hits'] * 0.65 + verb * 0.6
+mix = BUS['music'] * 2.0 + BUS['drums'] * 0.65 + BUS['sfx'] * 1.1 + BUS['hits'] * 0.65 + BUS['vo'] + verb * 0.6
 fx = BUS['sfx'] * 1.1 + BUS['hits'] * 0.6 + np.stack([signal.fftconvolve((BUS['verb_sfx'] + BUS['verb_hits'] * 0.55)[:, c], ir[:, c])[:N] for c in range(2)], 1) * 0.6
 np.save(os.path.join(os.path.dirname(HERE), 'build', 'fx_stem.npy'), fx[:int(R.END * SR)].astype(np.float32))
 np.save(os.path.join(os.path.dirname(HERE), 'build', 'vo_span.npy'), np.array([VO_AT, VO_AT + len(_vo) / SR]))
+vo_stem = BUS['vo'] + np.stack([signal.fftconvolve(BUS['verb_vo'][:, c], ir[:, c])[:N] for c in range(2)], 1) * 0.6
+np.save(os.path.join(os.path.dirname(HERE), 'build', 'vo_stem.npy'), vo_stem[:int(R.END * SR)].astype(np.float32))
 # the moment of silence before the title
 g = np.ones(N)
 a, b = int((R.TITLE[0] + 0.7) * SR), int((R.TITLE[0] + 1.2) * SR)

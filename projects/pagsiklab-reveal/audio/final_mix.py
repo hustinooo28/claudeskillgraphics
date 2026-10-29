@@ -35,7 +35,36 @@ g = np.ones(N)
 g[int((vo0 - 0.3) * SR):int((vo1 + 0.4) * SR)] = 0.45
 g = np.convolve(g, np.ones(9600) / 9600, mode='same')
 music *= g[:, None] * 0.9
-mix = music + fx * 0.85
+# effects sit under the music: a slow level rider keeps them ~10 dB below it (never louder than a floor),
+# and a soft limiter rounds off the transients so no single hit jumps out
+def movavg(x, win):
+    """centred moving average via cumulative sums (np.convolve is far too slow for second-long windows)"""
+    c = np.cumsum(np.r_[0.0, x])
+    y = (c[win:] - c[:-win]) / win
+    pad = len(x) - len(y)
+    return np.pad(y, (pad // 2, pad - pad // 2), mode='edge')
+
+
+def env_rms(x, win):
+    p = movavg((x ** 2).mean(1) if x.ndim == 2 else x ** 2, win)
+    return np.sqrt(np.maximum(p, 0) + 1e-12)
+
+
+win = int(0.6 * SR)
+m_env, f_env = env_rms(music, win), env_rms(fx, win)
+target = np.maximum(m_env * 10 ** (-10 / 20), 10 ** (-38 / 20))
+g_fx = np.clip(target / (f_env + 1e-9), 0.0, 1.7) * 0.9      # duck loud effects, lift buried ones a little
+g_fx = movavg(g_fx, int(0.25 * SR))
+fx = fx * g_fx[:, None]
+lim = 10 ** (-16 / 20)
+fx = np.tanh(fx / lim) * lim
+vo = np.load(os.path.join(B, 'vo_stem.npy')).astype(np.float64)
+mix = music + fx + vo * 1.0
+if os.environ.get('MIX_REPORT'):
+    lvl = lambda x: 20 * np.log10(np.sqrt((x ** 2).mean()) + 1e-12)
+    for nm, a, b in [('cold open', 0, 7), ('forge', 7, 12), ('credits', 12, 18), ('houses', 24, 90), ('campus', 90, 101), ('title', 108, 118)]:
+        i, j = int(a * SR), int(b * SR)
+        print('%-10s music %6.1f  fx %6.1f  vo %6.1f dB' % (nm, lvl(music[i:j]), lvl(fx[i:j]), lvl(vo[i:j])))
 e = np.ones(N)
 k0 = int((R.END - 1.6) * SR)
 e[k0:] = np.linspace(1, 0, N - k0) ** 2

@@ -176,21 +176,32 @@ def animate_dragon(ctx, root, wings):
             yaw_rate = (yaw - prev_yaw) * FPS if prev_yaw is not None else 0.0
             bank = max(-0.7, min(0.7, -0.35 * yaw_rate))
         prev_yaw = yaw
-        root.location = p
-        root.rotation_euler = (bank, -pitch * 0.8, yaw)
+        # wingbeat: fast powerful downstroke, slower recovery with the wings sweeping back
+        if mode == 'fly':
+            amp, freq, bias = 0.75, 1.7, 0.05
+        elif mode == 'glide':
+            amp, freq, bias = 0.55, 1.25, 0.12
+        elif mode == 'land':
+            amp, freq, bias = 0.85, 2.4, 0.1                     # back-beats to brake
+        else:
+            amp = None                                           # perched: folded back along the body
+        if amp is not None:
+            ph = 2 * math.pi * freq * t
+            stroke = math.sin(ph + 0.45 * math.sin(ph))          # skewed: quicker downstroke
+            flap = bias + amp * stroke
+            sweep = 0.35 * max(0.0, math.cos(ph))               # wings fold back on the way up
+            bob = -0.09 * stroke                                 # body lifts as the wings drive down
+        else:
+            flap, sweep, bob = None, 0.0, 0.0
+        root.location = p + Vector((0, 0, bob))
+        root.rotation_euler = (bank, -pitch * 0.8 + 0.06 * (bob / 0.09 if amp else 0), yaw)
         root.keyframe_insert('location', frame=fr)
         root.keyframe_insert('rotation_euler', frame=fr)
-        # wings: strong beats in flight, slow glide strokes while circling, folded when perched
-        if mode == 'fly':
-            flap = 0.55 * math.sin(2 * math.pi * 1.9 * t)
-        elif mode == 'glide':
-            flap = 0.12 + 0.22 * math.sin(2 * math.pi * 0.8 * t)
-        elif mode == 'land':
-            flap = 0.75 * math.sin(2 * math.pi * 2.4 * t)        # back-beats to brake
-        else:
-            flap = None                                          # folded back along the body
         for piv, side in wings:
-            piv.rotation_euler = (side * flap, 0, 0) if flap is not None else (side * -0.35, 0.25, -side * 1.15)
+            if flap is not None:
+                piv.rotation_euler = (side * flap, 0.0, -side * sweep)
+            else:
+                piv.rotation_euler = (side * -0.35, 0.25, -side * 1.15)
             piv.keyframe_insert('rotation_euler', frame=fr)
     # visible from the descent until it climbs out of frame
     root.hide_render = True
