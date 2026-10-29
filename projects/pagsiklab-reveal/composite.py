@@ -1,0 +1,568 @@
+"""Composite the final film: 2D openers, graded 3D with atmosphere and particles, lower thirds, finale.
+Usage: python3 composite.py build/film.mp4 [frame,frame,...  -> writes PNG stills instead]"""
+import sys, os, math, subprocess
+import cv2, numpy as np
+from multiprocessing import Pool
+import realm as R
+
+FPS, W, H = R.FPS, 1920, 1080
+NF = int(round(R.END * FPS))
+F = lambda t: int(round(t * FPS))
+yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+
+
+def clamp(x): return min(max(x, 0.0), 1.0)
+def prog(t, s, d): return clamp((t - s) / d)
+def sm(x): x = clamp(x); return x * x * (3 - 2 * x)
+def oc(x): x = clamp(x); return 1 - (1 - x) ** 3
+
+
+# ---------------- cached layers ----------------
+_C = {}
+
+
+def txt(name):
+    if name not in _C:
+        im = cv2.imread(f'build/titles/{name}.png', cv2.IMREAD_UNCHANGED).astype(np.float32)
+        im = cv2.resize(im, (W, H), interpolation=cv2.INTER_AREA)
+        a = im[..., 3:] / 255
+        _C[name] = np.dstack([im[..., :3] * a, a[..., 0]])
+    return _C[name]
+
+
+def rgba_img(path, width):
+    k = (path, width)
+    if k not in _C:
+        im = cv2.imread(path, cv2.IMREAD_UNCHANGED).astype(np.float32)
+        if im.shape[2] == 3:
+            im = np.dstack([im, np.full(im.shape[:2], 255, np.float32)])
+        s = width / im.shape[1]
+        im = cv2.resize(im, (width, int(im.shape[0] * s)), interpolation=cv2.INTER_AREA)
+        a = im[..., 3:] / 255
+        _C[k] = np.dstack([im[..., :3] * a, a[..., 0]])
+    return _C[k]
+
+
+def icon(key, size=92):
+    k = ('icon', key, size)
+    if k not in _C:
+        im = cv2.resize(cv2.imread(f'build/tex/sigil_{key}.png').astype(np.float32), (size, size), interpolation=cv2.INTER_AREA)
+        g = np.mgrid[0:size, 0:size].astype(np.float32)
+        d = np.sqrt((g[0] - size / 2 + 0.5) ** 2 + (g[1] - size / 2 + 0.5) ** 2)
+        a = np.clip(size / 2 - d, 0, 1)
+        ring = np.clip(1 - np.abs(d - (size / 2 - 1.5)) / 1.5, 0, 1)
+        im = im * (1 - ring[..., None]) + ring[..., None] * np.float32([110, 185, 230])
+        _C[k] = np.dstack([im * a[..., None], a])
+    return _C[k]
+
+
+def over(c, pm, op=1.0, x0=0, y0=0):
+    """premultiplied layer onto canvas, optional offset (clipped)"""
+    if op <= 0.002:
+        return c
+    h, w = pm.shape[:2]
+    X0, Y0, X1, Y1 = max(x0, 0), max(y0, 0), min(x0 + w, W), min(y0 + h, H)
+    if X1 <= X0 or Y1 <= Y0:
+        return c
+    sub = pm[Y0 - y0:Y1 - y0, X0 - x0:X1 - x0]
+    roi = c[Y0:Y1, X0:X1]
+    roi *= 1 - sub[..., 3:] * op
+    roi += sub[..., :3] * op
+    return c
+
+
+def shift(pm, dx, dy=0.0):
+    return cv2.warpAffine(pm, np.float32([[1, 0, dx], [0, 1, dy]]), (W, H))
+
+
+def scale_about(pm, s, cx=W / 2, cy=H / 2):
+    M = cv2.getRotationMatrix2D((cx, cy), 0, s)
+    return cv2.warpAffine(pm, M, (W, H))
+
+
+# ---------------- grading ----------------
+# (sat, shadow tint BGR, highlight tint BGR, contrast, lift)
+GRADES = {   # (sat, shadow tint BGR, highlight tint BGR, contrast, lift)  -- darker, candlelit
+    'neutral': (0.85, (1.10, 1.00, 0.92), (0.88, 0.98, 1.08), 1.18, -6),
+    'fire': (0.95, (1.00, 0.90, 0.95), (0.75, 0.92, 1.20), 1.24, -10),
+    'gold': (0.9, (1.06, 0.98, 0.94), (0.78, 0.96, 1.15), 1.2, -8),
+    'green': (0.9, (1.04, 1.02, 0.94), (0.84, 1.00, 1.08), 1.16, -6),
+    'cold': (0.62, (1.18, 1.04, 0.92), (1.04, 1.02, 0.98), 1.18, -4),
+    'sun': (0.95, (1.08, 0.98, 0.92), (0.76, 0.95, 1.16), 1.16, -6),
+    'storm': (0.6, (1.14, 1.05, 0.95), (1.00, 1.01, 1.00), 1.26, -8),
+    'campus': (0.92, (1.06, 1.00, 0.94), (0.84, 0.97, 1.10), 1.14, -5),
+}
+FOG = {  # far fog / sky colour and a darker top (BGR)
+    'neutral': ((62, 52, 44), (34, 28, 24)), 'fire': ((40, 46, 72), (14, 14, 26)), 'gold': ((52, 70, 92), (22, 26, 36)),
+    'green': ((60, 72, 70), (28, 32, 30)), 'cold': ((92, 84, 78), (46, 40, 34)), 'sun': ((60, 86, 108), (28, 36, 46)),
+    'storm': ((58, 56, 52), (26, 24, 22)), 'campus': ((70, 82, 92), (34, 38, 42)),
+}
+RAYS = {  # god-ray source (x, y), colour BGR, strength
+    'neutral': ((1500, -250), (200, 225, 245), 0.35), 'fire': ((1600, -200), (90, 150, 255), 0.45),
+    'gold': ((1700, -150), (110, 200, 255), 0.6), 'green': ((300, -250), (170, 235, 255), 0.5),
+    'cold': ((400, -300), (255, 240, 225), 0.4), 'sun': ((1500, -150), (120, 210, 255), 0.7),
+    'storm': ((900, -400), (220, 225, 225), 0.25), 'campus': ((1500, -250), (170, 225, 255), 0.6),
+}
+PARTS = {'neutral': 'dust', 'fire': 'embers', 'gold': 'golddust', 'green': 'petals', 'cold': 'snow', 'sun': 'dust',
+         'storm': 'rain', 'campus': 'dust'}
+
+
+def grade(c, g):
+    sat, sh, hi, con, lift = g
+    x = np.clip(c / 255, 0, 1)
+    lum = x[..., 0:1] * 0.114 + x[..., 1:2] * 0.587 + x[..., 2:3] * 0.299
+    x = lum + (x - lum) * sat
+    w = np.clip(lum * 1.4 - 0.2, 0, 1)
+    x = x * (np.float32(sh) * (1 - w) + np.float32(hi) * w)
+    x = 0.5 + (x - 0.5) * con
+    x = np.clip(x, 0, 1)
+    x = x * x * (3 - 2 * x) * 0.3 + x * 0.7
+    return x * (255 - lift) + lift
+
+
+def lerp_tuple(a, b, u):
+    return tuple(lerp_tuple(x, y, u) if isinstance(x, tuple) else x + (y - x) * u for x, y in zip(a, b))
+
+
+def segment(t):
+    """which look applies at time t, with a blend toward the next one during flights"""
+    keys = [h['grade'] for h in R.HOUSES] + ['campus']
+    if t < R.HOUSE_START:
+        u = sm(prog(t, R.HOUSE_START - 1.3, 1.3))
+        return 'neutral', keys[0], u
+    if t < R.OVERVIEW[0]:
+        i = min(int((t - R.HOUSE_START) // R.HOUSE_LEN), 6)
+        s = R.house_window(i)[0] if i < 6 else R.CAMPUS_WIN[0]
+        lt = t - s
+        nxt = keys[i + 1] if i < 6 else 'neutral'
+        u = sm(prog(lt, R.HOUSE_LEN - 1.3, 1.3))
+        return keys[i], nxt, u
+    return 'neutral', 'neutral', 0.0
+
+
+# ---------------- particles ----------------
+RNG = np.random.default_rng(9)
+P = RNG.random((420, 6)).astype(np.float32)
+
+
+def particles(kind, t, strength):
+    """additive (or over) particle layer at half resolution -> (layer BGR, mode)"""
+    if strength <= 0.01:
+        return None, None
+    h2, w2 = H // 2, W // 2
+    lay = np.zeros((h2, w2, 3), np.float32)
+    n = {'snow': 300, 'rain': 260, 'petals': 70, 'embers': 160, 'dust': 70, 'golddust': 150}[kind]
+    for k in range(n):
+        x0, y0, z, ph, a, b = P[k]
+        z = 0.15 + 0.85 * z ** 2                            # depth: near particles are big and fast
+        if kind == 'snow':
+            y = (y0 * (h2 + 40) + (12 + 55 * z) * t) % (h2 + 40) - 20
+            x = (x0 * w2 + 14 * math.sin(t * 0.7 + ph * 6) - 10 * z * t) % w2
+            r = 0.6 + 3.2 * z ** 2
+            cv2.circle(lay, (int(x), int(y)), max(1, int(r)), (230, 232, 235), -1, cv2.LINE_AA)
+        elif kind == 'rain':
+            y = (y0 * (h2 + 80) + (300 + 500 * z) * t) % (h2 + 80) - 40
+            x = (x0 * w2 - 90 * t) % w2
+            L = 8 + 26 * z
+            cv2.line(lay, (int(x), int(y)), (int(x - L * 0.25), int(y - L)), (200, 205, 205), 1, cv2.LINE_AA)
+        elif kind == 'petals':
+            y = (y0 * (h2 + 40) + (10 + 30 * z) * t) % (h2 + 40) - 20
+            x = (x0 * w2 + 60 * t * (0.4 + z) + 25 * math.sin(t * 1.3 + ph * 6)) % w2
+            ang = (t * (60 + 120 * a) + ph * 360) % 360
+            ax = 1.5 + 4 * z
+            cv2.ellipse(lay, (int(x), int(y)), (int(ax), max(1, int(ax * 0.45 * abs(math.cos(t * 2 + ph * 9)) + 0.5))),
+                        ang, 0, 360, (70 + 40 * b, 60 + 30 * a, 200 + 40 * b), -1, cv2.LINE_AA)
+        elif kind == 'embers':
+            y = h2 + 20 - ((y0 * (h2 + 40) + (25 + 70 * z) * t) % (h2 + 40))
+            x = (x0 * w2 + 22 * math.sin(t * (0.6 + z) + ph * 6)) % w2
+            fl = 0.5 + 0.5 * math.sin(t * 9 * (0.5 + z) + ph * 20)
+            cv2.circle(lay, (int(x), int(y)), max(1, int(0.5 + 1.8 * z)), (40 * fl, 140 * fl, 255 * fl), -1, cv2.LINE_AA)
+        else:  # dust / golddust: slow floating motes
+            y = (y0 * h2 + 8 * math.sin(t * 0.5 + ph * 6) - 6 * t * (0.3 + z)) % h2
+            x = (x0 * w2 + 10 * t * (a - 0.5) + 12 * math.cos(t * 0.4 + ph * 5)) % w2
+            col = (90, 160, 200) if kind == 'golddust' else (110, 130, 150)
+            tw = 0.45 + 0.55 * math.sin(t * (1 + 2 * a) + ph * 12) ** 2
+            cv2.circle(lay, (int(x), int(y)), max(1, int(0.5 + 1.6 * z)), tuple(v * tw for v in col), -1, cv2.LINE_AA)
+    blur = 0.8 if kind not in ('snow', 'petals') else 0.6
+    lay = cv2.GaussianBlur(lay, (0, 0), blur)
+    if kind in ('embers', 'dust', 'golddust'):
+        lay = lay + cv2.GaussianBlur(lay, (0, 0), 5) * 1.4
+    lay = cv2.resize(lay, (W, H), interpolation=cv2.INTER_LINEAR) * strength
+    mode = 'add' if kind in ('embers', 'dust', 'golddust') else 'screen'
+    return lay, mode
+
+
+def apply_particles(c, kind, t, s):
+    lay, mode = particles(kind, t, s)
+    if lay is None:
+        return c
+    if mode == 'add':
+        return c + lay * (0.9 if kind != 'golddust' else 1.1)
+    return 255 - (255 - c) * (1 - np.clip(lay / 255, 0, 1) * (0.85 if kind != 'rain' else 0.45))
+
+
+# ---------------- 3D frame treatment ----------------
+WORLD_BG = np.float32([63, 56, 52])        # Workbench world colour (BGR, sRGB)
+VIG = (np.clip(1 - 0.7 * (((xx - W / 2) / (W * 0.66)) ** 2 + ((yy - H / 2) / (H * 0.74)) ** 2), 0.15, 1) ** 1.3)[..., None]
+
+
+SHAFT_NOISE = np.random.default_rng(12).random(720).astype(np.float32)
+
+
+def god_rays(c, src, col, strength, t=0.0):
+    """soft light shafts falling from an off-screen source; they breathe slowly"""
+    q = 4
+    gx = (xx[::q, ::q] - src[0])
+    gy = (yy[::q, ::q] - src[1])
+    ang = (np.degrees(np.arctan2(gy, gx)) * 1.6 + t * 2) % 720
+    i0 = ang.astype(np.int32) % 720
+    fr = ang - np.floor(ang)
+    n = SHAFT_NOISE[i0] * (1 - fr) + SHAFT_NOISE[(i0 + 1) % 720] * fr
+    n = cv2.GaussianBlur(n, (0, 0), 4)
+    dist = np.sqrt(gx ** 2 + gy ** 2)
+    fall = np.exp(-dist / 1100.0)
+    shafts = np.clip(n - 0.42, 0, None) ** 1.3 * fall * 1.2
+    shafts = cv2.resize(shafts, (W, H), interpolation=cv2.INTER_LINEAR)[..., None]
+    return c + shafts * np.float32(col) * strength
+
+
+def bloom(c, amt=0.35):
+    q = 4
+    small = cv2.resize(np.clip(c - 175, 0, None), (W // q, H // q), interpolation=cv2.INTER_AREA)
+    b = cv2.GaussianBlur(small, (0, 0), 6) + cv2.GaussianBlur(small, (0, 0), 18)
+    return c + cv2.resize(b, (W, H)) * amt
+
+
+def fbm2(n, seed, oct=(3, 6, 12, 24)):
+    r = np.random.default_rng(seed)
+    acc = np.zeros((n, n * 2), np.float32)
+    amp = 1
+    for o in oct:
+        acc += cv2.resize(r.random((o + 2, o * 2 + 2)).astype(np.float32), (n * 2, n), interpolation=cv2.INTER_CUBIC) * amp
+        amp *= 0.5
+    return (acc - acc.min()) / (acc.max() - acc.min())
+
+
+CLOUD = fbm2(540, 4)
+CLOUD_BIG = cv2.resize(fbm2(270, 6, (2, 4, 8, 16, 32)), (W * 2, H * 2), interpolation=cv2.INTER_CUBIC)
+
+
+_m = cv2.resize(fbm2(270, 21, (2, 4, 8, 16)), (W * 2, H), interpolation=cv2.INTER_CUBIC)
+MIST = np.hstack([_m, _m[:, ::-1]])          # mirrored so it tiles without a seam
+
+
+def treat3d(fi, t):
+    raw = cv2.imread(f'build/v2/frames/{fi:05d}.png')
+    dep = cv2.imread(f'build/v2/depth/{fi:05d}.png', cv2.IMREAD_UNCHANGED)
+    if raw is None or dep is None:
+        raise FileNotFoundError(fi)
+    c = raw.astype(np.float32)
+    dist = dep.astype(np.float32) / 65535 * 150.0                 # scene units; sky = 150
+    ga, gb, u = segment(t)
+    g = lerp_tuple(GRADES[ga], GRADES[gb], u)
+    far, top = lerp_tuple(FOG[ga], FOG[gb], u)
+    c = grade(c, g)
+    # atmospheric perspective relative to what we're looking at: the subject stays clear,
+    # distance thickens into fog, and the horizon and the map's edges dissolve completely
+    ground = dist[dist < 149]
+    near = float(np.percentile(ground, 30)) if ground.size else 20.0
+    fog = 1 - np.exp(-np.clip(dist - near * 1.15, 0, None) / (near * 1.4))
+    fog = np.where(dist > 149, 1.0, fog * 0.85)
+    # drifting mist banks: denser low in frame and far away
+    m1 = np.roll(MIST, int(t * 22) % (W * 4), axis=1)[:, :W]
+    m2 = np.roll(MIST[::-1], int(-t * 14) % (W * 4), axis=1)[:, W:2 * W]
+    mist = np.clip((m1 * 0.6 + m2 * 0.4) - 0.35, 0, 1) * 1.6
+    fog = np.clip(fog + mist * (0.08 + 0.3 * fog) * (0.5 + 0.5 * yy / H), 0, 1)[..., None]
+    hy = np.clip(yy / (H * 0.6), 0, 1)[..., None]
+    fogcol = np.float32(top) * (1 - hy) + np.float32(far) * hy
+    c = c * (1 - fog) + fogcol * fog
+    src, rcol, rs = RAYS[ga] if u < 0.5 else RAYS[gb]
+    c = god_rays(c, src, rcol, rs * 0.8, t)
+    c = bloom(c, 0.3)
+    ka, kb = PARTS[ga], PARTS[gb]
+    if ka == kb:
+        c = apply_particles(c, ka, t, 1.0)
+    else:
+        c = apply_particles(c, ka, t, 1 - u)
+        c = apply_particles(c, kb, t, u)
+    if 'sun' in (ga, gb):
+        w = (1 - u) if ga == 'sun' else u
+        if w > 0.05:
+            dx = (np.sin(yy / 9 + t * 6) * 1.6 * w * np.clip((yy - H * 0.4) / (H * 0.6), 0, 1)).astype(np.float32)
+            c = cv2.remap(c, xx + dx, yy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    if 'storm' in (ga, gb):
+        s0 = R.house_window(5)[0]
+        L = sum(math.exp(-((t - (s0 + k)) / 0.05) ** 2) for k in (1.4, 1.55, 6.2))
+        c = c * (1 + 0.9 * L) + 40 * L
+    c *= 1 + 0.015 * math.sin(t * 11) * math.sin(t * 3.7)        # a candle-like breath in the exposure
+    if 'cold' in (ga, gb):                                        # frost flakes drifting across the lens
+        w = (1 - u) if ga == 'cold' else u
+        c = lens_frost(c, t, w)
+    sx = 1.6 * math.sin(t * 1.9) + 0.9 * math.sin(t * 4.3 + 1)    # grounded handheld drift
+    sy = 1.2 * math.sin(t * 2.3 + 2) + 0.7 * math.sin(t * 5.1)
+    c = cv2.warpAffine(c, np.float32([[1.004, 0, sx - W * 0.002], [0, 1.004, sy - H * 0.002]]), (W, H), borderMode=cv2.BORDER_REFLECT)
+    return c * VIG
+
+
+FROST = np.random.default_rng(44).random((16, 5)).astype(np.float32)
+
+
+def lens_frost(c, t, w):
+    if w <= 0.02:
+        return c
+    lay = np.zeros((H // 4, W // 4), np.float32)
+    for x0, y0, r, sp, ph in FROST:
+        y = (y0 * (H // 4 + 60) + t * (6 + 10 * sp)) % (H // 4 + 60) - 30
+        x = x0 * W // 4 + 10 * math.sin(t * 0.5 + ph * 6)
+        cv2.circle(lay, (int(x), int(y)), int(4 + 10 * r), 1.0, -1, cv2.LINE_AA)
+    lay = cv2.resize(cv2.GaussianBlur(lay, (0, 0), 3), (W, H))[..., None] * 0.35 * w
+    return c * (1 - lay) + (cv2.GaussianBlur(c, (0, 0), 12) * 0.6 + 200 * 0.4) * lay
+
+
+# ---------------- overlays ----------------
+def lower_third(c, key, lt):
+    a = sm(prog(lt, 3.6, 0.6)) * (1 - sm(prog(lt, 9.0, 0.5)))
+    if a <= 0.003:
+        return c
+    slide = int(30 * (1 - oc(prog(lt, 3.6, 0.9))))
+    shade = np.exp(-(((xx - 420) / 620) ** 2 + ((yy - 900) / 150) ** 2))[..., None] * 0.55 * a
+    c = c * (1 - shade)
+    ic = icon(key)
+    c = over(c, ic, a, 150 - ic.shape[1] // 2 + slide // 2 - 40, 890 - ic.shape[0] // 2)
+    for part, delay in (('name', 0.0), ('sub', 0.25), ('sec', 0.45)):
+        aa = sm(prog(lt, 3.6 + delay, 0.6)) * (1 - sm(prog(lt, 9.0, 0.5)))
+        c = over(c, shift(txt(f'{key}_{part}'), -slide), aa)
+    return c
+
+
+def embers_2d(c, t, s):
+    return apply_particles(c, 'embers', t, s)
+
+
+SPOT = None
+
+
+def card_trophy(t, fi):
+    """the reference's opening: a trophy in a dark hall under one shaft of light"""
+    global SPOT
+    k = min(fi, 120)
+    raw = cv2.imread(f'build/trophy/{k:05d}.png').astype(np.float32)
+    dep = cv2.imread(f'build/trophy_depth/{k:05d}.png', cv2.IMREAD_UNCHANGED).astype(np.float32) / 65535 * 20
+    c = grade(raw * 1.25, (0.95, (1.06, 1.0, 0.95), (0.70, 0.95, 1.25), 1.3, -12))
+    # warm the gold, punch its highlights
+    lum = c.mean(2, keepdims=True)
+    gold = np.clip((c[..., 2:3] - c[..., 0:1]) / 60, 0, 1)
+    c = c * (1 + 0.5 * gold * np.clip(lum / 120, 0, 1.5))
+    # the hall falls away into darkness and haze
+    fog = (1 - np.exp(-np.clip(dep - 2.5, 0, None) / 4.0))[..., None]
+    c = c * (1 - fog) + np.float32([16, 14, 13]) * fog
+    if SPOT is None:   # a soft cone from above onto the trophy, plus a pool of light on the plinth
+        cone = np.clip(1 - np.abs(xx - W / 2) / (90 + yy * 0.42), 0, 1) ** 1.6 * np.clip(yy / 300, 0, 1)
+        pool = np.exp(-(((xx - W / 2) / 420) ** 2 + ((yy - H * 0.86) / 90) ** 2))
+        SPOT = (cone, pool)
+    cone, pool = SPOT
+    haze = np.roll(MIST, int(t * 30), axis=1)[:, :W]
+    c = c + (cone * (0.55 + 0.45 * haze))[..., None] * np.float32([150, 175, 200]) * 0.42
+    c = c + pool[..., None] * np.float32([60, 80, 100]) * 0.5
+    # dust drifting through the beam only
+    lay, _ = particles('dust', t, 1.6)
+    c = c + lay * cone[..., None] * 1.6
+    c = bloom(c, 0.5)
+    c *= sm(prog(t, 0.0, 1.4))
+    return c * VIG
+
+
+def who_text(c, t):
+    a = sm(prog(t, 1.6, 1.0)) * (1 - sm(prog(t, 6.2, 0.7)))
+    if a <= 0.003:
+        return c
+    lay = scale_about(txt('who'), 1.0 + 0.03 * prog(t, 1.6, 5.0))
+    blur = 5 * (1 - sm(prog(t, 1.6, 1.2)))
+    if blur > 0.3:
+        lay = cv2.GaussianBlur(lay, (0, 0), blur)
+    return over(c, lay, a)
+
+
+def card_open(t, fi):
+    if t < 5.0:
+        c = card_trophy(t, fi) * (1 - sm(prog(t, 4.4, 0.6)))
+    else:
+        c = np.zeros((H, W, 3), np.float32)
+        c = apply_particles(c, 'embers', t, 0.25)
+    return who_text(c, t)
+
+
+SPARKS = np.random.default_rng(33).random((3, 140, 5)).astype(np.float32)
+STRIKES = (0.7, 1.75, 2.8)          # hammer blows, seconds into the forge card
+
+
+def card_forge(t, fi):
+    """2026 forged at the anvil: hammer blows throw sparks, the numerals glow white-hot and cool to iron"""
+    lt = t - R.TUNNEL[0]
+    c = np.zeros((H, W, 3), np.float32) + np.float32([9, 9, 11])
+    smoke = np.roll(MIST, int(t * 16) % (W * 4), axis=1)[:, :W]
+    c += (smoke * np.clip((yy - H * 0.35) / (H * 0.65), 0, 1))[..., None] * np.float32([14, 22, 40])
+    heat = sum(math.exp(-(lt - s0) / 1.1) for s0 in STRIKES if lt >= s0)
+    flash = sum(math.exp(-((lt - s0) / 0.06) ** 2) for s0 in STRIKES)
+    # forge glow from below
+    c += np.exp(-(((xx - W / 2) / 900) ** 2 + ((yy - H * 1.1) / 420) ** 2))[..., None] * np.float32([20, 70, 190]) * (0.5 + 0.4 * min(heat, 1.5))
+    # the numerals: hot metal cooling to dark steel
+    yr = txt('year')
+    a = sm(prog(lt, STRIKES[0], 0.25)) * (1 - sm(prog(lt, 4.3, 0.6)))
+    if a > 0.003:
+        h = min(heat, 1.0)
+        hot = np.float32([150, 225, 255]) * yr[..., 3:]                      # white-orange
+        steel = yr[..., :3] * 0.55                                           # cooled iron
+        body = steel * (1 - h) + hot * h
+        c = c * (1 - yr[..., 3:] * a) + body * a
+        glow = cv2.GaussianBlur(yr[..., 3], (0, 0), 26)[..., None] * np.float32([20, 90, 255]) * (0.25 + 1.1 * h) * a
+        c += glow
+    # sparks: ballistic streaks from the point of each blow
+    lay = np.zeros((H // 2, W // 2, 3), np.float32)
+    for k, s0 in enumerate(STRIKES):
+        dt = lt - s0
+        if not (0 <= dt < 1.6):
+            continue
+        for ang, sp, life, sz, hue in SPARKS[k]:
+            if dt > life * 1.4 + 0.2:
+                continue
+            a_ = math.radians(25 + ang * 130)                     # upward and outward from the anvil
+            v = 200 + 420 * sp
+            x = W / 4 + math.cos(a_) * v * dt
+            y = H / 4 + 45 - math.sin(a_) * v * dt + 330 * dt * dt
+            x1 = x - math.cos(a_) * v * 0.03
+            y1 = y + (math.sin(a_) * v - 660 * dt) * 0.03
+            fade = max(0.0, 1 - dt / (life * 1.4 + 0.2))
+            col = (60 + 120 * hue, 170 + 70 * hue, 255)
+            cv2.line(lay, (int(x1), int(y1)), (int(x), int(y)), tuple(float(v_ * fade) for v_ in col), 1 + int(sz * 1.5), cv2.LINE_AA)
+    lay = cv2.GaussianBlur(lay, (0, 0), 0.7) + cv2.GaussianBlur(lay, (0, 0), 5) * 1.3
+    c += cv2.resize(lay, (W, H))
+    c += np.exp(-(((xx - W / 2) / 300) ** 2 + ((yy - H / 2) / 220) ** 2))[..., None] * np.float32([120, 200, 255]) * flash * 0.9
+    c = apply_particles(c, 'embers', t, 0.4 + 0.6 * sm(prog(lt, 3.6, 1.0)))
+    c *= 1 - sm(prog(lt, 4.6, 0.4))                                      # into darkness, not a flash
+    sx, sy = 3 * flash * math.sin(t * 90), 3 * flash * math.cos(t * 77)   # each blow shakes the frame
+    c = cv2.warpAffine(c, np.float32([[1, 0, sx], [0, 1, sy]]), (W, H), borderMode=cv2.BORDER_REFLECT)
+    return c * VIG
+
+
+def card_credits(t, fi):
+    lt = t - R.CREDITS[0]
+    c = np.zeros((H, W, 3), np.float32)
+    if lt < 3.0:      # the akashic, on a deep blue glow
+        a = sm(prog(lt, 0.0, 0.3)) * (1 - sm(prog(lt, 2.5, 0.5)))
+        glow = np.exp(-(((xx - W / 2) / 520) ** 2 + ((yy - 560) / 320) ** 2))[..., None]
+        c += glow * np.float32([150, 50, 10]) * 0.9 * a
+        logo = rgba_img('assets/akashic.png', 760)
+        lh, lw = logo.shape[:2]
+        x0, y0 = W // 2 - lw // 2, 560 - lh // 2
+        wipe = prog(lt, 0.2, 1.3) * (lw + 240) - 120
+        mask = np.clip((wipe - np.arange(lw, dtype=np.float32)) / 120, 0, 1)[None, :, None]
+        c = over(c, logo * mask, a, x0, y0)
+        c = over(c, txt('ak_l1'), sm(prog(lt, 0.3, 0.8)) * a)
+    else:             # the Local Student Council presents
+        u = lt - 3.0
+        a = sm(prog(u, 0.0, 0.7)) * (1 - sm(prog(u, 2.4, 0.5)))
+        c += np.exp(-(((xx - W / 2) / 700) ** 2 + ((yy - 470) / 420) ** 2))[..., None] * np.float32([40, 30, 18]) * 0.6
+        c = apply_particles(c, 'embers', t, 0.3)
+        seal = rgba_img('assets/lsc-seal.webp', 400)
+        s = 0.96 + 0.04 * oc(prog(u, 0.0, 2.5))
+        sz = int(400 * s)
+        seal_s = cv2.resize(seal, (sz, sz), interpolation=cv2.INTER_AREA)
+        full = np.zeros((H, W, 4), np.float32)
+        full[445 - sz // 2:445 - sz // 2 + sz, W // 2 - sz // 2:W // 2 - sz // 2 + sz] = seal_s
+        c += cv2.GaussianBlur(full[..., 3], (0, 0), 30)[..., None] * np.float32([60, 120, 200]) * 0.45 * a   # full-frame glow, no box edges
+        c = over(c, full, a)
+        for name, dl in (('lsc_l1', 0.4), ('lsc_l2', 0.6), ('lsc_l3', 0.9)):
+            c = over(c, txt(name), sm(prog(u, dl, 0.8)) * (1 - sm(prog(u, 2.4, 0.5))))
+    return c * VIG
+
+
+def clouds_part(c, t):
+    """clouds open from the centre as we drop onto the realm"""
+    u = prog(t, R.MAP_IN[0], 2.3)
+    if u >= 1:
+        return c
+    zoom = 1 + 0.9 * oc(u)                    # we fall through the clouds: they grow and slide outward
+    M = cv2.getRotationMatrix2D((W, H), 0, zoom)
+    M[0, 2] -= W / 2
+    M[1, 2] -= H / 2
+    cl = cv2.warpAffine(CLOUD_BIG, M, (W, H))
+    r = np.sqrt(((xx - W / 2) / W) ** 2 + ((yy - H / 2) / H) ** 2)
+    hole = (r - 0.95 * oc(u) + 0.05) / 0.25                       # grows outward
+    a = np.clip(hole + (cl - 0.5) * 1.6, 0, 1)[..., None]
+    white = 1 - sm(prog(t, R.MAP_IN[0], 0.35))
+    cloud_col = np.float32([236, 234, 230]) * (0.9 + 0.1 * cl[..., None])
+    c = c * (1 - a) + cloud_col * a
+    return c * (1 - white) + 255 * white
+
+
+def finale(c, t):
+    s0 = R.TITLE[0]
+    dark = sm(prog(t, s0, 1.6))
+    if dark > 0:
+        k = 1 + int(14 * dark)
+        c = cv2.GaussianBlur(c, (0, 0), k) * (1 - 0.7 * dark)
+    c = embers_2d(c, t, 0.9 * dark)
+    tp = txt('title')
+    wp = prog(t, s0 + 1.2, 1.6)
+    if wp > 0:
+        edge = 260 + (1660 - 260) * sm(wp)
+        rev = np.clip((edge - xx) / 70, 0, 1)[..., None]
+        lay = tp * rev
+        c = c + cv2.GaussianBlur(lay[..., 3], (0, 0), 34)[..., None] * np.float32([30, 100, 230]) * 0.85
+        c = over(c, lay)
+        if wp < 1:
+            e = np.exp(-((xx - edge) / 18) ** 2) * tp[..., 3]
+            c += (e + cv2.GaussianBlur(e, (0, 0), 16) * 1.5)[..., None] * np.float32([170, 215, 255])
+    for name, st in (('title_sub', s0 + 2.9), ('title_q', s0 + 4.0), ('end_lsc', s0 + 5.2)):
+        c = over(c, txt(name), sm(prog(t, st, 0.8)))
+    a = sm(prog(t, s0 + 5.2, 0.8))
+    seal = rgba_img('assets/lsc-seal.webp', 70)
+    c = over(c, seal, a, W // 2 - 300 - 35, 975 - 35)
+    ak = rgba_img('assets/akashic.png', 150)
+    c = over(c, ak, a, W // 2 + 300 - 75, 975 - ak.shape[0] // 2)
+    return c * (1 - sm(prog(t, R.END - 1.6, 1.4)))
+
+
+def render(fi):
+    t = fi / FPS + 1e-6
+    if t < R.COLD_OPEN[1]:
+        c = card_open(t, fi)
+    elif t < R.TUNNEL[1]:
+        c = card_forge(t, fi)
+    elif t < R.CREDITS[1]:
+        c = card_credits(t, fi)
+    else:
+        c = treat3d(fi, t)
+        if t < R.MAP_IN[0] + 2.3:
+            c = clouds_part(c, t)
+        if R.HOUSE_START <= t < R.OVERVIEW[0]:
+            i = min(int((t - R.HOUSE_START) // R.HOUSE_LEN), 6)
+            s = R.house_window(i)[0] if i < 6 else R.CAMPUS_WIN[0]
+            c = lower_third(c, R.HOUSES[i]['key'] if i < 6 else 'campus', t - s)
+        if R.OVERVIEW[0] <= t < R.TITLE[0]:
+            a = sm(prog(t, R.OVERVIEW[0] + 1.0, 0.9)) * (1 - sm(prog(t, R.OVERVIEW[1] - 1.4, 0.8)))
+            c = over(c, scale_about(txt('era'), 1 + 0.03 * prog(t, R.OVERVIEW[0], 7)), a)
+        if t >= R.TITLE[0]:
+            c = finale(c, t)
+    rg = np.random.default_rng(fi).standard_normal((H // 2, W // 2)).astype(np.float32)
+    c = c + cv2.resize(rg, (W, H))[..., None] * 2.2 * (c.mean() > 2)
+    return np.clip(c, 0, 255).astype(np.uint8).tobytes()
+
+
+if __name__ == '__main__':
+    out = sys.argv[1]
+    if len(sys.argv) > 2:
+        for fi in [int(x) for x in sys.argv[2].split(',')]:
+            cv2.imwrite(out.replace('.png', f'_{fi:05d}.png'), np.frombuffer(render(fi), np.uint8).reshape(H, W, 3))
+        sys.exit()
+    ff = subprocess.Popen(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'bgr24', '-s', f'{W}x{H}',
+                           '-r', str(FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'slow', '-crf', '18',
+                           '-pix_fmt', 'yuv420p', out], stdin=subprocess.PIPE)
+    with Pool(int(os.environ.get('PROCS', '3'))) as pool:
+        for i, fr in enumerate(pool.imap(render, range(NF), chunksize=4)):
+            ff.stdin.write(fr)
+            if i % 240 == 0:
+                print(i, flush=True)
+    ff.stdin.close()
+    ff.wait()
