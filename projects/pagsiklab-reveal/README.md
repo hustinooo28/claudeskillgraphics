@@ -2,7 +2,7 @@
 
 A 121-second 16:9 intro for **PAGSIKLAB**, the Mini Olympics of DSSC – Sta. Cruz Extension Campus, presented by the Local Student Council and produced by *the akashic*. It reveals which team is which Game of Thrones house in the style of the show's opening titles: a camera flies over a model of the realm while each seat assembles itself out of the map with turning gears, and the house medallion rises above it.
 
-The 3D is a real Blender scene (Workbench renderer, so it renders on a CPU in about an hour) with a depth pass; the compositor uses that depth for atmospheric fog and drifting mist, then grades each house (cold North, amber South, bleached Dorne, storm, fire), adds light shafts, bloom, weather particles, frost on the lens, a slight handheld drift, crushed blacks, a heavy vignette and grain. The score is original and synthesized.
+The 3D is a real Blender scene (Workbench renderer, so it renders on a CPU in about an hour) with a depth pass; the compositor uses that depth for atmospheric fog and drifting mist, then grades each house (cold North, amber South, bleached Dorne, storm, fire), adds light shafts, bloom, weather particles, frost on the lens, a slight handheld drift, crushed blacks, a heavy vignette and grain. The music is the council's chosen epic Game of Thrones theme cover (not stored in this repo; put it at `build/track.wav`), edited so its final stinger lands on the title; the voice and every sound effect are generated here.
 
 | Time | Scene | Sound |
 |---|---|---|
@@ -26,7 +26,7 @@ The 3D is a real Blender scene (Workbench renderer, so it renders on a CPU in ab
 | 5 | Martell | Sunspear (sandstone domes and a spire) | Sun-baked, heat shimmer | BSIT-3A, BSAB-4A, BSIT-1B, BSAB-2A |
 | 6 | Baratheon | Storm's End (one colossal drum tower) | Storm, rain and lightning | BSIT-1A, BPA-1A, BSAB-1A |
 
-Teams, sections, seats and mottos come from the council's Mini Olympics sheet. The house sigils are fan imagery supplied by the council, and the music is original (no Game of Thrones theme).
+Teams, sections, seats and mottos come from the council's Mini Olympics sheet. The house sigils, the PAGSIKLAB lettering and the music track were supplied by the council; the music is a fan cover of the Game of Thrones theme, so this cut is for the event screens, not paid promotion.
 
 ## Files
 
@@ -39,7 +39,9 @@ Teams, sections, seats and mottos come from the council's Mini Olympics sheet. T
 | `scene.py` | Builds the Blender scene: terrain, trees, the six castles and the campus, their build animations, the camera path, and a 16-bit depth pass |
 | `titles.py`, `titles.js` | Every on-screen word, rendered in Cinzel to transparent layers |
 | `composite.py` | The film: openers, sky, haze, grading, light shafts, bloom, per-house particles, lower thirds and the finale |
-| `audio/score.py` | The score and sound design, locked to the 11-second house windows |
+| `audio/score.py` | Sound design (voice, anvils, ink, chimes, clockwork, whooshes, impacts) locked to the picture, plus a synthesized fallback score; also writes the effects stem |
+| `audio/final_mix.py` | Edits the council's music track to the picture (quiet intro under the cold open, full section from the descent, final stinger on the title) and lays the effects on top |
+| `audio/vo_who_raw.wav` | "Who will reign?" (Kokoro `bm_george`), pitched down 3 semitones in `score.py` |
 
 ## Rebuild
 
@@ -48,9 +50,9 @@ Needs Blender 4.2 (any build with Workbench; headless works with Mesa's `libegl1
 ```sh
 python3 make_map.py && python3 make_sigils.py
 blender -b --factory-startup -P intro_trophy.py
-blender -b --factory-startup -P scene.py -- --frames 432-2904 --out build/v2/frames     # ~1.3 h on 4 CPU cores
+blender -b --factory-startup -P scene.py -- --save --out build/v3/frames && python3 render_watchdog.py blender 432 2904     # ~1.3 h on 4 CPU cores
 python3 titles.py && node titles.js build/titles.json
-python3 audio/score.py
+python3 audio/score.py && python3 audio/final_mix.py      # needs build/track.wav
 python3 composite.py build/film.mp4
 ffmpeg -i build/score.wav -af loudnorm=I=-14:TP=-1.5:LRA=11 -ar 48000 build/score-norm.wav
 ffmpeg -i build/film.mp4 -i build/score-norm.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 256k -shortest PAGSIKLAB-house-reveal.mp4

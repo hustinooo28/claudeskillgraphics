@@ -16,7 +16,7 @@ rng = np.random.default_rng(11)
 BAR = R.HOUSE_LEN / 6
 BEAT = BAR / 3
 THEME_START = R.HOUSE_START - 3 * BAR          # 3 bars of ostinato under the descent onto the map
-BUS = {k: np.zeros((N, 2)) for k in ('music', 'drums', 'sfx', 'verb')}
+BUS = {k: np.zeros((N, 2)) for k in ('music', 'drums', 'sfx', 'hits', 'verb')}
 
 
 # ---------------- primitives ----------------
@@ -61,6 +61,9 @@ def add(bus, x, start, gain=1.0, pan=0.0, send=0.25):
     BUS[bus][i:j, 1] += seg * Rr
     BUS['verb'][i:j, 0] += seg * L * send
     BUS['verb'][i:j, 1] += seg * Rr * send
+    v = BUS.setdefault('verb_' + bus, np.zeros((N, 2)))
+    v[i:j, 0] += seg * L * send
+    v[i:j, 1] += seg * Rr * send
 
 
 # ---------------- instruments ----------------
@@ -219,7 +222,7 @@ def phrase(t0, layer):
 # cold open: the trophy hall, then the words alone
 add('sfx', wind(7.0) * np.minimum(tt(7.0) / 2, 1) * np.clip((7.0 - tt(7.0)) / 1.5, 0, 1), 0.0, 0.08, send=0.4)
 add('music', strings(26, 6.2, 1.0, 380), 0.2, 0.18, send=0.5)
-add('drums', boom(4.0, 70, 26, 1.8), 1.6, 0.55, send=0.4)
+add('hits', boom(4.0, 70, 26, 1.8), 1.6, 0.55, send=0.4)
 add('music', choir(62, 4.5, 0.7), 1.8, 0.05, send=0.9)
 add('sfx', chime(660, 3.5), 1.65, 0.035, send=0.9)
 
@@ -245,7 +248,7 @@ add('sfx', fire * np.minimum(tt(5.0) / 0.6, 1) * np.clip((5.0 - tt(5.0)) / 0.6, 
 for k, st in enumerate((0.7, 1.75, 2.8)):
     add('sfx', anvil(), f0 + st, 0.33 + 0.05 * k, pan=0.05, send=0.55)
     add('sfx', sizzle(), f0 + st + 0.05, 0.08, pan=-0.2, send=0.3)
-    add('drums', boom(2.0, 90, 30, 0.7), f0 + st, 0.35 + 0.1 * k, send=0.4)
+    add('hits', boom(2.0, 90, 30, 0.7), f0 + st, 0.35 + 0.1 * k, send=0.4)
 add('music', strings(38, 4.6, 0.9, 900), f0 + 0.6, 0.10, send=0.6)
 add('music', strings(45, 3.6, 0.8, 1200), f0 + 1.7, 0.07, pan=0.3, send=0.6)
 
@@ -259,7 +262,7 @@ add('sfx', chime(990, 3.0), c0 + 3.1, 0.05, send=0.8)
 add('sfx', riser(1.6), R.MAP_IN[0] - 1.6, 0.25, send=0.3)
 
 # falling through the clouds onto the realm
-add('drums', boom(3.0, 150, 30, 1.2), R.MAP_IN[0], 0.7, send=0.4)
+add('hits', boom(3.0, 150, 30, 1.2), R.MAP_IN[0], 0.7, send=0.4)
 add('sfx', whoosh(2.4, 300, 3000), R.MAP_IN[0] - 0.1, 0.4, send=0.5)
 add('sfx', wind(6.0) * np.exp(-tt(6.0) / 2.5), R.MAP_IN[0], 0.12, send=0.4)
 
@@ -278,7 +281,7 @@ for i in range(7):
         add('sfx', clunk(), build0 + 0.4 + k * 0.32 + float(rng.uniform(-0.05, 0.05)), 0.10, pan=float(rng.uniform(-0.6, 0.6)), send=0.25)
     # the medallion lands
     add('sfx', whoosh(1.0, 600, 2500), s + 0.7 + 2.6 + 0.6, 0.12, send=0.4)
-    add('drums', boom(2.0, 110, 32, 0.8), s + 0.7 + 2.6 + 1.6, 0.35, send=0.35)
+    add('hits', boom(2.0, 110, 32, 0.8), s + 0.7 + 2.6 + 1.6, 0.35, send=0.35)
     add('sfx', chime(1180 + 60 * i, 2.5), s + 0.7 + 2.6 + 1.6, 0.06, pan=0.3, send=0.8)
     # flight to the next seat
     add('sfx', whoosh(1.6, 300, 1800), s + R.HOUSE_LEN - 1.45, 0.22, send=0.4)
@@ -289,12 +292,12 @@ add('music', strings(38, o1 - o0, 1.0, 1400), o0, 0.12, send=0.7)
 add('music', strings(45, o1 - o0, 0.8, 1800), o0, 0.08, pan=0.3, send=0.7)
 add('music', strings(53, o1 - o0, 0.7, 2600), o0, 0.06, pan=-0.3, send=0.7)
 add('music', choir(62, o1 - o0 - 0.5, 0.9), o0 + 0.5, 0.08, send=0.9)
-add('drums', boom(4.0, 90, 26, 2.0), o0, 0.5, send=0.4)
+add('hits', boom(4.0, 90, 26, 2.0), o0, 0.5, send=0.4)
 add('sfx', riser(o1 - o0 - 1.5), o0 + 1.5, 0.45, send=0.3)
 
 # title: silence, then the hit as the wordmark ignites
 t0 = R.TITLE[0] + 1.2
-add('drums', boom(5.0, 140, 26, 2.2), t0, 0.95, send=0.4)
+add('hits', boom(5.0, 140, 26, 2.2), t0, 0.95, send=0.4)
 add('music', braam(6.0, 38, 2400), t0, 0.5, send=0.5)
 add('drums', taiko(1.5, 48, 1.0), t0, 0.5, send=0.3)
 for b, (root, q) in enumerate([(38, 'm'), (34, 'M'), (45, 'M')]):
@@ -306,13 +309,33 @@ for b, (root, q) in enumerate([(38, 'm'), (34, 'M'), (45, 'M')]):
 add('music', strings(26, 6.0, 1.0, 600), t0 + 6.5, 0.16, send=0.6)     # final low D under the end card
 add('sfx', chime(880, 4.0), t0 + 4.0, 0.05, send=0.9)
 
+# the voice: "Who will reign?" as the words resolve on screen (deep male, pitched down, in a stone hall)
+import soundfile as _sf
+_vo, _sr = _sf.read(os.path.join(HERE, 'vo_who_raw.wav'), dtype='float64')
+_vo = signal.resample_poly(_vo, 48000, _sr)
+_vo = signal.resample(_vo, int(len(_vo) / 2 ** (-3 / 12)))          # -3 semitones (slower and lower)
+_vo = filt(_vo, 'highpass', 55) + filt(_vo, 'lowpass', 220) * 0.6     # chest warmth
+_vo = np.tanh(_vo / np.abs(_vo).max() * 1.6) / np.tanh(1.6)
+VO_AT = 1.75
+add('sfx', _vo, VO_AT, 0.55, send=0.9)
+add('sfx', np.concatenate([np.zeros(int(0.32 * SR)), filt(_vo, 'lowpass', 1800)]), VO_AT, 0.10, pan=-0.4, send=1.0)   # hall echo
+add('sfx', np.concatenate([np.zeros(int(0.55 * SR)), filt(_vo, 'lowpass', 1200)]), VO_AT, 0.06, pan=0.4, send=1.0)
+
 # ---------------- mix ----------------
 ir_t = tt(3.5)
 ir = np.stack([filt(rng.standard_normal(len(ir_t)), 'lowpass', 6000) * np.exp(-ir_t / 0.9) for _ in range(2)], 1)
 ir[:int(0.03 * SR)] = 0
 ir /= np.sqrt((ir ** 2).sum(0))
 verb = np.stack([signal.fftconvolve(BUS['verb'][:, c], ir[:, c])[:N] for c in range(2)], 1)
-mix = BUS['music'] * 2.0 + BUS['drums'] * 0.65 + BUS['sfx'] * 1.1 + verb * 0.6
+_duck = np.ones(N)
+_d0, _d1 = int((VO_AT - 0.2) * SR), int((VO_AT + len(_vo) / SR + 0.3) * SR)
+_duck[_d0:_d1] = 0.55
+_duck = np.convolve(_duck, np.ones(4800) / 4800, mode='same')
+BUS['music'] *= _duck[:, None]
+mix = BUS['music'] * 2.0 + BUS['drums'] * 0.65 + BUS['sfx'] * 1.1 + BUS['hits'] * 0.65 + verb * 0.6
+fx = BUS['sfx'] * 1.1 + BUS['hits'] * 0.6 + np.stack([signal.fftconvolve((BUS['verb_sfx'] + BUS['verb_hits'] * 0.55)[:, c], ir[:, c])[:N] for c in range(2)], 1) * 0.6
+np.save(os.path.join(os.path.dirname(HERE), 'build', 'fx_stem.npy'), fx[:int(R.END * SR)].astype(np.float32))
+np.save(os.path.join(os.path.dirname(HERE), 'build', 'vo_span.npy'), np.array([VO_AT, VO_AT + len(_vo) / SR]))
 # the moment of silence before the title
 g = np.ones(N)
 a, b = int((R.TITLE[0] + 0.7) * SR), int((R.TITLE[0] + 1.2) * SR)

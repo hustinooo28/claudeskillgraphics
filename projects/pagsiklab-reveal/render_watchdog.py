@@ -6,7 +6,7 @@ import os, sys, time, subprocess, glob
 
 BLENDER, FIRST, LAST = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 CHUNK = int(sys.argv[4]) if len(sys.argv) > 4 else 40
-FRAMES, DEPTH = 'build/v2/frames', 'build/v2/depth'
+FRAMES, DEPTH = os.environ.get('FRAMES', 'build/v3/frames'), os.environ.get('DEPTH', 'build/v3/depth')
 STALL = 20.0          # seconds without a new frame -> restart
 
 
@@ -38,7 +38,7 @@ while f <= LAST:
     a = f
     b = min(a + CHUNK - 1, LAST)
     clean_partial()
-    cmd = [BLENDER, '-b', 'build/scene.blend', '--python-expr',
+    cmd = [BLENDER, '-b', os.environ.get('BLEND', 'build/scene.blend'), '--python-expr',
            f'import bpy; s=bpy.context.scene; s.frame_start={a}; s.frame_end={b}; bpy.ops.render.render(animation=True)']
     p = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     last_progress, last_count, t0 = time.time(), -1, time.time()

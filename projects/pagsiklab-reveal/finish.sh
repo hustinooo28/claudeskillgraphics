@@ -1,7 +1,7 @@
 #!/bin/sh
 # Runs after the 3D render: composite, master the audio, mux, make the repo copy, commit and push.
 cd "$(dirname "$0")"
-until grep -q -E "all frames done|finished with gaps" build/watchdog.log; do sleep 30; done
+until grep -q -E "all frames done|finished with gaps" build/watchdog3.log 2>/dev/null; do sleep 30; done
 echo "composite start $(date +%T)"
 PROCS=3 python3 composite.py build/film.mp4 || exit 1
 ffmpeg -v error -y -i build/score.wav -af loudnorm=I=-14:TP=-1.5:LRA=11 -ar 48000 build/score-norm.wav

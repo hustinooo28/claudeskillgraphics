@@ -180,7 +180,7 @@ def particles(kind, t, strength):
             ang = (t * (60 + 120 * a) + ph * 360) % 360
             ax = 1.5 + 4 * z
             cv2.ellipse(lay, (int(x), int(y)), (int(ax), max(1, int(ax * 0.45 * abs(math.cos(t * 2 + ph * 9)) + 0.5))),
-                        ang, 0, 360, (70 + 40 * b, 60 + 30 * a, 200 + 40 * b), -1, cv2.LINE_AA)
+                        float(ang), 0, 360, (float(70 + 40 * b), float(60 + 30 * a), float(200 + 40 * b)), -1, cv2.LINE_AA)
         elif kind == 'embers':
             y = h2 + 20 - ((y0 * (h2 + 40) + (25 + 70 * z) * t) % (h2 + 40))
             x = (x0 * w2 + 22 * math.sin(t * (0.6 + z) + ph * 6)) % w2
@@ -264,8 +264,8 @@ CSHADOW = np.vstack([np.hstack([_c, _c]), np.hstack([_c, _c])])   # mirror-tiled
 
 
 def treat3d(fi, t):
-    raw = cv2.imread(f'build/v2/frames/{fi:05d}.png')
-    dep = cv2.imread(f'build/v2/depth/{fi:05d}.png', cv2.IMREAD_UNCHANGED)
+    raw = cv2.imread(f'build/v3/frames/{fi:05d}.png')
+    dep = cv2.imread(f'build/v3/depth/{fi:05d}.png', cv2.IMREAD_UNCHANGED)
     if raw is None or dep is None:
         raise FileNotFoundError(fi)
     c = raw.astype(np.float32)
@@ -520,31 +520,143 @@ def clouds_part(c, t):
     return c * (1 - white) + 255 * white
 
 
+def title_img():
+    """the council's own PAGSIKLAB lettering (gold on black) as a premultiplied full-frame layer"""
+    if 'title_img' not in _C:
+        im = cv2.imread('assets/pagsiklab-title.webp').astype(np.float32)[200:530, 35:1945]
+        s = 1500 / im.shape[1]
+        im = cv2.resize(im, (1500, int(im.shape[0] * s)), interpolation=cv2.INTER_AREA)
+        a = np.clip(im.max(2) / 70.0, 0, 1) ** 0.8                 # black background keys out
+        full = np.zeros((H, W, 4), np.float32)
+        h, w = im.shape[:2]
+        y0, x0 = 470 - h // 2, (W - w) // 2
+        full[y0:y0 + h, x0:x0 + w, :3] = im                        # already premultiplied on black
+        full[y0:y0 + h, x0:x0 + w, 3] = a
+        _C['title_img'] = full
+    return _C['title_img']
+
+
+FG = {}
+
+
+def dragons():
+    """the two dragon cut-outs as dark silhouettes (alpha only), cropped to their bodies"""
+    if 'dr' not in FG:
+        im = cv2.imread('assets/dragons.webp', cv2.IMREAD_UNCHANGED).astype(np.float32)
+        a = im[..., 3] / 255
+        lab = cv2.connectedComponents((a > 0.08).astype(np.uint8), 8)[1]
+        out = []
+        for k in (1, 2):
+            m = a * (lab == k)
+            ys, xs = np.nonzero(m > 0.05)
+            out.append(np.ascontiguousarray(m[ys.min():ys.max() + 1, xs.min():xs.max() + 1]))
+        FG['dr'] = out
+    return FG['dr']
+
+
+# (which dragon, start, end, x0, x1, y0, y1, width px, flip)
+FLIGHTS = [(1, 1.4, 7.4, 2300, -500, 250, 120, 900, False),     # close: sweeps right to left behind the title
+           (0, 5.8, 12.6, -300, 2200, 150, 70, 420, True)]       # far: a smaller one crosses high, left to right
+
+
+def draw_dragons(c, t, s0, a):
+    drs = dragons()
+    for k, ts, te, x0, x1, y0, y1, wd, flip in FLIGHTS:
+        u = (t - s0 - ts) / (te - ts)
+        if not (0 < u < 1):
+            continue
+        m = drs[k][:, ::-1] if flip else drs[k]
+        s = wd / m.shape[1]
+        flap = 1 + 0.07 * math.sin((t - s0) * 5.5 + k)
+        sz = (int(wd), max(int(m.shape[0] * s * flap), 2))
+        mm = cv2.resize(m, sz, interpolation=cv2.INTER_AREA)
+        far = wd < 500
+        mm = cv2.GaussianBlur(mm, (0, 0), 1.6 if far else 1.2)
+        x, y = x0 + (x1 - x0) * u, y0 + (y1 - y0) * u + 18 * math.sin(u * 6)
+        lay = np.zeros((H, W), np.float32)
+        X0, Y0 = int(x - sz[0] / 2), int(y - sz[1] / 2)
+        xa, ya, xb, yb = max(X0, 0), max(Y0, 0), min(X0 + sz[0], W), min(Y0 + sz[1], H)
+        if xb <= xa or yb <= ya:
+            continue
+        lay[ya:yb, xa:xb] = mm[ya - Y0:yb - Y0, xa - X0:xb - X0]
+        fade = sm(u / 0.08) * sm((1 - u) / 0.08) * a * (0.55 if far else 0.92)
+        rim = np.clip(lay - np.roll(lay, -6, axis=0), 0, 1)            # underside lit by the fire below
+        c = c * (1 - lay[..., None] * fade) + lay[..., None] * np.float32([7, 7, 9]) * fade
+        if not far:
+            c += cv2.GaussianBlur(rim, (0, 0), 2)[..., None] * np.float32([20, 70, 170]) * fade
+    return c
+
+
+def fg_clouds(t, e):
+    """dark storm clouds rolling across the foreground, heavier at the bottom and the corners"""
+    ox = int(t * 60) % (2 * W)
+    cl = CSHADOW[200:200 + H, ox:ox + W]
+    cl2 = CSHADOW[600:600 + H, (int(-t * 35) % (2 * W)):(int(-t * 35) % (2 * W)) + W]
+    d = np.clip(cl * 0.6 + cl2 * 0.4, 0, 1)
+    wgt = np.clip((yy - H * 0.5) / (H * 0.5), 0, 1) ** 1.2 + 0.55 * np.clip(np.abs(xx - W / 2) / (W / 2) - 0.55, 0, 1) * 2
+    m = np.clip((d - 0.42) * 3.0 + wgt * 1.1 - 0.55, 0, 1)
+    m = push(cv2.GaussianBlur(m, (0, 0), 7), 1 + 0.14 * e, H)
+    under = np.clip(m - push(np.roll(m, 18, axis=0), 1.0), 0, 1)          # fire light on the cloud bellies
+    return m, cv2.GaussianBlur(under, (0, 0), 8)
+
+
+FG_BOKEH = np.random.default_rng(81).random((9, 5)).astype(np.float32)
+
+
+def fg_bokeh(t):
+    lay = np.zeros((H // 2, W // 2, 3), np.float32)
+    for x0, y0, r, sp, ph in FG_BOKEH:
+        rad = 4 + 9 * r
+        y = (y0 * (H // 2 + 120) - t * (22 + 40 * sp)) % (H // 2 + 120) - 60
+        x = (x0 * W // 2 + 30 * math.sin(t * 0.6 + ph * 6) - t * 12) % (W // 2)
+        tw = 0.35 + 0.65 * math.sin(t * (0.8 + sp) + ph * 9) ** 2
+        cv2.circle(lay, (int(x), int(y)), int(rad), (float(40 * tw), float(120 * tw), float(255 * tw)), -1, cv2.LINE_AA)
+    lay = cv2.GaussianBlur(lay, (0, 0), 4)
+    return cv2.resize(lay, (W, H)) * 0.35
+
+
+def push(img, s, cy=H / 2):
+    M = cv2.getRotationMatrix2D((W / 2, cy), 0, s)
+    return cv2.warpAffine(img, M, (W, H), borderMode=cv2.BORDER_REFLECT)
+
+
 def finale(c, t):
     s0 = R.TITLE[0]
+    e = sm(prog(t, s0, R.END - s0))                              # the slow push-in that drives the parallax
     dark = sm(prog(t, s0, 1.6))
     if dark > 0:
         k = 1 + int(14 * dark)
-        c = cv2.GaussianBlur(c, (0, 0), k) * (1 - 0.7 * dark)
+        c = push(cv2.GaussianBlur(c, (0, 0), k), 1 + 0.04 * e) * (1 - 0.7 * dark)     # far plane: slowest
+    # middle plane: warm smoke rolling behind the lettering
+    sm1 = np.roll(MIST, int(t * 26) % (W * 4), axis=1)[:, :W]
+    smoke = np.clip(sm1 - 0.3, 0, 1) * np.exp(-((yy - 520) / 360) ** 2)
+    c += (smoke * dark)[..., None] * np.float32([18, 42, 85])
     c = embers_2d(c, t, 0.9 * dark)
-    tp = txt('title')
+    c = draw_dragons(c, t, s0, dark)                               # dragons glide through the smoke behind the title
+    tp = push(title_img(), 1 + 0.035 * e, 470)                    # title plane
     wp = prog(t, s0 + 1.2, 1.6)
     if wp > 0:
-        edge = 260 + (1660 - 260) * sm(wp)
+        edge = 160 + (1760 - 160) * sm(wp)
         rev = np.clip((edge - xx) / 70, 0, 1)[..., None]
         lay = tp * rev
         c = c + cv2.GaussianBlur(lay[..., 3], (0, 0), 34)[..., None] * np.float32([30, 100, 230]) * 0.85
         c = over(c, lay)
         if wp < 1:
-            e = np.exp(-((xx - edge) / 18) ** 2) * tp[..., 3]
-            c += (e + cv2.GaussianBlur(e, (0, 0), 16) * 1.5)[..., None] * np.float32([170, 215, 255])
-    for name, st in (('title_sub', s0 + 2.9), ('title_q', s0 + 4.0), ('end_lsc', s0 + 5.2)):
-        c = over(c, txt(name), sm(prog(t, st, 0.8)))
+            ee = np.exp(-((xx - edge) / 18) ** 2) * tp[..., 3]
+            c += (ee + cv2.GaussianBlur(ee, (0, 0), 16) * 1.5)[..., None] * np.float32([170, 215, 255])
+    # foreground: dark storm clouds rolling past the lens, a few embers drifting through
+    m, under = fg_clouds(t, e)
+    flick = 0.75 + 0.25 * math.sin(t * 9.0) * math.sin(t * 3.1 + 1)
+    c = c * (1 - m[..., None] * 0.9 * dark) + m[..., None] * np.float32([9, 9, 12]) * dark
+    c += under[..., None] * np.float32([20, 70, 170]) * 0.55 * flick * dark
+    c += fg_bokeh(t) * dark
+    for name, st in (('title_sub', s0 + 2.9), ('title_q', s0 + 4.0)):     # in front of the clouds
+        c = over(c, push(txt(name), 1 + 0.035 * e, 470), sm(prog(t, st, 0.8)))
+    # the council line and seal sit on top of everything, steady
     a = sm(prog(t, s0 + 5.2, 0.8))
-    seal = rgba_img('assets/lsc-seal.webp', 70)
-    c = over(c, seal, a, W // 2 - 300 - 35, 975 - 35)
-    ak = rgba_img('assets/akashic.png', 150)
-    c = over(c, ak, a, W // 2 + 300 - 75, 975 - ak.shape[0] // 2)
+    c = over(c, txt('end_lsc'), a)
+    seal = rgba_img('assets/lsc-seal.webp', 96)                  # the end card carries the council seal only
+    c = over(c, seal, a, W // 2 - 48, 948 - 48)
     return c * (1 - sm(prog(t, R.END - 1.6, 1.4)))
 
 
