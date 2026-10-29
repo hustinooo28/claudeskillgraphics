@@ -264,8 +264,8 @@ CSHADOW = np.vstack([np.hstack([_c, _c]), np.hstack([_c, _c])])   # mirror-tiled
 
 
 def treat3d(fi, t):
-    raw = cv2.imread(f'build/v3/frames/{fi:05d}.png')
-    dep = cv2.imread(f'build/v3/depth/{fi:05d}.png', cv2.IMREAD_UNCHANGED)
+    raw = cv2.imread(f'build/v4/frames/{fi:05d}.png')
+    dep = cv2.imread(f'build/v4/depth/{fi:05d}.png', cv2.IMREAD_UNCHANGED)
     if raw is None or dep is None:
         raise FileNotFoundError(fi)
     c = raw.astype(np.float32)

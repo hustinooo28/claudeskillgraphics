@@ -124,7 +124,7 @@ f = ImageFont.truetype('assets/fonts/Cinzel.ttf', 64)
 f.set_variation_by_axes([700])
 fs = ImageFont.truetype('assets/fonts/Cinzel.ttf', 40)
 fs.set_variation_by_axes([600])
-for hs in HOUSES + [CAMPUS]:
+for hs in []:          # seat names are now 3D lettering floating above each seat (scene.py)
     x, y = hs['pos'][0] * TS, hs['pos'][1] * TS
     label = hs['seat']
     tw = d.textlength(label, font=f)

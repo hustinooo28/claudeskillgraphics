@@ -286,6 +286,36 @@ for i in range(7):
     # flight to the next seat
     add('sfx', whoosh(1.6, 300, 1800), s + R.HOUSE_LEN - 1.45, 0.22, send=0.4)
 
+# the guide dragon: wingbeats on every flight, a roar as it lands on the campus roof and as it takes off
+def wingbeat():
+    t = tt(0.45)
+    x = filt(noise(0.45), 'bandpass', [90, 700]) * np.sin(np.pi * np.clip(t / 0.4, 0, 1)) ** 2
+    return x + np.sin(2 * np.pi * 55 * t) * np.exp(-t / 0.12) * 0.6
+
+
+def dragon_roar(d=1.8, base=70):
+    t = tt(d)
+    u = t / d
+    f0 = base * (0.85 + 0.45 * np.sin(np.pi * np.minimum(u * 1.25, 1)) ** 0.8)
+    src = saw(f0, d) * (1 + 0.5 * np.sin(2 * np.pi * 27 * t)) + noise(d) * 0.3
+    x = sum(filt(src, 'bandpass', [fc * 0.75, fc * 1.3]) * g for fc, g in ((380, 1.0), (950, 0.8), (2300, 0.4)))
+    return np.tanh(x * 2.5) * np.minimum(t / 0.2, 1) * np.clip((d - t) / 0.7, 0, 1)
+
+
+DWELL_ = R.HOUSE_LEN - 1.3
+flights = [(R.MAP_IN[0] + 1.0, R.HOUSE_START)] + [(R.house_window(i)[0] + DWELL_, R.house_window(i)[0] + R.HOUSE_LEN) for i in range(6)]
+for f0_, f1_ in flights:
+    k = 0
+    while f0_ + k / 1.9 < f1_:
+        add('sfx', wingbeat(), f0_ + k / 1.9, 0.20, pan=0.2 * math.sin(k), send=0.35)
+        k += 1
+add('sfx', dragon_roar(2.0, 66), R.CAMPUS_WIN[0] + 7.4, 0.32, pan=0.15, send=0.6)
+for k in range(5):
+    add('sfx', wingbeat(), R.CAMPUS_WIN[0] + 5.0 + k / 2.4, 0.22, send=0.35)
+add('sfx', dragon_roar(1.6, 80), R.OVERVIEW[0] + 0.3, 0.30, pan=-0.2, send=0.7)
+for k in range(7):
+    add('sfx', wingbeat(), R.OVERVIEW[0] + 0.5 + k / 1.9, 0.2, send=0.4)
+
 # a new era is here: the drums stop, a held chord and choir swell, then a riser into the title
 o0, o1 = R.OVERVIEW
 add('music', strings(38, o1 - o0, 1.0, 1400), o0, 0.12, send=0.7)

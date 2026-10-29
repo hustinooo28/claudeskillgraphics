@@ -536,6 +536,16 @@ for fr in range(F(R.MAP_IN[0]), F(R.END) + 1):
     cam_data.dof.focus_distance = (c - tg).length
     cam_data.dof.keyframe_insert('focus_distance', frame=fr)
 
+# ---------------- life on the map: the guide dragon, floating names, armies ----------------
+import realm_life as LIFE
+ctx = dict(mat=mat, mesh_obj=mesh_obj, link=link, M=M, ROOF=ROOF, SEATS=SEATS, F=F, ground=ground, tex=TEX,
+           height=np.load(os.path.join(HERE, 'build/tex/height.npy')), font=os.path.join(HERE, 'assets/fonts/Cinzel.ttf'))
+dragon_root, dragon_wings = LIFE.build_dragon(ctx)
+LIFE.animate_dragon(ctx, dragon_root, dragon_wings)
+names = LIFE.build_names(ctx)
+LIFE.animate_names(ctx, names, lambda t: camera_at(t)[0])
+LIFE.build_armies(ctx)
+
 sc.frame_start, sc.frame_end = F(R.MAP_IN[0]), F(R.END)
 
 # ---------------- output ----------------

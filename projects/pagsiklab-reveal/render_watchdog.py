@@ -6,7 +6,7 @@ import os, sys, time, subprocess, glob
 
 BLENDER, FIRST, LAST = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 CHUNK = int(sys.argv[4]) if len(sys.argv) > 4 else 40
-FRAMES, DEPTH = os.environ.get('FRAMES', 'build/v3/frames'), os.environ.get('DEPTH', 'build/v3/depth')
+FRAMES, DEPTH = os.environ.get('FRAMES', 'build/v4/frames'), os.environ.get('DEPTH', 'build/v4/depth')
 STALL = 20.0          # seconds without a new frame -> restart
 
 

@@ -6,13 +6,13 @@ yy, xx = np.mgrid[0:N, 0:N].astype(np.float32)
 R = np.sqrt((xx - N / 2) ** 2 + (yy - N / 2) ** 2) / (N / 2)
 
 # (file, mode, crop params, crush (lo, span)) -- crops are in the source image's pixels
-SPECS = {
-    'stark': ('16.webp', 'alpha', (410, 184, 1128, 790), None),
+SPECS = {   # the council's emblem set (cut out by cut_emblems.py); Baratheon keeps the earlier stag until its emblem arrives
+    'stark': ('../emblems/stark.png', 'alpha', (0, 0, 522, 365), None),
     'baratheon': ('28.webp', 'rect', (232, 345, 256, 480), (0.22, 0.2)),
-    'tyrell': ('25.webp', 'ellipse', (250, 360, 230, 330), (0.10, 0.25)),
-    'martell': ('33.webp', 'disc', (368, 548, 194), None),
-    'lannister': ('22.webp', 'ellipse', (30, 100, 580, 720), (0.2, 0.2)),
-    'targaryen': ('21.webp', 'disc', (355, 350, 236), None),
+    'tyrell': ('../emblems/tyrell.png', 'alpha', (0, 0, 345, 343), None),
+    'martell': ('../emblems/martell.png', 'alpha', (0, 0, 237, 255), None),
+    'lannister': ('../emblems/lannister.png', 'alpha', (0, 0, 443, 558), None),
+    'targaryen': ('../emblems/targaryen.png', 'alpha', (0, 0, 464, 499), None),
     'campus': ('../lsc-seal.webp', 'disc', (1000, 1000, 985), None),     # the Local Student Council seal
 }
 
@@ -65,12 +65,12 @@ def sigil_layer(spec):
 for key, spec in SPECS.items():
     out = face_base()
     rgb, a, mode = sigil_layer(spec)
-    if key == 'baratheon':
+    if key == 'baratheon' and spec[0] == '28.webp':
         rgb = np.clip(rgb * 1.9, 0, 255)          # the stag is a thin gold line drawing
-    if key == 'tyrell':
+    if key == 'tyrell' and spec[0] == '25.webp':
         a = a * np.clip((rgb.mean(2) - 60) / 120, 0, 1) ** 0.3 * np.clip((235 - rgb.mean(2)) / 40, 0, 1)
     hh, ww = a.shape
-    fit = (0.86 if mode == 'disc' else 0.70) * N
+    fit = (0.86 if mode == 'disc' else 0.80 if mode == 'alpha' else 0.70) * N
     s = fit / max(hh, ww)
     rgb = cv2.resize(rgb, (int(ww * s), int(hh * s)), interpolation=cv2.INTER_AREA if s < 1 else cv2.INTER_CUBIC)
     a = cv2.resize(a, (int(ww * s), int(hh * s)), interpolation=cv2.INTER_AREA if s < 1 else cv2.INTER_CUBIC)

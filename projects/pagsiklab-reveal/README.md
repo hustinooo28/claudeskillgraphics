@@ -36,6 +36,8 @@ Teams, sections, seats and mottos come from the council's Mini Olympics sheet. T
 | `make_map.py` | Paints the realm (colour texture, heightmap, tree positions) into `build/tex/` |
 | `make_sigils.py` | Sets each sigil and the LSC seal into a bronze medallion face; draws the campus sign |
 | `intro_trophy.py` | The opening shot: the trophy on its plinth in the dark hall (with depth) |
+| `realm_life.py` | The guide dragon (clockwork iron and brass; flies alongside the camera, patrols behind each seat, lands on the campus roof), the seat names as extruded brass lettering floating flat on the map (each sinks away while its house is revealed), and marching regiments with house banners and tent camps |
+| `cut_emblems.py` | Cuts the council's house emblems out of their backgrounds for the medallions and lower thirds |
 | `scene.py` | Builds the Blender scene: terrain, trees, the six castles and the campus, their build animations, the camera path, and a 16-bit depth pass |
 | `titles.py`, `titles.js` | Every on-screen word, rendered in Cinzel to transparent layers |
 | `composite.py` | The film: openers, sky, haze, grading, light shafts, bloom, per-house particles, lower thirds and the finale |
@@ -50,7 +52,7 @@ Needs Blender 4.2 (any build with Workbench; headless works with Mesa's `libegl1
 ```sh
 python3 make_map.py && python3 make_sigils.py
 blender -b --factory-startup -P intro_trophy.py
-blender -b --factory-startup -P scene.py -- --save --out build/v3/frames && python3 render_watchdog.py blender 432 2904     # ~1.3 h on 4 CPU cores
+blender -b --factory-startup -P scene.py -- --save --out build/v4/frames && python3 render_watchdog.py blender 432 2904     # ~1.3 h on 4 CPU cores
 python3 titles.py && node titles.js build/titles.json
 python3 audio/score.py && python3 audio/final_mix.py      # needs build/track.wav
 python3 composite.py build/film.mp4
