@@ -32,11 +32,16 @@ def cut_dark(im, thr=62):
     m = m | (1 - ff)
     return np.clip(cv2.GaussianBlur(m.astype(np.float32), (0, 0), 1.0) * 1.3 - 0.15, 0, 1)
 
-SRC = {'targaryen': ('light', 236), 'lannister': ('light', 236), 'tyrell': ('light', 238), 'stark': ('light', 205), 'martell': ('dark', 62)}
+SRC = {'targaryen': ('light', 236), 'lannister': ('light', 236), 'tyrell': ('light', 238), 'baratheon': ('light', 236),
+       'stark': ('svg', 0), 'martell': ('svg', 0)}     # stark/martell: the council's transparent SVG exports
 prev = []
 for k, (mode, thr) in SRC.items():
-    im = cv2.imread(f'assets/emblems/{k}_src.png')
-    a = cut_light(im, thr) if mode == 'light' else cut_dark(im, thr)
+    if mode == 'svg':
+        src = cv2.imread(f'assets/emblems/{k}_svg.png', cv2.IMREAD_UNCHANGED)
+        im, a = src[..., :3], src[..., 3].astype(np.float32) / 255
+    else:
+        im = cv2.imread(f'assets/emblems/{k}_src.png')
+        a = cut_light(im, thr) if mode == 'light' else cut_dark(im, thr)
     # drop specks: keep only components that are a real part of the emblem
     n, lab, st, _ = cv2.connectedComponentsWithStats((a > 0.5).astype(np.uint8), 8)
     keep = np.zeros(a.shape, np.float32)

@@ -6,13 +6,13 @@ yy, xx = np.mgrid[0:N, 0:N].astype(np.float32)
 R = np.sqrt((xx - N / 2) ** 2 + (yy - N / 2) ** 2) / (N / 2)
 
 # (file, mode, crop params, crush (lo, span)) -- crops are in the source image's pixels
-SPECS = {   # the council's emblem set (cut out by cut_emblems.py); Baratheon keeps the earlier stag until its emblem arrives
-    'stark': ('../emblems/stark.png', 'alpha', (0, 0, 522, 365), None),
-    'baratheon': ('28.webp', 'rect', (232, 345, 256, 480), (0.22, 0.2)),
-    'tyrell': ('../emblems/tyrell.png', 'alpha', (0, 0, 345, 343), None),
-    'martell': ('../emblems/martell.png', 'alpha', (0, 0, 237, 255), None),
-    'lannister': ('../emblems/lannister.png', 'alpha', (0, 0, 443, 558), None),
-    'targaryen': ('../emblems/targaryen.png', 'alpha', (0, 0, 464, 499), None),
+SPECS = {   # the council's emblem set (cut out by cut_emblems.py)
+    'stark': ('../emblems/stark.png', 'alpha', (0, 0, 9999, 9999), None),
+    'baratheon': ('../emblems/baratheon.png', 'alpha', (0, 0, 9999, 9999), None),
+    'tyrell': ('../emblems/tyrell.png', 'alpha', (0, 0, 9999, 9999), None),
+    'martell': ('../emblems/martell.png', 'alpha', (0, 0, 9999, 9999), None),
+    'lannister': ('../emblems/lannister.png', 'alpha', (0, 0, 9999, 9999), None),
+    'targaryen': ('../emblems/targaryen.png', 'alpha', (0, 0, 9999, 9999), None),
     'campus': ('../lsc-seal.webp', 'disc', (1000, 1000, 985), None),     # the Local Student Council seal
 }
 
