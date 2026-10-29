@@ -542,8 +542,6 @@ sc.frame_start, sc.frame_end = F(R.MAP_IN[0]), F(R.END)
 # ---------------- output ----------------
 out = arg('--out', os.path.join(HERE, 'build', 'frames'))
 os.makedirs(out, exist_ok=True)
-if '--save' in argv:
-    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, 'build', 'scene.blend'))
 # depth pass for atmospheric fog in compositing: 16-bit PNG, 0..150 units -> 0..1 (sky = 1)
 sc.view_layers[0].use_pass_z = True
 sc.use_nodes = True
@@ -560,23 +558,28 @@ fo.file_slots[0].path = '#####'
 nt.links.new(rl.outputs['Depth'], mr.inputs['Value'])
 nt.links.new(mr.outputs['Value'], fo.inputs[0])
 nt.links.new(rl.outputs['Image'], comp.inputs['Image'])
+sc.render.filepath = os.path.join(out, '#####')
+sc.render.use_overwrite = False
+
+if '--save' in argv:
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, 'build', 'scene.blend'))
 
 if '--profile' in argv:
     import time
-    sc.frame_set(600)
+    sc.frame_set(int(arg('--pframe', '600')))
     sc.render.filepath = os.path.join(out, 'prof.png')
     base = dict(shadows=sh.show_shadows, cavity=sh.show_cavity, dof=cam_data.dof.use_dof, aa=sc.display.render_aa)
     def setcfg(c):
         sh.show_shadows, sh.show_cavity, cam_data.dof.use_dof, sc.display.render_aa = c['shadows'], c['cavity'], c['dof'], c['aa']
-    tests = [('all on', {}), ('no shadows', dict(shadows=False)), ('no cavity', dict(cavity=False)),
-             ('no dof', dict(dof=False)), ('aa 5', dict(aa='5')), ('aa fxaa', dict(aa='FXAA')),
-             ('bare', dict(shadows=False, cavity=False, dof=False, aa='FXAA'))]
+    tests = [('all on', {}), ('no dof', dict(dof=False)), ('no shadows', dict(shadows=False))]
     for name, ch in tests:
         setcfg({**base, **ch})
         bpy.ops.render.render(write_still=True)          # warm-up
         t = time.time(); bpy.ops.render.render(write_still=True)
         print('PROF', name, '%.2fs' % (time.time() - t), flush=True)
-    t = time.time(); sc.frame_set(601); print('PROF frame_set', '%.2fs' % (time.time() - t), flush=True)
+    setcfg(base)
+    sc.use_nodes = False
+    t = time.time(); bpy.ops.render.render(write_still=True); print('PROF no compositor', '%.2fs' % (time.time() - t), flush=True)
 elif '--stills' in argv:
     for fr in [int(x) for x in arg('--stills').split(',')]:
         sc.frame_set(fr)

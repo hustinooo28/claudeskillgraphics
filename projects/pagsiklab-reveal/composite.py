@@ -87,8 +87,8 @@ GRADES = {   # (sat, shadow tint BGR, highlight tint BGR, contrast, lift)  -- da
     'fire': (0.95, (1.00, 0.90, 0.95), (0.75, 0.92, 1.20), 1.24, -10),
     'gold': (0.9, (1.06, 0.98, 0.94), (0.78, 0.96, 1.15), 1.2, -8),
     'green': (0.9, (1.04, 1.02, 0.94), (0.84, 1.00, 1.08), 1.16, -6),
-    'cold': (0.62, (1.18, 1.04, 0.92), (1.04, 1.02, 0.98), 1.18, -4),
-    'sun': (0.95, (1.08, 0.98, 0.92), (0.76, 0.95, 1.16), 1.16, -6),
+    'cold': (0.55, (1.18, 1.05, 0.94), (1.06, 1.03, 1.00), 1.04, -6),   # flat overcast winter light
+    'sun': (0.8, (1.06, 0.98, 0.92), (0.82, 0.97, 1.12), 1.10, 2),      # bleached, high exposure
     'storm': (0.6, (1.14, 1.05, 0.95), (1.00, 1.01, 1.00), 1.26, -8),
     'campus': (0.92, (1.06, 1.00, 0.94), (0.84, 0.97, 1.10), 1.14, -5),
 }
@@ -102,6 +102,10 @@ RAYS = {  # god-ray source (x, y), colour BGR, strength
     'gold': ((1700, -150), (110, 200, 255), 0.6), 'green': ((300, -250), (170, 235, 255), 0.5),
     'cold': ((400, -300), (255, 240, 225), 0.4), 'sun': ((1500, -150), (120, 210, 255), 0.7),
     'storm': ((900, -400), (220, 225, 225), 0.25), 'campus': ((1500, -250), (170, 225, 255), 0.6),
+}
+ATMOS = {   # fog reach (x near distance), light-shaft gain, sweeping cloud-shadow strength
+    'neutral': (1.4, 1.0, 0.30), 'fire': (1.5, 0.7, 0.25), 'gold': (1.6, 1.7, 0.30), 'green': (1.5, 1.5, 0.30),
+    'cold': (0.8, 0.5, 0.45), 'sun': (1.8, 1.4, 0.20), 'storm': (1.0, 0.4, 0.40), 'campus': (1.5, 1.6, 0.30),
 }
 PARTS = {'neutral': 'dust', 'fire': 'embers', 'gold': 'golddust', 'green': 'petals', 'cold': 'snow', 'sun': 'dust',
          'storm': 'rain', 'campus': 'dust'}
@@ -141,6 +145,10 @@ def segment(t):
 
 
 # ---------------- particles ----------------
+_ld = np.zeros((H, W), np.float32)
+for _x, _y, _r in np.random.default_rng(71).random((26, 3)):
+    cv2.circle(_ld, (int(_x * W), int(_y * H)), int(6 + 26 * _r), 1.0, -1, cv2.LINE_AA)
+LENS_DUST = cv2.GaussianBlur(_ld, (0, 0), 6)[..., None]
 RNG = np.random.default_rng(9)
 P = RNG.random((420, 6)).astype(np.float32)
 
@@ -151,15 +159,16 @@ def particles(kind, t, strength):
         return None, None
     h2, w2 = H // 2, W // 2
     lay = np.zeros((h2, w2, 3), np.float32)
-    n = {'snow': 300, 'rain': 260, 'petals': 70, 'embers': 160, 'dust': 70, 'golddust': 150}[kind]
+    n = {'snow': 420, 'rain': 260, 'petals': 70, 'embers': 160, 'dust': 70, 'golddust': 150}[kind]
     for k in range(n):
         x0, y0, z, ph, a, b = P[k]
         z = 0.15 + 0.85 * z ** 2                            # depth: near particles are big and fast
         if kind == 'snow':
-            y = (y0 * (h2 + 40) + (12 + 55 * z) * t) % (h2 + 40) - 20
-            x = (x0 * w2 + 14 * math.sin(t * 0.7 + ph * 6) - 10 * z * t) % w2
-            r = 0.6 + 3.2 * z ** 2
-            cv2.circle(lay, (int(x), int(y)), max(1, int(r)), (230, 232, 235), -1, cv2.LINE_AA)
+            y = (y0 * (h2 + 40) + (40 + 120 * z) * t) % (h2 + 40) - 20
+            x = (x0 * w2 + 14 * math.sin(t * 0.7 + ph * 6) - (60 + 160 * z) * t) % w2
+            r = 0.6 + 3.0 * z ** 2
+            L = 2 + 9 * z
+            cv2.line(lay, (int(x), int(y)), (int(x + L), int(y - L * 0.35)), (230, 232, 235), max(1, int(r)), cv2.LINE_AA)
         elif kind == 'rain':
             y = (y0 * (h2 + 80) + (300 + 500 * z) * t) % (h2 + 80) - 40
             x = (x0 * w2 - 90 * t) % w2
@@ -249,6 +258,9 @@ CLOUD_BIG = cv2.resize(fbm2(270, 6, (2, 4, 8, 16, 32)), (W * 2, H * 2), interpol
 
 _m = cv2.resize(fbm2(270, 21, (2, 4, 8, 16)), (W * 2, H), interpolation=cv2.INTER_CUBIC)
 MIST = np.hstack([_m, _m[:, ::-1]])          # mirrored so it tiles without a seam
+_c = CLOUD_BIG[::2, ::2]
+_c = np.vstack([np.hstack([_c, _c[:, ::-1]]), np.hstack([_c[::-1], _c[::-1, ::-1]])])
+CSHADOW = np.vstack([np.hstack([_c, _c]), np.hstack([_c, _c])])   # mirror-tiled: continuous for any window
 
 
 def treat3d(fi, t):
@@ -266,18 +278,24 @@ def treat3d(fi, t):
     # distance thickens into fog, and the horizon and the map's edges dissolve completely
     ground = dist[dist < 149]
     near = float(np.percentile(ground, 30)) if ground.size else 20.0
-    fog = 1 - np.exp(-np.clip(dist - near * 1.15, 0, None) / (near * 1.4))
+    reach, shaft_gain, shadow_k = lerp_tuple(ATMOS[ga], ATMOS[gb], u)
+    fog = 1 - np.exp(-np.clip(dist - near * 1.15, 0, None) / (near * reach))
     fog = np.where(dist > 149, 1.0, fog * 0.85)
     # drifting mist banks: denser low in frame and far away
     m1 = np.roll(MIST, int(t * 22) % (W * 4), axis=1)[:, :W]
     m2 = np.roll(MIST[::-1], int(-t * 14) % (W * 4), axis=1)[:, W:2 * W]
     mist = np.clip((m1 * 0.6 + m2 * 0.4) - 0.35, 0, 1) * 1.6
     fog = np.clip(fog + mist * (0.08 + 0.3 * fog) * (0.5 + 0.5 * yy / H), 0, 1)[..., None]
+    # shadow sling: huge cloud shadows drifting over the land convey the scale of the realm
+    ox, oy = int(t * 40) % (2 * W), int(t * 12) % (2 * H)
+    cs = CSHADOW[oy:oy + H, ox:ox + W]
+    ground_m = (dist < 149)[..., None]
+    c = c * (1 - ground_m * shadow_k * np.clip((cs - 0.45) * 2.5, 0, 1)[..., None])
     hy = np.clip(yy / (H * 0.6), 0, 1)[..., None]
     fogcol = np.float32(top) * (1 - hy) + np.float32(far) * hy
     c = c * (1 - fog) + fogcol * fog
     src, rcol, rs = RAYS[ga] if u < 0.5 else RAYS[gb]
-    c = god_rays(c, src, rcol, rs * 0.8, t)
+    c = god_rays(c, src, rcol, rs * 0.8 * shaft_gain, t)
     c = bloom(c, 0.3)
     ka, kb = PARTS[ga], PARTS[gb]
     if ka == kb:
@@ -288,8 +306,14 @@ def treat3d(fi, t):
     if 'sun' in (ga, gb):
         w = (1 - u) if ga == 'sun' else u
         if w > 0.05:
-            dx = (np.sin(yy / 9 + t * 6) * 1.6 * w * np.clip((yy - H * 0.4) / (H * 0.6), 0, 1)).astype(np.float32)
+            farm = np.clip((dist - near * 1.2) / (near * 1.5), 0, 1)
+            dx = (np.sin(yy / 7 + t * 7) * 2.4 * w * farm).astype(np.float32)
             c = cv2.remap(c, xx + dx, yy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    if 'fire' in (ga, gb):
+        w = (1 - u) if ga == 'fire' else u
+        fl = 0.5 + 0.3 * math.sin(t * 13.0) + 0.2 * math.sin(t * 29.0 + 1.3)
+        c = c * (1 + 0.06 * fl * w) + np.clip(1 - yy / H * 1.2, 0, 1)[..., None] * 0 + \
+            np.exp(-(((xx - W / 2) / 900) ** 2 + ((yy - H * 0.95) / 380) ** 2))[..., None] * np.float32([10, 45, 120]) * fl * w
     if 'storm' in (ga, gb):
         s0 = R.house_window(5)[0]
         L = sum(math.exp(-((t - (s0 + k)) / 0.05) ** 2) for k in (1.4, 1.55, 6.2))
@@ -545,8 +569,15 @@ def render(fi):
             c = over(c, scale_about(txt('era'), 1 + 0.03 * prog(t, R.OVERVIEW[0], 7)), a)
         if t >= R.TITLE[0]:
             c = finale(c, t)
-    rg = np.random.default_rng(fi).standard_normal((H // 2, W // 2)).astype(np.float32)
-    c = c + cv2.resize(rg, (W, H))[..., None] * 2.2 * (c.mean() > 2)
+    if c.mean() > 2:
+        rgen = np.random.default_rng(fi)
+        g1 = cv2.resize(rgen.standard_normal((H // 2, W // 2)).astype(np.float32), (W, H))
+        g2 = cv2.GaussianBlur(rgen.standard_normal((H, W)).astype(np.float32), (0, 0), 0.6)
+        lum = np.clip(c.mean(2) / 255, 0, 1)
+        amt = (4.5 * (lum * (1 - lum)) * 2 + 0.8)[..., None]                    # strongest in the mid-tones
+        c = c + (g1 * 0.6 + g2 * 0.5)[..., None] * amt
+        if t >= R.MAP_IN[0]:
+            c = c + LENS_DUST * np.clip((c.mean(2, keepdims=True) - 90) / 120, 0, 1) * 18
     return np.clip(c, 0, 255).astype(np.uint8).tobytes()
 
 
