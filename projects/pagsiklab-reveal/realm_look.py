@@ -40,7 +40,7 @@ def _tint(nt, b, fac, lo, hi):
     return ramp
 
 
-def masonry(m, scale=26.0, mortar=0.55):
+def masonry(m, scale=26.0, mortar=0.55, windows=False):
     """stone blocks in courses: brick texture on (x + y, z) so every wall orientation gets courses"""
     nt, b = _nodes(m)
     if b.inputs['Base Color'].is_linked:
@@ -74,6 +74,72 @@ def masonry(m, scale=26.0, mortar=0.55):
     nt.links.new(mix.outputs['Result'], b.inputs['Base Color'])
     _bump(nt, b, br.outputs['Fac'], 0.35, 0.01)
     b.inputs['Roughness'].default_value = 0.88
+    if windows:
+        _windows(nt, b, comb.outputs[0], mix.outputs['Result'])
+
+
+def _windows(nt, b, vec, base_col):
+    """arrow slits on a coarse grid; about a third of them lit from inside by warm firelight"""
+    win = nt.nodes.new('ShaderNodeTexBrick')
+    win.offset = 0.5
+    win.inputs['Scale'].default_value = 6.5
+    win.inputs['Brick Width'].default_value = 0.5
+    win.inputs['Row Height'].default_value = 0.5
+    win.inputs['Mortar Size'].default_value = 0.0
+    win.inputs['Color1'].default_value = (0, 0, 0, 1)
+    win.inputs['Color2'].default_value = (1, 1, 1, 1)
+    nt.links.new(vec, win.inputs['Vector'])
+    # a slit in the middle of each cell: |frac(u) - 0.5| small horizontally, a little taller vertically
+    sep = nt.nodes.new('ShaderNodeSeparateXYZ')
+    sc_ = nt.nodes.new('ShaderNodeVectorMath')
+    sc_.operation = 'MULTIPLY'
+    sc_.inputs[1].default_value = (6.5 / 0.5, 6.5 / 0.5, 1)
+    nt.links.new(vec, sc_.inputs[0])
+    nt.links.new(sc_.outputs[0], sep.inputs[0])
+
+    def slit(out, half):
+        fr = nt.nodes.new('ShaderNodeMath'); fr.operation = 'FRACT'
+        nt.links.new(out, fr.inputs[0])
+        sub = nt.nodes.new('ShaderNodeMath'); sub.operation = 'SUBTRACT'; sub.inputs[1].default_value = 0.5
+        nt.links.new(fr.outputs[0], sub.inputs[0])
+        ab = nt.nodes.new('ShaderNodeMath'); ab.operation = 'ABSOLUTE'
+        nt.links.new(sub.outputs[0], ab.inputs[0])
+        lt = nt.nodes.new('ShaderNodeMath'); lt.operation = 'LESS_THAN'; lt.inputs[1].default_value = half
+        nt.links.new(ab.outputs[0], lt.inputs[0])
+        return lt.outputs[0]
+    # the brick rows are offset by half a cell every other row; shift x by 0.5 on odd rows like the brick node does
+    row = nt.nodes.new('ShaderNodeMath'); row.operation = 'FLOOR'
+    nt.links.new(sep.outputs['Y'], row.inputs[0])
+    odd = nt.nodes.new('ShaderNodeMath'); odd.operation = 'MODULO'; odd.inputs[1].default_value = 2.0
+    nt.links.new(row.outputs[0], odd.inputs[0])
+    shift = nt.nodes.new('ShaderNodeMath'); shift.operation = 'MULTIPLY_ADD'
+    shift.inputs[1].default_value = 0.5
+    nt.links.new(odd.outputs[0], shift.inputs[0])
+    nt.links.new(sep.outputs['X'], shift.inputs[2])
+    sx = slit(shift.outputs[0], 0.09)
+    sy = slit(sep.outputs['Y'], 0.2)
+    hole = nt.nodes.new('ShaderNodeMath'); hole.operation = 'MULTIPLY'
+    nt.links.new(sx, hole.inputs[0]); nt.links.new(sy, hole.inputs[1])
+    pick = nt.nodes.new('ShaderNodeSeparateColor')            # the brick node's per-cell random value
+    nt.links.new(win.outputs['Color'], pick.inputs[0])
+    some = nt.nodes.new('ShaderNodeMath'); some.operation = 'GREATER_THAN'; some.inputs[1].default_value = 0.55
+    nt.links.new(pick.outputs[0], some.inputs[0])
+    slit_m = nt.nodes.new('ShaderNodeMath'); slit_m.operation = 'MULTIPLY'
+    nt.links.new(hole.outputs[0], slit_m.inputs[0]); nt.links.new(some.outputs[0], slit_m.inputs[1])
+    lit = nt.nodes.new('ShaderNodeMath'); lit.operation = 'GREATER_THAN'; lit.inputs[1].default_value = 0.76
+    nt.links.new(pick.outputs[0], lit.inputs[0])
+    glow = nt.nodes.new('ShaderNodeMath'); glow.operation = 'MULTIPLY'
+    nt.links.new(hole.outputs[0], glow.inputs[0]); nt.links.new(lit.outputs[0], glow.inputs[1])
+    dark = nt.nodes.new('ShaderNodeMix')
+    dark.data_type = 'RGBA'
+    dark.inputs['B'].default_value = (0.01, 0.008, 0.007, 1)
+    nt.links.new(slit_m.outputs[0], dark.inputs['Factor'])
+    nt.links.new(base_col, dark.inputs['A'])
+    nt.links.new(dark.outputs['Result'], b.inputs['Base Color'])
+    b.inputs['Emission Color'].default_value = (1.0, 0.55, 0.18, 1)
+    em = nt.nodes.new('ShaderNodeMath'); em.operation = 'MULTIPLY'; em.inputs[1].default_value = 2.5
+    nt.links.new(glow.outputs[0], em.inputs[0])
+    nt.links.new(em.outputs[0], b.inputs['Emission Strength'])
 
 
 def metal(m, rough=0.28, base=None):
@@ -193,7 +259,7 @@ def apply(sc, cam_data, res_y, sun_dir=(-0.45, 0.55, 0.70)):
         if not m.use_nodes or n.startswith('dragon_'):
             continue
         if n in ('stone', 'darkstone'):
-            masonry(m, mortar=0.55 if n == 'stone' else 0.4)
+            masonry(m, mortar=0.55 if n == 'stone' else 0.4, windows=True)
         elif n == 'sand':
             masonry(m, scale=18.0, mortar=0.75)
         elif n in ('brass', 'name_gold'):

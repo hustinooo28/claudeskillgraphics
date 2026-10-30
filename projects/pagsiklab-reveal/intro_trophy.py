@@ -1,5 +1,5 @@
 """Opening shot: a gold trophy on a stone pedestal in a dark hall, slow dolly-in (frames 0..119 = 0-5 s).
-Run: blender -b --factory-startup -P intro_trophy.py -- [--stills 0,60,119] [--res 1080]"""
+Run: blender -b --factory-startup -P intro_trophy.py -- [--stills 0,60,119] [--res 1080] [--engine workbench]"""
 import bpy, bmesh, sys, os, math
 from mathutils import Vector, Matrix
 
@@ -112,6 +112,69 @@ for side in (-1, 1):                       # handles: half tori standing on the 
         bmesh.ops.scale(bm, vec=(-1, 1, 1), verts=bm.verts)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     obj(f'handle{side}', bm, GOLD, (side * 0.17, 0, Z0 + 0.18 + 0.56))
+
+
+def cycles_look():
+    """polished gold under one warm shaft from above, a cool rim behind, soft panels out of frame for reflections"""
+    sc.render.engine = 'CYCLES'
+    cy = sc.cycles
+    cy.device, cy.samples, cy.use_adaptive_sampling = 'CPU', 32, True
+    cy.use_denoising, cy.denoiser, cy.denoising_quality = True, 'OPENIMAGEDENOISE', 'BALANCED'
+    cy.max_bounces, cy.glossy_bounces, cy.diffuse_bounces = 6, 4, 2
+    cy.seed = 3
+    sc.render.use_persistent_data = True
+    sc.view_settings.view_transform = 'AgX'
+    sc.view_settings.look = 'AgX - Medium High Contrast'
+    sc.world.use_nodes = True
+    sc.world.node_tree.nodes['Background'].inputs[0].default_value = (0.004, 0.004, 0.005, 1)
+
+    def pbr(m, base, metal, rough, bump=0.0, scale=40.0):
+        m.use_nodes = True
+        nt = m.node_tree
+        b = nt.nodes['Principled BSDF']
+        b.inputs['Base Color'].default_value = (*base, 1)
+        b.inputs['Metallic'].default_value = metal
+        b.inputs['Roughness'].default_value = rough
+        nz = nt.nodes.new('ShaderNodeTexNoise')
+        nz.inputs['Scale'].default_value = scale
+        nz.inputs['Detail'].default_value = 6.0
+        mr = nt.nodes.new('ShaderNodeMapRange')
+        mr.inputs['To Min'].default_value, mr.inputs['To Max'].default_value = rough * 0.7, rough * 1.4
+        nt.links.new(nz.outputs['Fac'], mr.inputs['Value'])
+        nt.links.new(mr.outputs['Result'], b.inputs['Roughness'])
+        if bump:
+            bp = nt.nodes.new('ShaderNodeBump')
+            bp.inputs['Strength'].default_value = bump
+            nt.links.new(nz.outputs['Fac'], bp.inputs['Height'])
+            nt.links.new(bp.outputs['Normal'], b.inputs['Normal'])
+
+    pbr(GOLD, (1.0, 0.70, 0.30), 1.0, 0.17, 0.02, 60.0)
+    pbr(PLATE, (0.95, 0.80, 0.50), 1.0, 0.3)
+    pbr(BLACK, (0.012, 0.012, 0.013), 0.0, 0.12)
+    pbr(STONE, (0.075, 0.07, 0.065), 0.0, 0.85, 0.4, 18.0)
+
+    def light(name, kind, loc, energy, color, size=None, spot=None, target=(0, 0, 1.6)):
+        L = bpy.data.lights.new(name, kind)
+        L.energy, L.color = energy, color
+        if size is not None:
+            L.size = size
+        if spot:
+            L.spot_size, L.spot_blend = math.radians(spot), 0.45
+            L.shadow_soft_size = 0.15
+        o = bpy.data.objects.new(name, L)
+        sc.collection.objects.link(o)
+        o.location = loc
+        o.rotation_euler = (Vector(target) - Vector(loc)).to_track_quat('-Z', 'Y').to_euler()
+        return o
+
+    light('shaft', 'SPOT', (0.35, -0.5, 6.0), 1400, (1.0, 0.86, 0.66), spot=22)
+    light('rim', 'AREA', (0.4, 2.6, 2.6), 160, (0.75, 0.85, 1.0), size=1.2)
+    light('panel_l', 'AREA', (-2.8, -0.6, 2.4), 70, (1.0, 0.8, 0.55), size=2.5)
+    light('panel_r', 'AREA', (2.6, 0.4, 2.0), 35, (0.8, 0.85, 1.0), size=2.5)
+
+
+if arg('--engine', 'cycles') == 'cycles':
+    cycles_look()
 
 # camera: low, slow dolly-in with a slight arc
 cam_data = bpy.data.cameras.new('cam')

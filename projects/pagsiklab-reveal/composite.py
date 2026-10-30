@@ -377,9 +377,9 @@ def card_trophy(t, fi):
     """the reference's opening: a trophy in a dark hall under one shaft of light"""
     global SPOT
     k = min(fi, 120)
-    raw = cv2.imread(f'build/trophy/{k:05d}.png').astype(np.float32)
+    raw = cv2.imread(f"{os.environ.get('TROPHY', 'build/trophy')}/{k:05d}.png").astype(np.float32)
     dep = cv2.imread(f'build/trophy_depth/{k:05d}.png', cv2.IMREAD_UNCHANGED).astype(np.float32) / 65535 * 20
-    c = grade(raw * 1.25, (0.95, (1.06, 1.0, 0.95), (0.70, 0.95, 1.25), 1.3, -12))
+    c = grade(raw * 1.05, (0.95, (1.06, 1.0, 0.95), (0.70, 0.95, 1.25), 1.3, -12))
     # warm the gold, punch its highlights
     lum = c.mean(2, keepdims=True)
     gold = np.clip((c[..., 2:3] - c[..., 0:1]) / 60, 0, 1)

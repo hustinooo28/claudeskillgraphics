@@ -2,6 +2,9 @@
 # Runs after the 3D render: composite, master the audio, mux, make the repo copy, commit and push.
 cd "$(dirname "$0")"
 until grep -q -E "all frames done|finished with gaps" build/watchdog5.log 2>/dev/null; do sleep 30; done
+BL=/tmp/claude-0/-home-user-turnstilecapstone/7edcc0eb-c7eb-536c-916c-5abbf72e83a6/scratchpad/blender/blender-4.2.3-linux-x64/blender
+echo "trophy start $(date +%T)"
+$BL -b --factory-startup -P intro_trophy.py > build/trophy.log 2>&1 || exit 1
 python3 audio/score.py && python3 audio/final_mix.py || exit 1
 echo "composite start $(date +%T)"
 PROCS=3 python3 composite.py build/film.mp4 || exit 1
