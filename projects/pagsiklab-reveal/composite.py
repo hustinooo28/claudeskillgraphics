@@ -266,16 +266,31 @@ CSHADOW = np.vstack([np.hstack([_c, _c]), np.hstack([_c, _c])])   # mirror-tiled
 SRC3D = os.environ.get('SRC3D', 'build/v6')
 
 
+def sky_matte(raw, dep, r=4, eps=2e-3):
+    """Soft sky matte: the depth pass is one sample per pixel, so its sky test is aliased on
+    silhouettes and dithers under motion blur. A guided filter fits it to the beauty pass's own
+    edges, which are antialiased and already hold the blur."""
+    I = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY).astype(np.float32) / 255
+    p = (dep > 65535 * 149 / 150).astype(np.float32)
+    box = lambda x: cv2.boxFilter(x, -1, (2 * r + 1, 2 * r + 1))
+    mI, mp = box(I), box(p)
+    a = (box(I * p) - mI * mp) / (box(I * I) - mI * mI + eps)
+    b = mp - a * mI
+    return np.clip(box(a) * I + box(b), 0, 1)
+
+
 def treat3d(fi, t):
     raw = cv2.imread(f'{SRC3D}/frames/{fi:05d}.png')
     dep = cv2.imread(f'{SRC3D}/depth/{fi:05d}.png', cv2.IMREAD_UNCHANGED)
     if raw is None or dep is None:
         raise FileNotFoundError(fi)
     c = raw.astype(np.float32)
+    sky = sky_matte(raw, dep)
     if c.shape[1] != W:                                           # 720p Cycles render -> 1080p, then a light unsharp mask
         c = cv2.resize(c, (W, H), interpolation=cv2.INTER_CUBIC)
         c = c + (c - cv2.GaussianBlur(c, (0, 0), 1.6)) * 0.45
         dep = cv2.resize(dep, (W, H), interpolation=cv2.INTER_NEAREST)
+        sky = cv2.resize(sky, (W, H), interpolation=cv2.INTER_LINEAR)
     dist = dep.astype(np.float32) / 65535 * 150.0                 # scene units; sky = 150
     ga, gb, u = segment(t)
     g = lerp_tuple(GRADES[ga], GRADES[gb], u)
@@ -288,8 +303,9 @@ def treat3d(fi, t):
     if t < R.HOUSE_START:                                         # the low run hugs the ground: keep the near hills clear
         near = max(near, 5.0 * sm(prog(t, R.CLOUD_BREAK - 1.0, 1.0)) + near * (1 - sm(prog(t, R.CLOUD_BREAK - 1.0, 1.0))))
     reach, shaft_gain, shadow_k = lerp_tuple(ATMOS[ga], ATMOS[gb], u)
-    fog = 1 - np.exp(-np.clip(dist - near * 1.15, 0, None) / (near * reach))
-    fog = np.where(dist > 149, 1.0, fog * 0.85)
+    dg = np.where(dist > 149, cv2.erode(dist, np.ones((9, 9), np.uint8)), dist)   # sky borrows its neighbour's depth
+    fog = 1 - np.exp(-np.clip(dg - near * 1.15, 0, None) / (near * reach))
+    fog = sky + (1 - sky) * fog * 0.85
     # drifting mist banks: denser low in frame and far away
     m1 = np.roll(MIST, int(t * 22) % (W * 4), axis=1)[:, :W]
     m2 = np.roll(MIST[::-1], int(-t * 14) % (W * 4), axis=1)[:, W:2 * W]
@@ -298,7 +314,7 @@ def treat3d(fi, t):
     # shadow sling: huge cloud shadows drifting over the land convey the scale of the realm
     ox, oy = int(t * 40) % (2 * W), int(t * 12) % (2 * H)
     cs = CSHADOW[oy:oy + H, ox:ox + W]
-    ground_m = (dist < 149)[..., None]
+    ground_m = (1 - sky)[..., None]
     c = c * (1 - ground_m * shadow_k * np.clip((cs - 0.45) * 2.5, 0, 1)[..., None])
     hy = np.clip(yy / (H * 0.6), 0, 1)[..., None]
     fogcol = np.float32(top) * (1 - hy) + np.float32(far) * hy
