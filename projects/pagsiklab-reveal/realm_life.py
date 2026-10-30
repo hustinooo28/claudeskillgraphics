@@ -36,9 +36,14 @@ def _tube(bm, pts, radii, seg=10, flatten=1.0):
 
 
 def build_dragon(ctx):
+    """the council's dragon model if it is present, else the procedural wyvern (dragon.py)"""
+    import dragon_glb as G
+    if os.path.exists(G.GLB):
+        root, rig = G.build(ctx)
+        return root, ('glb', rig)
     import dragon as DR
     arm = DR.build(ctx)
-    return arm, None
+    return arm, ('proc', arm)
 
 
 def dragon_path(t, ctx):
@@ -88,7 +93,8 @@ def dragon_path(t, ctx):
 
 
 def animate_dragon(ctx, root, wings):
-    import dragon as DR
+    import dragon as DR, dragon_glb as G
+    kind, rig = wings
     FPS, F = R.FPS, ctx['F']
     t0, t1 = R.MAP_IN[0], R.END
     prev_yaw = None
@@ -99,7 +105,7 @@ def animate_dragon(ctx, root, wings):
         v = q - p
         if mode == 'perched':
             yaw = prev_yaw if prev_yaw is not None else 0.0
-            pitch, bank = 0.15, 0.0
+            pitch, bank = (0.15 if kind == 'proc' else 0.0), 0.0
         else:
             yaw = math.atan2(v.y, v.x) if v.length > 1e-5 else (prev_yaw or 0.0)
             if prev_yaw is not None:                         # unwrap so keyframes don't spin
@@ -112,16 +118,16 @@ def animate_dragon(ctx, root, wings):
             yaw_rate = (yaw - prev_yaw) * FPS if prev_yaw is not None else 0.0
             bank = max(-0.7, min(0.7, -0.35 * yaw_rate))
         prev_yaw = yaw
-        bob = DR.pose(root, t, mode, fr) * DR.SCALE / 0.62 * 0.8
+        if kind == 'glb':
+            bob = G.pose(rig, t, mode, fr)
+        else:
+            bob = DR.pose(rig, t, mode, fr) * DR.SCALE / 0.62 * 0.8
         root.location = p + Vector((0, 0, bob))
         root.rotation_euler = (bank, -pitch * 0.8 - 0.5 * bob, yaw)
         root.keyframe_insert('location', frame=fr)
         root.keyframe_insert('rotation_euler', frame=fr)
-    # visible from the descent until it climbs out of frame
-    root.hide_render = True
-    root.keyframe_insert('hide_render', frame=F(t0))
-    root.hide_render = False
-    root.keyframe_insert('hide_render', frame=F(t0) + 1)
+    if kind == 'glb':
+        G.finish(rig)
 
 
 # ======================================================================== floating names

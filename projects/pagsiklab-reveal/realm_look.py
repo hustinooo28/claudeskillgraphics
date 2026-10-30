@@ -302,7 +302,8 @@ def apply(sc, cam_data, res_y, sun_dir=(-0.45, 0.55, 0.70)):
 
     # bevelled edges catch the light on every built part
     for ob in sc.objects:
-        if ob.type == 'MESH' and not ob.name.startswith(('terrain', 'sea', 'trees', 'dragon', 'face_', 'name_', 'army', 'tents', 'banner')):
+        if ob.type == 'MESH' and not ob.name.startswith(('terrain', 'sea', 'trees', 'dragon', 'face_', 'name_', 'army', 'tents', 'banner')) \
+                and not any(m.type == 'ARMATURE' for m in ob.modifiers):
             bv = ob.modifiers.new('bevel', 'BEVEL')
             bv.width = 0.008
             bv.segments = 2
