@@ -6,7 +6,7 @@ from multiprocessing import Pool
 import realm as R
 
 FPS, W, H = R.FPS, 1920, 1080
-NF = int(round(R.END * FPS))
+NF = int(round((R.END + R.ROLL) * FPS))   # the film, then the closing line
 F = lambda t: int(round(t * FPS))
 yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
 
@@ -667,9 +667,27 @@ def finale(c, t):
     return c * (1 - sm(prog(t, R.END - 1.6, 1.4)))
 
 
+def end_card(t):
+    """the closing line, on black after the film has faded out"""
+    lt = t - R.END
+    c = np.zeros((H, W, 3), np.float32)
+    sm1 = np.roll(MIST, int(t * 18) % (W * 4), axis=1)[:, :W]                    # faint warm smoke, as in the finale
+    c += (np.clip(sm1 - 0.35, 0, 1) * np.exp(-((yy - 540) / 380) ** 2) * 0.55)[..., None] * np.float32([18, 42, 85])
+    c = embers_2d(c, t, 0.45)
+    c *= sm(prog(lt, 0.4, 1.4))
+    a = sm(prog(lt, 1.0, 1.4)) * (1 - sm(prog(lt, R.ROLL - 2.2, 1.2)))
+    if a > 0.003:
+        lay = scale_about(txt('end_line'), 1 + 0.02 * prog(lt, 0.0, R.ROLL))          # a slow push-in
+        c += cv2.GaussianBlur(lay[..., 3], (0, 0), 16)[..., None] * np.float32([30, 100, 230]) * 0.45 * a
+        c = over(c, lay, a)
+    return c * VIG * (1 - sm(prog(lt, R.ROLL - 1.0, 0.9)))
+
+
 def render(fi):
     t = fi / FPS + 1e-6
-    if t < R.COLD_OPEN[1]:
+    if t >= R.END:
+        c = end_card(t)
+    elif t < R.COLD_OPEN[1]:
         c = card_open(t, fi)
     elif t < R.TUNNEL[1]:
         c = card_forge(t, fi)

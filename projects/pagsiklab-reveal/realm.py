@@ -40,6 +40,7 @@ CAMPUS_WIN = (HOUSE_START + 6 * HOUSE_LEN, HOUSE_START + 6 * HOUSE_LEN + 11.0)  
 OVERVIEW = (CAMPUS_WIN[1], CAMPUS_WIN[1] + 7.0)                                # 98 - 105  "A NEW ERA IS HERE"
 TITLE = (OVERVIEW[1], OVERVIEW[1] + 13.0)                                      # 105 - 118
 END = TITLE[1]
+ROLL = 8.0                      # the closing line on black, after the film has faded out
 
 
 def house_window(i):

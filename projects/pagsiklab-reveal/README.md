@@ -1,6 +1,6 @@
 # PAGSIKLAB 2026: the house reveal
 
-A 121-second 16:9 intro for **PAGSIKLAB**, the Mini Olympics of DSSC – Sta. Cruz Extension Campus, presented by the Local Student Council and produced by *the akashic*. It reveals which team is which Game of Thrones house in the style of the show's opening titles: a camera flies over a model of the realm while each seat assembles itself out of the map with turning gears, and the house medallion rises above it.
+A 129-second 16:9 intro (121 s of film and an 8-second closing line) for **PAGSIKLAB**, the Mini Olympics of DSSC – Sta. Cruz Extension Campus, presented by the Local Student Council and produced by *the akashic*. It reveals which team is which Game of Thrones house in the style of the show's opening titles: a camera flies over a model of the realm while each seat assembles itself out of the map with turning gears, and the house medallion rises above it.
 
 The 3D is a real Blender scene rendered with Cycles (sun and sky light, masonry, polished brass, glossy water, motion blur; 10 samples plus denoising at 720p, upscaled to 1080p, about 8 hours on a 4-core CPU) with a depth pass; the compositor uses that depth for atmospheric fog and drifting mist, then grades each house (cold North, amber South, bleached Dorne, storm, fire), adds light shafts, bloom, weather particles, frost on the lens, a slight handheld drift, crushed blacks, a heavy vignette and grain. The music is the council's chosen epic Game of Thrones theme cover (not stored in this repo; put it at `build/track.wav`), edited so its final stinger lands on the title; the sound effects come from the council's royalty-free cinematic SFX reel (FlameSound, free edition), cut into one-shots by `audio/cut_sfx.py`, with clockwork, wingbeats and the voice generated here.
 
@@ -16,6 +16,7 @@ The 3D is a real Blender scene rendered with Cycles (sun and sky light, masonry,
 | 90–101 s | **The Seat of the Realm**: the DSSC Sta. Cruz Extension Campus assembles in the centre of the map, with the LSC seal as its medallion | The full theme with choir |
 | 101–108 s | "A NEW ERA IS HERE": the camera pulls up over all seven seats | Held chord, choir swell, riser |
 | 108–121 s | A breath of silence, then **PAGSIKLAB** ignites left to right; *Mini Olympics 2026*; "Who will claim the throne?"; the LSC seal and the akashic logo | Title impact, final chords, fade |
+| 121–129 s | After the fade to black: *One Step Better Than Yesterday.* on dark smoke and embers | A quiet drone and one soft low hit |
 
 | Team | House | Seat | Look and weather | Sections |
 |---|---|---|---|---|
@@ -36,16 +37,17 @@ Teams, sections, seats and mottos come from the council's Mini Olympics sheet. T
 | `make_map.py` | Paints the realm (colour texture, heightmap, tree positions) into `build/tex/` |
 | `make_sigils.py` | Sets each sigil and the LSC seal into a bronze medallion face; draws the campus sign |
 | `intro_trophy.py` | The opening shot: the trophy on its plinth in the dark hall (with depth) |
-| `dragon.py` | The guide dragon: a rigged wyvern (black scales, ember-red wing membranes, horned head, glowing eyes) with bat-like wings on an arm, wrist and four finger bones; the wings fold on the upstroke and the tips lag, the tail sways, the jaw opens on the roars |
+| `dragon_glb.py` | The guide dragon, from the council's model `assets/dragon/black_dragon.glb`: its idle animation always plays underneath, and a flight layer beats the wings, tucks the legs, sways the tail and opens the jaw on the roars, fading out when it perches |
+| `dragon.py` | The fallback guide dragon (used if the model file is missing): a rigged wyvern (black scales, ember-red wing membranes, horned head, glowing eyes) with bat-like wings on an arm, wrist and four finger bones; the wings fold on the upstroke and the tips lag, the tail sways, the jaw opens on the roars |
 | `realm_look.py` | The Cycles look: lighting, materials, bevels, motion blur and render settings |
 | `realm_life.py` | The dragon's flight path (flies alongside the camera, patrols behind each seat, lands on the campus roof), the seat names as extruded brass lettering floating flat on the map (each sinks away while its house is revealed), and marching regiments with house banners and tent camps |
 | `cut_emblems.py` | Cuts the council's house emblems out of their backgrounds for the medallions and lower thirds |
 | `scene.py` | Builds the Blender scene: terrain, trees, the six castles and the campus, their build animations, the camera path, and a 16-bit depth pass |
 | `titles.py`, `titles.js` | Every on-screen word, rendered in Cinzel to transparent layers |
-| `composite.py` | The film: openers, sky, haze, grading, light shafts, bloom, per-house particles, lower thirds and the finale |
+| `composite.py` | The film: openers, sky, haze, grading, light shafts, bloom, per-house particles, lower thirds, the finale and the closing line |
 | `audio/cut_sfx.py`, `audio/sfx/` | The recorded one-shots (impacts, booms, braams, risers, drones) cut from the SFX reel |
 | `audio/score.py` | Sound design locked to the picture (recorded impacts and booms, clockwork, wingbeats, the voice), plus a synthesized fallback score; also writes the effects stem |
-| `audio/final_mix.py` | Edits the council's music track to the picture (quiet intro under the cold open, full section from the descent, final stinger on the title) and lays the effects on top |
+| `audio/final_mix.py` | Edits the council's music track to the picture (quiet intro under the cold open, full section from the descent, final stinger on the title) and lays the effects on top; a quiet bed under the closing line |
 | `audio/vo_who_raw.wav` | "Who will reign?" (Kokoro `bm_george`), pitched down 3 semitones in `score.py` |
 
 ## Rebuild

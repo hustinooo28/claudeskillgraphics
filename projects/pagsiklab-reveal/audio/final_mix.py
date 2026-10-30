@@ -69,8 +69,26 @@ e = np.ones(N)
 k0 = int((R.END - 1.6) * SR)
 e[k0:] = np.linspace(1, 0, N - k0) ** 2
 mix *= e[:, None]
+
+# the closing line: after the film's own fade, a quiet drone with one soft low hit as the words appear
+import soundfile as sf
+def sfx(name):
+    x, r = sf.read(os.path.join(HERE, 'sfx', name + '.flac'), dtype='float64')
+    x = signal.resample_poly(x, SR, r) if r != SR else x
+    x = x if x.ndim == 2 else np.stack([x, x], 1)
+    return x / np.sqrt((x ** 2).mean() + 1e-12)                      # unit RMS
+ref = np.sqrt((music[int(R.TITLE[0] * SR):k0] ** 2).mean())
+NC = int(R.ROLL * SR)
+cred = np.zeros((NC, 2))
+bed = sfx('drone_stellar')[:NC - int(0.3 * SR)]
+tb = np.arange(len(bed)) / SR
+bed *= (np.minimum(tb / 1.8, 1) * np.clip((R.ROLL - 0.6 - tb) / 2.5, 0, 1))[:, None]
+cred[int(0.3 * SR):int(0.3 * SR) + len(bed)] += bed * ref * 10 ** (-18 / 20)
+hit = sfx('boom_cavernous_a')[:NC - SR]
+cred[SR:SR + len(hit)] += hit * ref * 10 ** (-17 / 20) * np.linspace(1, 0, len(hit))[:, None] ** 1.5
+mix = np.r_[mix, cred]
 mix = np.stack([signal.sosfilt(signal.butter(2, 28, 'high', fs=SR, output='sos'), mix[:, c]) for c in range(2)], 1)
 mix = mix / np.abs(mix).max() * 1.15
 mix = np.tanh(mix) / np.tanh(1.15) * 0.9
 wavfile.write(os.path.join(B, 'score.wav'), SR, (mix * 32767).astype(np.int16))
-print('final mix written; track offset %.2f s (video %.1f s = track %.1f s)' % (OFF, CUT, CUT + OFF))
+print('final mix written, %.1f s with the closing line; track offset %.2f s (video %.1f s = track %.1f s)' % (len(mix) / SR, OFF, CUT, CUT + OFF))

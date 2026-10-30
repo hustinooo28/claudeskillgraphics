@@ -37,5 +37,8 @@ add('title_sub', 'MINI OLYMPICS 2026', 44, 640, weight=700, track=20, style='gol
 add('title_q', 'WHO WILL CLAIM THE THRONE?', 26, 735, weight=600, track=12, color='#e2e6e9')
 add('end_lsc', 'THE LOCAL STUDENT COUNCIL  ·  DSSC STA. CRUZ EXTENSION CAMPUS', 15, 1010, weight=600, track=6, color='#8d969d')
 
+# end card (after the film)
+add('end_line', 'One Step Better Than Yesterday.', 62, 540, weight=700, track=8, style='silver')
+
 json.dump(T, open('build/titles.json', 'w'))
 print(len(T), 'text layers')

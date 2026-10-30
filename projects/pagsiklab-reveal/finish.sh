@@ -16,7 +16,7 @@ ffmpeg -v error -y -i build/PAGSIKLAB-house-reveal-master.mp4 -c:v libx264 -pres
 echo "video done $(date +%T)"
 cd ../..
 git add projects/pagsiklab-reveal
-git -c user.name="Claude" -c user.email="noreply@anthropic.com" commit -q -m "pagsiklab-reveal: final film v3: Cycles render, rigged wyvern, recorded SFX, bolder era title (121 s, 1080p)
+git -c user.name="Claude" -c user.email="noreply@anthropic.com" commit -q -m "pagsiklab-reveal: final film v3: Cycles render, the black dragon model, recorded SFX, bolder era title, closing line (129 s, 1080p)
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01SDEdxvUrEa2xjhDxFi7ajW"
