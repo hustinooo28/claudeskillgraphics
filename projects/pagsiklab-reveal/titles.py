@@ -31,7 +31,7 @@ add('campus_sub', 'DSSC  ·  STA. CRUZ EXTENSION CAMPUS', 25, 905, x=LX + 2, ali
 add('campus_sec', 'WHERE ALL SIX HOUSES MEET', 22, 948, x=LX + 2, align='left', weight=700, track=6, color='#c6ccd1')
 
 # finale
-add('era', 'A NEW ERA IS HERE', 54, 540, weight=600, track=14, style='silver')
+add('era', 'A NEW ERA IS HERE', 88, 540, weight=700, track=18, style='gold')
 add('title', 'PAGSIKLAB', 190, 470, weight=900, track=22, style='silver')
 add('title_sub', 'MINI OLYMPICS 2026', 44, 640, weight=700, track=20, style='gold')
 add('title_q', 'WHO WILL CLAIM THE THRONE?', 26, 735, weight=600, track=12, color='#e2e6e9')

@@ -1,5 +1,5 @@
-"""Blender scene for the PAGSIKLAB house reveal (GoT-opening-titles style), rendered with Workbench.
-Run:  blender -b --factory-startup -P scene.py -- [--frames A-B | --stills f1,f2,...] [--out DIR] [--res 1080]
+"""Blender scene for the PAGSIKLAB house reveal (GoT-opening-titles style), rendered with Cycles (realm_look.py).
+Run:  blender -b --factory-startup -P scene.py -- [--frames A-B | --stills f1,f2,...] [--out DIR] [--res 720] [--engine workbench]
 Frames are global video frames at 24 fps (frame 0 = video start); the 3D part covers MAP_IN..TITLE."""
 import bpy, bmesh, sys, os, math, json
 import numpy as np
@@ -21,7 +21,8 @@ rng = np.random.default_rng(5)
 # ---------------- scene / render ----------------
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene
-res = int(arg('--res', '1080'))
+ENGINE = arg('--engine', 'cycles')
+res = int(arg('--res', '720' if ENGINE == 'cycles' else '1080'))
 sc.render.resolution_x, sc.render.resolution_y = res * 16 // 9, res
 sc.render.fps = FPS
 sc.render.engine = 'BLENDER_WORKBENCH'
@@ -545,6 +546,9 @@ LIFE.animate_dragon(ctx, dragon_root, dragon_wings)
 names = LIFE.build_names(ctx)
 LIFE.animate_names(ctx, names, lambda t: camera_at(t)[0])
 LIFE.build_armies(ctx)
+if ENGINE == 'cycles':
+    import realm_look
+    realm_look.apply(sc, cam_data, res, tuple(sc.display.light_direction))
 
 sc.frame_start, sc.frame_end = F(R.MAP_IN[0]), F(R.END)
 

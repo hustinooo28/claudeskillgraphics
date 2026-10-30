@@ -1,13 +1,13 @@
 """Render build/scene.blend in short chunks with a watchdog.
-A Blender process on the software GL driver can drop into a slow state (40-100 s/frame instead of ~2 s)
-and stay there; each chunk runs in a fresh process, and a process that stalls is restarted.
+Each chunk runs in a fresh process (a long-lived Blender process can drop into a slow state and stay there),
+and a process that stalls is restarted.
 Resumable: finished frames are skipped. usage: python3 render_watchdog.py BLENDER FIRST LAST [CHUNK]"""
 import os, sys, time, subprocess, glob
 
 BLENDER, FIRST, LAST = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 CHUNK = int(sys.argv[4]) if len(sys.argv) > 4 else 40
-FRAMES, DEPTH = os.environ.get('FRAMES', 'build/v4/frames'), os.environ.get('DEPTH', 'build/v4/depth')
-STALL = 20.0          # seconds without a new frame -> restart
+FRAMES, DEPTH = os.environ.get('FRAMES', 'build/v5/frames'), os.environ.get('DEPTH', 'build/v5/depth')
+STALL = float(os.environ.get('STALL', '150'))     # seconds without a new frame -> restart (Cycles: ~15 s a frame)
 
 
 def done(f):
@@ -47,7 +47,7 @@ while f <= LAST:
         count = sum(done(k) for k in range(a, b + 1))
         if count != last_count:
             last_count, last_progress = count, time.time()
-        elif time.time() - last_progress > STALL + (25 if count == 0 else 0):   # first frame includes loading
+        elif time.time() - last_progress > STALL + (120 if count == 0 else 0):   # first frame includes loading
             log(f'chunk {a}-{b}: stalled at {count} frames, restarting')
             p.kill()
             p.wait()

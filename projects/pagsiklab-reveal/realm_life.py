@@ -36,74 +36,9 @@ def _tube(bm, pts, radii, seg=10, flatten=1.0):
 
 
 def build_dragon(ctx):
-    mat, mesh_obj, link = ctx['mat'], ctx['mesh_obj'], ctx['link']
-    iron = mat('dragon_iron', (0.13, 0.12, 0.12))
-    brass = ctx['M']['brass']
-    membrane = mat('dragon_membrane', (0.30, 0.07, 0.05))
-    root = link(bpy.data.objects.new('dragon', None))
-    root.rotation_mode = 'XYZ'
-    # body + neck + head + tail along one spine (local +x is forward)
-    spine, radii = [], []
-    for k in range(40):
-        s = k / 39                                   # 0 = tail tip, 1 = snout
-        x = -1.5 + 2.9 * s
-        z = 0.12 * math.sin(s * math.pi * 2.2) + (0.18 * (s - 0.72) / 0.28 if s > 0.72 else 0)
-        y = 0.08 * math.sin(s * math.pi * 3.0)
-        spine.append((x, y, z))
-        body = math.exp(-((s - 0.55) / 0.2) ** 2)
-        r = 0.02 + 0.17 * body + (0.06 * math.exp(-((s - 0.97) / 0.04) ** 2))
-        radii.append(r)
-    bm = bmesh.new()
-    _tube(bm, spine, radii, seg=10, flatten=0.85)
-    # jaw, horns, spinal ridge plates
-    hx, hy, hz = spine[-1]
-    for side in (-1, 1):
-        b = bmesh.ops.create_cone(bm, cap_ends=True, segments=6, radius1=0.025, radius2=0, depth=0.22)
-        bmesh.ops.rotate(bm, cent=(0, 0, 0), matrix=Matrix.Rotation(-2.2, 3, 'Y'), verts=b['verts'])
-        bmesh.ops.translate(bm, vec=(hx - 0.1, hy + side * 0.05, hz + 0.08), verts=b['verts'])
-    for k in range(6, 34, 3):
-        x, y, z = spine[k]
-        b = bmesh.ops.create_cone(bm, cap_ends=True, segments=4, radius1=0.035 * (radii[k] / 0.19 + 0.3), radius2=0, depth=0.12)
-        bmesh.ops.translate(bm, vec=(x, y, z + radii[k] + 0.03), verts=b['verts'])
-    body = mesh_obj('dragon_body', bm, iron)
-    body.parent = root
-    for p in body.data.polygons:
-        p.use_smooth = True
-    # legs tucked under the body
-    bm = bmesh.new()
-    for lx in (0.0, 0.42):
-        for side in (-1, 1):
-            _tube(bm, [(lx, side * 0.12, -0.05), (lx - 0.12, side * 0.16, -0.24), (lx - 0.05, side * 0.16, -0.34)],
-                  [0.045, 0.03, 0.02], seg=6)
-    legs = mesh_obj('dragon_legs', bm, iron)
-    legs.parent = root
-    # wings: each a pivot at the shoulder; brass bones + membrane fan
-    wings = []
-    for side in (-1, 1):
-        piv = link(bpy.data.objects.new(f'wing_pivot_{side}', None))
-        piv.parent = root
-        piv.location = (0.38, side * 0.12, 0.12)
-        piv.rotation_mode = 'XYZ'
-        tips = [(0.25, 0.75, 0.05), (-0.05, 1.45, 0.0), (-0.45, 1.6, -0.02), (-0.8, 1.25, -0.03), (-0.95, 0.75, -0.03)]
-        bm = bmesh.new()
-        sh = bm.verts.new((0, 0, 0))
-        elbow = bm.verts.new((0.18, 0.62 * side, 0.08))
-        tv = [bm.verts.new((x, y * side, z)) for x, y, z in tips]
-        root_v = bm.verts.new((-0.62, 0.05 * side, 0.0))
-        for a_, b_ in zip(tv[:-1], tv[1:]):
-            f = bm.faces.new((elbow, a_, b_) if side > 0 else (elbow, b_, a_))
-        bm.faces.new((sh, elbow, tv[-1], root_v) if side > 0 else (sh, root_v, tv[-1], elbow))
-        mem = mesh_obj(f'wing_membrane_{side}', bm, membrane)
-        mem.parent = piv
-        bm = bmesh.new()
-        _tube(bm, [(0, 0, 0), (0.18, 0.62 * side, 0.08)], [0.035, 0.028], seg=6)
-        for x, y, z in tips[:4]:
-            _tube(bm, [(0.18, 0.62 * side, 0.08), (x, y * side, z)], [0.022, 0.008], seg=5)
-        bones = mesh_obj(f'wing_bones_{side}', bm, brass)
-        bones.parent = piv
-        wings.append((piv, side))
-    root.scale = (0.62, 0.62, 0.62)
-    return root, wings
+    import dragon as DR
+    arm = DR.build(ctx)
+    return arm, None
 
 
 def dragon_path(t, ctx):
@@ -153,6 +88,7 @@ def dragon_path(t, ctx):
 
 
 def animate_dragon(ctx, root, wings):
+    import dragon as DR
     FPS, F = R.FPS, ctx['F']
     t0, t1 = R.MAP_IN[0], R.END
     prev_yaw = None
@@ -176,33 +112,11 @@ def animate_dragon(ctx, root, wings):
             yaw_rate = (yaw - prev_yaw) * FPS if prev_yaw is not None else 0.0
             bank = max(-0.7, min(0.7, -0.35 * yaw_rate))
         prev_yaw = yaw
-        # wingbeat: fast powerful downstroke, slower recovery with the wings sweeping back
-        if mode == 'fly':
-            amp, freq, bias = 0.75, 1.7, 0.05
-        elif mode == 'glide':
-            amp, freq, bias = 0.55, 1.25, 0.12
-        elif mode == 'land':
-            amp, freq, bias = 0.85, 2.4, 0.1                     # back-beats to brake
-        else:
-            amp = None                                           # perched: folded back along the body
-        if amp is not None:
-            ph = 2 * math.pi * freq * t
-            stroke = math.sin(ph + 0.45 * math.sin(ph))          # skewed: quicker downstroke
-            flap = bias + amp * stroke
-            sweep = 0.35 * max(0.0, math.cos(ph))               # wings fold back on the way up
-            bob = -0.09 * stroke                                 # body lifts as the wings drive down
-        else:
-            flap, sweep, bob = None, 0.0, 0.0
+        bob = DR.pose(root, t, mode, fr) * DR.SCALE / 0.62 * 0.8
         root.location = p + Vector((0, 0, bob))
-        root.rotation_euler = (bank, -pitch * 0.8 + 0.06 * (bob / 0.09 if amp else 0), yaw)
+        root.rotation_euler = (bank, -pitch * 0.8 - 0.5 * bob, yaw)
         root.keyframe_insert('location', frame=fr)
         root.keyframe_insert('rotation_euler', frame=fr)
-        for piv, side in wings:
-            if flap is not None:
-                piv.rotation_euler = (side * flap, 0.0, -side * sweep)
-            else:
-                piv.rotation_euler = (side * -0.35, 0.25, -side * 1.15)
-            piv.keyframe_insert('rotation_euler', frame=fr)
     # visible from the descent until it climbs out of frame
     root.hide_render = True
     root.keyframe_insert('hide_render', frame=F(t0))

@@ -66,6 +66,29 @@ def add(bus, x, start, gain=1.0, pan=0.0, send=0.25):
     v[i:j, 1] += seg * Rr * send
 
 
+# ---------------- recorded one-shots (cut from the council's cinematic SFX reel by cut_sfx.py) ----------------
+import soundfile as _sf
+_SMP = {}
+
+
+def smp(name, rate=1.0, mono=True):
+    """a sample, peak-normalised; rate < 1 plays it slower and lower"""
+    if name not in _SMP:
+        x, sr = _sf.read(os.path.join(HERE, 'sfx', name + '.flac'), dtype='float64')
+        _SMP[name] = signal.resample_poly(x, SR, sr) if sr != SR else x
+    x = _SMP[name]
+    if rate != 1.0:
+        x = signal.resample(x, int(len(x) / rate))
+    x = x.mean(1) if mono and x.ndim == 2 else x
+    return x / (np.abs(x).max() + 1e-9)
+
+
+def add_st(bus, x, start, gain=1.0, send=0.25):
+    """stereo sample: left and right as recorded"""
+    add(bus, x[:, 0], start, gain, pan=-1.0, send=send)
+    add(bus, x[:, 1], start, gain, pan=1.0, send=send)
+
+
 # ---------------- instruments ----------------
 def cello(note, d, vel=1.0):
     f = midi(note)
@@ -222,7 +245,8 @@ def phrase(t0, layer):
 # cold open: the trophy hall, then the words alone
 add('sfx', wind(7.0) * np.minimum(tt(7.0) / 2, 1) * np.clip((7.0 - tt(7.0)) / 1.5, 0, 1), 0.0, 0.08, send=0.4)
 add('music', strings(26, 6.2, 1.0, 380), 0.2, 0.18, send=0.5)
-add('hits', boom(4.0, 70, 26, 1.8), 1.6, 0.55, send=0.4)
+add('hits', smp('boom_cavernous_b', 0.92), 1.6, 0.55, send=0.4)
+add_st('sfx', smp('drone_nocturnal', 0.66, mono=False) * np.minimum(tt(len(smp('drone_nocturnal', 0.66)) / SR) / 1.5, 1)[:, None], 0.0, 0.10, send=0.3)
 add('music', choir(62, 4.5, 0.7), 1.8, 0.05, send=0.9)
 add('sfx', chime(660, 3.5), 1.65, 0.035, send=0.9)
 
@@ -246,23 +270,25 @@ f0 = R.TUNNEL[0]
 fire = filt(noise(5.0), 'lowpass', 300) * 0.8 + filt(noise(5.0), 'bandpass', [1500, 4000]) * (rng.random(int(5.0 * SR)) > 0.9985) * 3
 add('sfx', fire * np.minimum(tt(5.0) / 0.6, 1) * np.clip((5.0 - tt(5.0)) / 0.6, 0, 1), f0, 0.16, send=0.3)
 for k, st in enumerate((0.7, 1.75, 2.8)):
-    add('sfx', anvil(), f0 + st, 0.33 + 0.05 * k, pan=0.05, send=0.55)
-    add('sfx', sizzle(), f0 + st + 0.05, 0.08, pan=-0.2, send=0.3)
-    add('hits', boom(2.0, 90, 30, 0.7), f0 + st, 0.35 + 0.1 * k, send=0.4)
+    add('sfx', smp('impact_metallic', (1.0, 0.94, 0.86)[k]), f0 + st, 0.40 + 0.05 * k, pan=(-0.15, 0.15, 0.0)[k], send=0.45)
+    add('sfx', sizzle(), f0 + st + 0.05, 0.06, pan=-0.2, send=0.3)
+add('hits', smp('boom_earthcore'), f0 + 2.8, 0.45, send=0.4)
 add('music', strings(38, 4.6, 0.9, 900), f0 + 0.6, 0.10, send=0.6)
 add('music', strings(45, 3.6, 0.8, 1200), f0 + 1.7, 0.07, pan=0.3, send=0.6)
 
 # credits: the akashic (ink), the Local Student Council (chime)
 c0 = R.CREDITS[0]
-add('sfx', whoosh(1.2, 4000, 800), c0 + 0.15, 0.18, send=0.4)
+add('sfx', smp('downshifter', 1.15), c0 - 0.1, 0.30, send=0.4)
 add('sfx', filt(noise(1.3), 'highpass', 3000) * np.exp(-tt(1.3) / 0.6) * 0.3, c0 + 0.25, 0.12, pan=-0.3, send=0.2)
 add('music', strings(50, 3.0, 0.7, 1600), c0, 0.07, send=0.7)
 add('music', strings(38, 3.4, 0.9, 900), c0 + 3.0, 0.10, send=0.6)
-add('sfx', chime(990, 3.0), c0 + 3.1, 0.05, send=0.8)
-add('sfx', riser(1.6), R.MAP_IN[0] - 1.6, 0.25, send=0.3)
+add('sfx', chime(990, 3.0), c0 + 3.1, 0.04, send=0.8)
+add('hits', smp('braam_up_under', 1.0), c0 + 3.0, 0.30, send=0.5)
+_r12 = smp('riser_12')
+add('sfx', _r12, R.MAP_IN[0] - len(_r12) / SR, 0.35, send=0.3)
 
 # falling through the clouds onto the realm
-add('hits', boom(3.0, 150, 30, 1.2), R.MAP_IN[0], 0.7, send=0.4)
+add('hits', smp('boom_big_reveal'), R.MAP_IN[0], 0.7, send=0.4)
 add('sfx', whoosh(2.4, 300, 3000), R.MAP_IN[0] - 0.1, 0.4, send=0.5)
 add('sfx', wind(6.0) * np.exp(-tt(6.0) / 2.5), R.MAP_IN[0], 0.12, send=0.4)
 
@@ -281,7 +307,11 @@ for i in range(7):
         add('sfx', clunk(), build0 + 0.4 + k * 0.32 + float(rng.uniform(-0.05, 0.05)), 0.10, pan=float(rng.uniform(-0.6, 0.6)), send=0.25)
     # the medallion lands
     add('sfx', whoosh(1.0, 600, 2500), s + 0.7 + 2.6 + 0.6, 0.12, send=0.4)
-    add('hits', boom(2.0, 110, 32, 0.8), s + 0.7 + 2.6 + 1.6, 0.35, send=0.35)
+    if i < 6:
+        add('hits', smp(('boom_cavernous_a', 'boom_cavernous_b', 'boom_morphing')[i % 3], (1.0, 0.95, 1.05, 0.9, 1.0, 0.93)[i]),
+            s + 0.7 + 2.6 + 1.6, 0.38, send=0.35)
+    else:                                    # the seat of the realm gets the big braam
+        add('hits', smp('braam_massive'), s + 0.7 + 2.6 + 1.6, 0.6, send=0.5)
     add('sfx', chime(1180 + 60 * i, 2.5), s + 0.7 + 2.6 + 1.6, 0.06, pan=0.3, send=0.8)
     # flight to the next seat
     add('sfx', whoosh(1.6, 300, 1800), s + R.HOUSE_LEN - 1.45, 0.22, send=0.4)
@@ -322,12 +352,16 @@ add('music', strings(38, o1 - o0, 1.0, 1400), o0, 0.12, send=0.7)
 add('music', strings(45, o1 - o0, 0.8, 1800), o0, 0.08, pan=0.3, send=0.7)
 add('music', strings(53, o1 - o0, 0.7, 2600), o0, 0.06, pan=-0.3, send=0.7)
 add('music', choir(62, o1 - o0 - 0.5, 0.9), o0 + 0.5, 0.08, send=0.9)
-add('hits', boom(4.0, 90, 26, 2.0), o0, 0.5, send=0.4)
-add('sfx', riser(o1 - o0 - 1.5), o0 + 1.5, 0.45, send=0.3)
+add('hits', smp('boom_cavernous_a', 0.85), o0, 0.5, send=0.4)
+_r02 = smp('riser_02', mono=False)
+add_st('sfx', _r02, R.TITLE[0] + 0.7 - len(_r02) / SR, 0.45, send=0.3)       # rises into the breath of silence
+add('sfx', smp('tension_dramatic'), o0 + 0.8, 0.22, send=0.4)
 
 # title: silence, then the hit as the wordmark ignites
 t0 = R.TITLE[0] + 1.2
-add('hits', boom(5.0, 140, 26, 2.2), t0, 0.95, send=0.4)
+add('hits', smp('boom_big_reveal'), t0, 0.9, send=0.4)
+add('hits', smp('boom_earthcore', 0.9), t0, 0.55, send=0.5)
+add_st('sfx', smp('drone_stellar', mono=False) * np.minimum(tt(13.0) / 3.0, 1)[:len(smp('drone_stellar'))][:, None], t0 + 2.0, 0.10, send=0.3)
 add('music', braam(6.0, 38, 2400), t0, 0.5, send=0.5)
 add('drums', taiko(1.5, 48, 1.0), t0, 0.5, send=0.3)
 for b, (root, q) in enumerate([(38, 'm'), (34, 'M'), (45, 'M')]):

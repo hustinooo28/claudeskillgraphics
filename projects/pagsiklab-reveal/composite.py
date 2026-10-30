@@ -263,12 +263,19 @@ _c = np.vstack([np.hstack([_c, _c[:, ::-1]]), np.hstack([_c[::-1], _c[::-1, ::-1
 CSHADOW = np.vstack([np.hstack([_c, _c]), np.hstack([_c, _c])])   # mirror-tiled: continuous for any window
 
 
+SRC3D = os.environ.get('SRC3D', 'build/v5')
+
+
 def treat3d(fi, t):
-    raw = cv2.imread(f'build/v4/frames/{fi:05d}.png')
-    dep = cv2.imread(f'build/v4/depth/{fi:05d}.png', cv2.IMREAD_UNCHANGED)
+    raw = cv2.imread(f'{SRC3D}/frames/{fi:05d}.png')
+    dep = cv2.imread(f'{SRC3D}/depth/{fi:05d}.png', cv2.IMREAD_UNCHANGED)
     if raw is None or dep is None:
         raise FileNotFoundError(fi)
     c = raw.astype(np.float32)
+    if c.shape[1] != W:                                           # 720p Cycles render -> 1080p, then a light unsharp mask
+        c = cv2.resize(c, (W, H), interpolation=cv2.INTER_CUBIC)
+        c = c + (c - cv2.GaussianBlur(c, (0, 0), 1.6)) * 0.45
+        dep = cv2.resize(dep, (W, H), interpolation=cv2.INTER_NEAREST)
     dist = dep.astype(np.float32) / 65535 * 150.0                 # scene units; sky = 150
     ga, gb, u = segment(t)
     g = lerp_tuple(GRADES[ga], GRADES[gb], u)
@@ -678,7 +685,13 @@ def render(fi):
             c = lower_third(c, R.HOUSES[i]['key'] if i < 6 else 'campus', t - s)
         if R.OVERVIEW[0] <= t < R.TITLE[0]:
             a = sm(prog(t, R.OVERVIEW[0] + 1.0, 0.9)) * (1 - sm(prog(t, R.OVERVIEW[1] - 1.4, 0.8)))
-            c = over(c, scale_about(txt('era'), 1 + 0.03 * prog(t, R.OVERVIEW[0], 7)), a)
+            # a dark band settles behind the words so they read over the sunlit map, then gold with a warm glow
+            band = np.exp(-((yy - H / 2) / 150) ** 2 - ((xx - W / 2) / 1100) ** 4)[..., None] * 0.62 * a
+            c = c * (1 - band)
+            era = scale_about(txt('era'), 1 + 0.03 * prog(t, R.OVERVIEW[0], 7))
+            glow = cv2.GaussianBlur(era[..., 3], (0, 0), 14)[..., None]
+            c = c + glow * np.float32([40, 120, 230]) * 0.55 * a
+            c = over(c, era, a)
         if t >= R.TITLE[0]:
             c = finale(c, t)
     if c.mean() > 2:
