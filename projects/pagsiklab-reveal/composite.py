@@ -263,7 +263,7 @@ _c = np.vstack([np.hstack([_c, _c[:, ::-1]]), np.hstack([_c[::-1], _c[::-1, ::-1
 CSHADOW = np.vstack([np.hstack([_c, _c]), np.hstack([_c, _c])])   # mirror-tiled: continuous for any window
 
 
-SRC3D = os.environ.get('SRC3D', 'build/v5')
+SRC3D = os.environ.get('SRC3D', 'build/v6')
 
 
 def treat3d(fi, t):
@@ -285,6 +285,8 @@ def treat3d(fi, t):
     # distance thickens into fog, and the horizon and the map's edges dissolve completely
     ground = dist[dist < 149]
     near = float(np.percentile(ground, 30)) if ground.size else 20.0
+    if t < R.HOUSE_START:                                         # the low run hugs the ground: keep the near hills clear
+        near = max(near, 5.0 * sm(prog(t, R.CLOUD_BREAK - 1.0, 1.0)) + near * (1 - sm(prog(t, R.CLOUD_BREAK - 1.0, 1.0))))
     reach, shaft_gain, shadow_k = lerp_tuple(ATMOS[ga], ATMOS[gb], u)
     fog = 1 - np.exp(-np.clip(dist - near * 1.15, 0, None) / (near * reach))
     fog = np.where(dist > 149, 1.0, fog * 0.85)
@@ -423,59 +425,6 @@ def card_open(t, fi):
     return who_text(c, t)
 
 
-SPARKS = np.random.default_rng(33).random((3, 140, 5)).astype(np.float32)
-STRIKES = (0.7, 1.75, 2.8)          # hammer blows, seconds into the forge card
-
-
-def card_forge(t, fi):
-    """2026 forged at the anvil: hammer blows throw sparks, the numerals glow white-hot and cool to iron"""
-    lt = t - R.TUNNEL[0]
-    c = np.zeros((H, W, 3), np.float32) + np.float32([9, 9, 11])
-    smoke = np.roll(MIST, int(t * 16) % (W * 4), axis=1)[:, :W]
-    c += (smoke * np.clip((yy - H * 0.35) / (H * 0.65), 0, 1))[..., None] * np.float32([14, 22, 40])
-    heat = sum(math.exp(-(lt - s0) / 1.1) for s0 in STRIKES if lt >= s0)
-    flash = sum(math.exp(-((lt - s0) / 0.06) ** 2) for s0 in STRIKES)
-    # forge glow from below
-    c += np.exp(-(((xx - W / 2) / 900) ** 2 + ((yy - H * 1.1) / 420) ** 2))[..., None] * np.float32([20, 70, 190]) * (0.5 + 0.4 * min(heat, 1.5))
-    # the numerals: hot metal cooling to dark steel
-    yr = txt('year')
-    a = sm(prog(lt, STRIKES[0], 0.25)) * (1 - sm(prog(lt, 4.3, 0.6)))
-    if a > 0.003:
-        h = min(heat, 1.0)
-        hot = np.float32([150, 225, 255]) * yr[..., 3:]                      # white-orange
-        steel = yr[..., :3] * 0.55                                           # cooled iron
-        body = steel * (1 - h) + hot * h
-        c = c * (1 - yr[..., 3:] * a) + body * a
-        glow = cv2.GaussianBlur(yr[..., 3], (0, 0), 26)[..., None] * np.float32([20, 90, 255]) * (0.25 + 1.1 * h) * a
-        c += glow
-    # sparks: ballistic streaks from the point of each blow
-    lay = np.zeros((H // 2, W // 2, 3), np.float32)
-    for k, s0 in enumerate(STRIKES):
-        dt = lt - s0
-        if not (0 <= dt < 1.6):
-            continue
-        for ang, sp, life, sz, hue in SPARKS[k]:
-            if dt > life * 1.4 + 0.2:
-                continue
-            a_ = math.radians(25 + ang * 130)                     # upward and outward from the anvil
-            v = 200 + 420 * sp
-            x = W / 4 + math.cos(a_) * v * dt
-            y = H / 4 + 45 - math.sin(a_) * v * dt + 330 * dt * dt
-            x1 = x - math.cos(a_) * v * 0.03
-            y1 = y + (math.sin(a_) * v - 660 * dt) * 0.03
-            fade = max(0.0, 1 - dt / (life * 1.4 + 0.2))
-            col = (60 + 120 * hue, 170 + 70 * hue, 255)
-            cv2.line(lay, (int(x1), int(y1)), (int(x), int(y)), tuple(float(v_ * fade) for v_ in col), 1 + int(sz * 1.5), cv2.LINE_AA)
-    lay = cv2.GaussianBlur(lay, (0, 0), 0.7) + cv2.GaussianBlur(lay, (0, 0), 5) * 1.3
-    c += cv2.resize(lay, (W, H))
-    c += np.exp(-(((xx - W / 2) / 300) ** 2 + ((yy - H / 2) / 220) ** 2))[..., None] * np.float32([120, 200, 255]) * flash * 0.9
-    c = apply_particles(c, 'embers', t, 0.4 + 0.6 * sm(prog(lt, 3.6, 1.0)))
-    c *= 1 - sm(prog(lt, 4.6, 0.4))                                      # into darkness, not a flash
-    sx, sy = 3 * flash * math.sin(t * 90), 3 * flash * math.cos(t * 77)   # each blow shakes the frame
-    c = cv2.warpAffine(c, np.float32([[1, 0, sx], [0, 1, sy]]), (W, H), borderMode=cv2.BORDER_REFLECT)
-    return c * VIG
-
-
 def card_credits(t, fi):
     lt = t - R.CREDITS[0]
     c = np.zeros((H, W, 3), np.float32)
@@ -508,23 +457,59 @@ def card_credits(t, fi):
     return c * VIG
 
 
-def clouds_part(c, t):
-    """clouds open from the centre as we drop onto the realm"""
-    u = prog(t, R.MAP_IN[0], 2.3)
+def clouds_part(c, u, flash=0.0, op=1.0):
+    """a cloud deck splits open from the centre as we fall through it; u runs 0..1"""
     if u >= 1:
         return c
-    zoom = 1 + 0.9 * oc(u)                    # we fall through the clouds: they grow and slide outward
+    zoom = 1 + 0.9 * oc(u)                    # the deck grows and slides outward past the lens
     M = cv2.getRotationMatrix2D((W, H), 0, zoom)
     M[0, 2] -= W / 2
     M[1, 2] -= H / 2
     cl = cv2.warpAffine(CLOUD_BIG, M, (W, H))
     r = np.sqrt(((xx - W / 2) / W) ** 2 + ((yy - H / 2) / H) ** 2)
     hole = (r - 0.95 * oc(u) + 0.05) / 0.25                       # grows outward
-    a = np.clip(hole + (cl - 0.5) * 1.6, 0, 1)[..., None]
-    white = 1 - sm(prog(t, R.MAP_IN[0], 0.35))
+    a = np.clip(hole + (cl - 0.5) * 1.6, 0, 1)[..., None] * op
     cloud_col = np.float32([236, 234, 230]) * (0.9 + 0.1 * cl[..., None])
     c = c * (1 - a) + cloud_col * a
-    return c * (1 - white) + 255 * white
+    return c * (1 - flash) + 255 * flash
+
+
+DIVE_SEEDS = np.random.default_rng(57).random((12, 3)).astype(np.float32)
+
+
+def cloud_dive(c, t):
+    """the dive: layer after layer of cloud rushes past the lens, the realm glimpsed far below through the gaps,
+    until we burst out under the last deck at CLOUD_BREAK"""
+    t0, tb = R.MAP_IN[0], R.CLOUD_BREAK
+    cover = 0.6 - 0.36 * sm(prog(t, t0 + 0.8, tb - t0 - 1.6))   # the gaps open up as we fall
+    haze = 0.4 - 0.32 * sm(prog(t, t0, tb - t0))                 # the realm far below, pale with distance
+    c = c * (1 - haze) + np.float32([205, 200, 194]) * haze
+    P, L = 0.9, 2.2                                              # a new layer every 0.9 s, each passes in 2.2 s
+    lays = []
+    for k in range(12):
+        born = t0 - 1.6 + k * P
+        a = (t - born) / L
+        if not (0 <= a < 1) or born > tb - 0.8:
+            continue
+        lays.append((a, k))
+    for a, k in sorted(lays):                                    # far (young) layers first, the nearest on top
+        sx, sy, rot = DIVE_SEEDS[k]
+        zoom = 0.4 + 2.6 * a * a                                 # accelerating toward the lens
+        M = cv2.getRotationMatrix2D((W, H), float(rot * 360), zoom)
+        M[0, 2] -= W / 2 + (sx - 0.5) * 300
+        M[1, 2] -= H / 2 + (sy - 0.5) * 200
+        cl = cv2.warpAffine(CLOUD_BIG, M, (W, H), borderMode=cv2.BORDER_REFLECT)
+        thr = 1 - cover
+        m = np.clip((cl - thr) / 0.12, 0, 1) * math.sin(math.pi * min(a / 0.35, 1.0) * 0.5) * (1 - sm(prog(a, 0.75, 0.25))) \
+            * (1 - sm(prog(t, tb - 0.1, 0.4)))                   # whatever is left blows away with the burst
+        if a > 0.4:                                              # close layers smear as they rush by
+            m = cv2.GaussianBlur(m, (0, 0), 2 + 14 * (a - 0.4))
+        shade = np.clip((cl - thr) / 0.3, 0, 1)[..., None]       # sunlit crowns, grey undersides at the edges
+        col = np.float32([238, 236, 232]) * (0.62 + 0.38 * shade)
+        c = c * (1 - m[..., None]) + col * m[..., None]
+    if t > tb - 1.0:                                             # the last deck closes in, then bursts open
+        c = clouds_part(c, prog(t, tb - 0.4, 1.0), 0.22 * math.exp(-((t - tb) / 0.12) ** 2), sm(prog(t, tb - 1.0, 0.6)))
+    return c * sm(prog(t, t0, 0.5))                             # in from the black of the council card
 
 
 def title_img():
@@ -689,14 +674,12 @@ def render(fi):
         c = end_card(t)
     elif t < R.COLD_OPEN[1]:
         c = card_open(t, fi)
-    elif t < R.TUNNEL[1]:
-        c = card_forge(t, fi)
     elif t < R.CREDITS[1]:
         c = card_credits(t, fi)
     else:
         c = treat3d(fi, t)
-        if t < R.MAP_IN[0] + 2.3:
-            c = clouds_part(c, t)
+        if t < R.CLOUD_BREAK + 0.6:
+            c = cloud_dive(c, t)
         if R.HOUSE_START <= t < R.OVERVIEW[0]:
             i = min(int((t - R.HOUSE_START) // R.HOUSE_LEN), 6)
             s = R.house_window(i)[0] if i < 6 else R.CAMPUS_WIN[0]

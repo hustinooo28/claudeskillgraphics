@@ -177,23 +177,23 @@ def terrain(m):
     sea.inputs['From Min'].default_value, sea.inputs['From Max'].default_value = 0.035, 0.0
     nt.links.new(sep.outputs['Z'], sea.inputs['Value'])
     rough = nt.nodes.new('ShaderNodeMapRange')
-    rough.inputs['To Min'].default_value, rough.inputs['To Max'].default_value = 0.86, 0.3
+    rough.inputs['To Min'].default_value, rough.inputs['To Max'].default_value = 0.86, 0.42
     nt.links.new(sea.outputs['Result'], rough.inputs['Value'])
     nt.links.new(rough.outputs['Result'], b.inputs['Roughness'])
     co = _coords(nt)
     fine = _noise(nt, co, 90.0, 8.0)
     wav = nt.nodes.new('ShaderNodeTexWave')
-    wav.inputs['Scale'].default_value = 1.6
-    wav.inputs['Distortion'].default_value = 6.0
-    wav.inputs['Detail'].default_value = 4.0
+    wav.inputs['Scale'].default_value = 5.0                  # fine, broken ripples: no long bands or arcs across the sea
+    wav.inputs['Distortion'].default_value = 3.0
+    wav.inputs['Detail'].default_value = 3.0
     nt.links.new(co, wav.inputs['Vector'])
     h = nt.nodes.new('ShaderNodeMath')
     h.operation = 'MULTIPLY_ADD'                             # waves * sea + fine grain
     nt.links.new(wav.outputs['Fac'], h.inputs[0])
     nt.links.new(sea.outputs['Result'], h.inputs[1])
     nt.links.new(fine.outputs['Fac'], h.inputs[2])
-    _bump(nt, b, h.outputs[0], 0.12, 0.02)
-    b.inputs['Specular IOR Level'].default_value = 0.3        # soft sheen on the water, no blown-out sun glare
+    _bump(nt, b, h.outputs[0], 0.06, 0.02)
+    b.inputs['Specular IOR Level'].default_value = 0.2        # soft sheen on the water, no glare band from the low sun
 
 
 def water(m):

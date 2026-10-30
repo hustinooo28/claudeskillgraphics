@@ -109,11 +109,16 @@ for p in terrain.data.polygons:
     p.use_smooth = True
 
 
-# open sea to the horizon, just under the map's sea level
+# open sea to the horizon, just under the map's sea level. It shares the map's own material, every UV pinned to the
+# map's flat outer margin, so the water reads as one surface with no seam where the map ends
 bm = bmesh.new()
+uvl = bm.loops.layers.uv.new('UVMap')
 bmesh.ops.create_grid(bm, x_segments=1, y_segments=1, size=400)
 bmesh.ops.translate(bm, vec=(0, 0, -0.01), verts=bm.verts)
-mesh_obj('sea', bm, mat('sea', (0.052, 0.084, 0.112)))      # matches the sea painted at the map's edge
+for f_ in bm.faces:
+    for l_ in f_.loops:
+        l_[uvl].uv = (0.004, 0.5)
+mesh_obj('sea', bm, terrain.data.materials[0])
 
 
 def ground(x, y):
@@ -500,7 +505,67 @@ def seat_pose(i, u):
 DWELL = R.HOUSE_LEN - 1.3          # last 1.3 s of each window is the flight to the next seat
 OVER_CAM = (Vector((0.0, -26.0, 30.0)), Vector((0.0, -1.0, 0.0)))
 OVER_CAM2 = (Vector((0.0, -18.0, 24.0)), Vector((0.0, 1.0, 0.0)))
-START_CAM = (Vector((10.0, -34.0, 38.0)), Vector((6.0, 0.0, 0.0)))
+
+
+def _hermite(ts, ps, m0, m1, t):
+    """cubic Hermite through keys (ts, ps) with Catmull-Rom tangents inside and the given end tangents"""
+    k = max(0, min(len(ts) - 2, int(np.searchsorted(ts, t, side='right')) - 1))
+    tan = [m0] + [(ps[i + 1] - ps[i - 1]) / (ts[i + 1] - ts[i - 1]) for i in range(1, len(ts) - 1)] + [m1]
+    dt = ts[k + 1] - ts[k]
+    u = min(max((t - ts[k]) / dt, 0.0), 1.0)
+    h00, h10, h01, h11 = 2 * u ** 3 - 3 * u ** 2 + 1, u ** 3 - 2 * u ** 2 + u, -2 * u ** 3 + 3 * u ** 2, u ** 3 - u ** 2
+    return h00 * ps[k] + h10 * dt * tan[k] + h01 * ps[k + 1] + h11 * dt * tan[k + 1]
+
+
+def _intro_path():
+    """the opening flight, one pose per frame: a dive from high above the north through the clouds (until CLOUD_BREAK),
+    then a fast run low over the northern mountains and forests that pulls up into Dragonstone's orbit at HOUSE_START"""
+    t0, t1 = R.MAP_IN[0], R.HOUSE_START
+    c_end, tg_end = seat_pose(0, 0.0)
+    v_end = (seat_pose(0, 1 / (FPS * DWELL))[0] - c_end) * FPS     # the orbit's starting velocity, matched on arrival
+    # in over the Sunset Sea, straight at the great Westerlands massif, banking around its peaks close enough that they
+    # slide past the lens, down over the forests below it and the stormlands woods, out over the coast to Dragonstone
+    keys = [(t0, -19.0, -6.0), (15.5, -14.5, -5.2), (R.CLOUD_BREAK, -10.6, -4.4), (19.2, -7.7, -2.7), (20.2, -5.0, -2.0),
+            (21.2, -2.6, -3.9), (22.2, 1.2, -4.3), (t1, c_end.x, c_end.y)]
+    ts = np.array([k[0] for k in keys])
+    ps = [np.array(k[1:]) for k in keys]
+    m0 = (ps[1] - ps[0]) / (ts[1] - ts[0])
+    frs = np.arange(F(t0), F(t1) + 1)
+    tt_ = frs / FPS
+    xy = np.array([_hermite(ts, ps, m0, np.array([v_end.x, v_end.y]), t) for t in tt_])
+
+    def gmax(x, y, r=0.35):                      # highest ground close by: clears ridges, still flies below the peaks beside it
+        return max(ground(x + r * math.cos(a), y + r * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 9)[:-1])
+    run = np.array([max(gmax(x, y), ground(x, y)) + 0.75 for x, y in xy])
+    k18 = int(F(R.CLOUD_BREAK) - frs[0])
+    zd = np.array([_hermite(np.array([t0, 15.5, R.CLOUD_BREAK]), [np.array([46.0]), np.array([17.0]), np.array([run[k18] + 0.8])],
+                            np.array([-14.0]), np.array([-3.0]), t)[0] for t in tt_])
+    z = np.where(tt_ < R.CLOUD_BREAK, zd, run)
+    z = np.convolve(np.pad(z, 8, mode='edge'), np.ones(17) / 17, mode='valid')     # glide over the terrain, no jitter
+    z = np.maximum(z, np.array([ground(x, y) + 0.6 for x, y in xy]))
+    tb = 22.4                                     # pull up and settle into the orbit pose
+    zb = z[int(F(tb) - frs[0])]
+    for i, t in enumerate(tt_):
+        if t > tb:
+            w = ease((t - tb) / (t1 - tb))
+            ze = _hermite(np.array([tb, t1]), [np.array([zb]), np.array([c_end.z])], np.array([0.0]), np.array([v_end.z]), t)[0]
+            z[i] = max(z[i] * (1 - w) + ze * w, ground(*xy[i]) + 0.6)
+    cams, tgts = [], []
+    for i, t in enumerate(tt_):
+        c = Vector((xy[i][0], xy[i][1], z[i]))
+        ja = min(i + int(0.7 * FPS), len(tt_) - 1)                      # low run: look a beat ahead along the path
+        run_t = Vector((xy[ja][0], xy[ja][1], max(ground(*xy[ja]) + 0.5, z[i] - 0.3)))
+        jd = min(i + int(1.6 * FPS), len(tt_) - 1)                      # the dive: look down at the ground ahead
+        dive_t = Vector((xy[jd][0], xy[jd][1], ground(*xy[jd])))
+        tg = dive_t.lerp(run_t, ease((t - 16.4) / 2.0))
+        tg = tg.lerp(tg_end, ease((t - tb) / (t1 - tb)))
+        cams.append(c)
+        tgts.append(tg)
+    # a wider lens for the low run: the ground rushes past and the peaks fill the sides of the frame
+    lens = [32.0 - 10.0 * ease((t - 16.8) / 1.2) * (1 - ease((t - tb) / (t1 - tb))) for t in tt_]
+    # and deep focus down there: the castle shots' miniature depth of field would blur the whole low run
+    fstop = [0.28 + 3.7 * ease((t - 16.6) / 1.2) * (1 - ease((t - tb) / (t1 - tb))) for t in tt_]
+    return frs[0], cams, tgts, lens, fstop
 
 
 def bez(p0, p1, u, lift):
@@ -509,10 +574,11 @@ def bez(p0, p1, u, lift):
 
 
 def camera_at(t):
-    if t < R.HOUSE_START:                                   # descend onto the realm, glide to Dragonstone
-        u = ease((t - R.MAP_IN[0]) / (R.HOUSE_START - R.MAP_IN[0]))
-        c1, t1 = seat_pose(0, 0.0)
-        return bez(START_CAM[0], c1, u, 4.0), bez(START_CAM[1], t1, u, 0.0)
+    if t < R.HOUSE_START:                                   # the dive and the low run into Dragonstone
+        f = min(max(t * FPS - INTRO[0], 0.0), len(INTRO[1]) - 1.0)
+        i = min(int(f), len(INTRO[1]) - 2)
+        w = f - i
+        return INTRO[1][i].lerp(INTRO[1][i + 1], w), INTRO[2][i].lerp(INTRO[2][i + 1], w)
     if t < R.OVERVIEW[0]:
         i = min(int((t - R.HOUSE_START) // R.HOUSE_LEN), 6)          # 6 = the campus
         lt = t - (R.house_window(i)[0] if i < 6 else R.CAMPUS_WIN[0])
@@ -526,6 +592,7 @@ def camera_at(t):
     return OVER_CAM[0].lerp(OVER_CAM2[0], u), OVER_CAM[1].lerp(OVER_CAM2[1], u)
 
 
+INTRO = _intro_path()
 for fr in range(F(R.MAP_IN[0]), F(R.END) + 1):
     c, tg = camera_at(fr / FPS)
     gmin = ground(c.x, c.y) + 0.6
@@ -536,10 +603,15 @@ for fr in range(F(R.MAP_IN[0]), F(R.END) + 1):
     tgt.keyframe_insert('location', frame=fr)
     cam_data.dof.focus_distance = (c - tg).length
     cam_data.dof.keyframe_insert('focus_distance', frame=fr)
+    if fr - INTRO[0] < len(INTRO[3]):
+        cam_data.lens = INTRO[3][fr - INTRO[0]]
+        cam_data.keyframe_insert('lens', frame=fr)
+        cam_data.dof.aperture_fstop = INTRO[4][fr - INTRO[0]]
+        cam_data.dof.keyframe_insert('aperture_fstop', frame=fr)
 
 # ---------------- life on the map: the guide dragon, floating names, armies ----------------
 import realm_life as LIFE
-ctx = dict(mat=mat, mesh_obj=mesh_obj, link=link, M=M, ROOF=ROOF, SEATS=SEATS, F=F, ground=ground, tex=TEX,
+ctx = dict(mat=mat, mesh_obj=mesh_obj, link=link, M=M, ROOF=ROOF, SEATS=SEATS, F=F, ground=ground, tex=TEX, camera_at=camera_at,
            height=np.load(os.path.join(HERE, 'build/tex/height.npy')), font=os.path.join(HERE, 'assets/fonts/Cinzel.ttf'))
 dragon_root, dragon_wings = LIFE.build_dragon(ctx)
 LIFE.animate_dragon(ctx, dragon_root, dragon_wings)

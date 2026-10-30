@@ -54,7 +54,7 @@ h = land * 0.22 + land * mount_mask * ridge * 1.35 + land * fbm(HS, 23) * 0.06
 for hs in HOUSES + [CAMPUS]:
     cu, cv = hs['pos']
     d = np.sqrt((u - cu) ** 2 + (v - cv) ** 2)
-    k = smooth(0.07, 0.025, d)
+    k = smooth(0.07, 0.025, d) * smooth(-0.12, 0.0, field)       # on land only: a plateau must not bulge out of the sea
     h = h * (1 - k) + 0.24 * k
 np.save('build/tex/height.npy', h.astype(np.float32))
 

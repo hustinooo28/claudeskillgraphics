@@ -2,16 +2,16 @@
 
 A 129-second 16:9 intro (121 s of film and an 8-second closing line) for **PAGSIKLAB**, the Mini Olympics of DSSC – Sta. Cruz Extension Campus, presented by the Local Student Council and produced by *the akashic*. It reveals which team is which Game of Thrones house in the style of the show's opening titles: a camera flies over a model of the realm while each seat assembles itself out of the map with turning gears, and the house medallion rises above it.
 
-The 3D is a real Blender scene rendered with Cycles (sun and sky light, masonry, polished brass, glossy water, motion blur; 10 samples plus denoising at 720p, upscaled to 1080p, about 8 hours on a 4-core CPU) with a depth pass; the compositor uses that depth for atmospheric fog and drifting mist, then grades each house (cold North, amber South, bleached Dorne, storm, fire), adds light shafts, bloom, weather particles, frost on the lens, a slight handheld drift, crushed blacks, a heavy vignette and grain. The music is the council's chosen epic Game of Thrones theme cover (not stored in this repo; put it at `build/track.wav`), edited so its final stinger lands on the title; the sound effects come from the council's royalty-free cinematic SFX reel (FlameSound, free edition), cut into one-shots by `audio/cut_sfx.py`, with clockwork, wingbeats and the voice generated here.
+The 3D is a real Blender scene rendered with Cycles (sun and sky light, masonry, polished brass, glossy water, motion blur; 10 samples plus denoising at 720p, upscaled to 1080p, about 13 hours on a 4-core CPU) with a depth pass; the compositor uses that depth for atmospheric fog and drifting mist, then grades each house (cold North, amber South, bleached Dorne, storm, fire), adds light shafts, bloom, weather particles, frost on the lens, a slight handheld drift, crushed blacks, a heavy vignette and grain. The music is the council's chosen epic Game of Thrones theme cover (not stored in this repo; put it at `build/track.wav`), edited so its final stinger lands on the title; the sound effects come from the council's royalty-free cinematic SFX reel (FlameSound, free edition), cut into one-shots by `audio/cut_sfx.py`, with clockwork, wingbeats and the voice generated here.
 
 | Time | Scene | Sound |
 |---|---|---|
 | 0–5 s | A gold trophy on a stone plinth in a dark hall, one shaft of light, dust in the beam: "WHO WILL REIGN?" | Low strings, wind, a deep boom |
 | 5–7 s | The words alone on black | Held note |
-| 7–12 s | **2026** forged at the anvil: three hammer blows throw sparks, the numerals glow white-hot and cool to iron, embers rise into darkness | Anvil clangs, sizzle, fire bed |
-| 12–15 s | *the akashic* logo inks itself in on a deep blue glow: *a production by* | An ink-stroke whoosh |
-| 15–18 s | The Local Student Council seal: *presents* | Strings, a chime |
-| 18–24 s | Falling through clouds onto the realm; the cello ostinato starts | Cloud whoosh, the theme |
+| 7–10 s | *the akashic* logo inks itself in on a deep blue glow: *a production by* | An ink-stroke whoosh |
+| 10–13 s | The Local Student Council seal: *presents* | Strings, a chime |
+| 13–18 s | A dive from high above the Westerlands: layer after layer of cloud rushes past the lens, the realm glimpsed far below through the gaps, with the dragon diving ahead | Rushing air, a long riser |
+| 18–24 s | The last cloud deck bursts open and the camera races low over the snowy peaks of the great Westerlands massif, the forests below it and the stormlands woods, the dragon just ahead, then pulls up over the coast into Dragonstone | The music opens up with a big hit; whooshes as the peaks and treetops rush past |
 | 24–90 s | Six reveals of 11 s (6 bars) each, in team order. The seat builds out of the map, the medallion rises, and a lower third names the house, team, seat, motto and sections. Each house has its own grade and weather. | Clockwork ticks and clunks during each build, a hit when the medallion lands; the score adds a layer per house |
 | 90–101 s | **The Seat of the Realm**: the DSSC Sta. Cruz Extension Campus assembles in the centre of the map, with the LSC seal as its medallion | The full theme with choir |
 | 101–108 s | "A NEW ERA IS HERE": the camera pulls up over all seven seats | Held chord, choir swell, riser |
@@ -57,7 +57,7 @@ Needs Blender 4.2 (any build with Workbench; headless works with Mesa's `libegl1
 ```sh
 python3 make_map.py && python3 make_sigils.py
 blender -b --factory-startup -P intro_trophy.py
-blender -b --factory-startup -P scene.py -- --save --out build/v5/frames && python3 render_watchdog.py blender 432 2904 100   # ~8 h on 4 CPU cores
+blender -b --factory-startup -P scene.py -- --save --out build/v6/frames && python3 render_watchdog.py blender 312 2904 100   # ~13 h on 4 CPU cores
 python3 titles.py && node titles.js build/titles.json
 python3 audio/score.py && python3 audio/final_mix.py      # needs build/track.wav
 python3 composite.py build/film.mp4

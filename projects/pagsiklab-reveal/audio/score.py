@@ -265,17 +265,6 @@ def sizzle(d=1.4):
     return filt(noise(d), 'bandpass', [3000, 9000]) * np.exp(-t / 0.5) * (0.6 + 0.4 * np.sin(2 * np.pi * 23 * t))
 
 
-# the forge: three blows, sparks, a low fire bed, then darkness
-f0 = R.TUNNEL[0]
-fire = filt(noise(5.0), 'lowpass', 300) * 0.8 + filt(noise(5.0), 'bandpass', [1500, 4000]) * (rng.random(int(5.0 * SR)) > 0.9985) * 3
-add('sfx', fire * np.minimum(tt(5.0) / 0.6, 1) * np.clip((5.0 - tt(5.0)) / 0.6, 0, 1), f0, 0.16, send=0.3)
-for k, st in enumerate((0.7, 1.75, 2.8)):
-    add('sfx', smp('impact_metallic', (1.0, 0.94, 0.86)[k]), f0 + st, 0.40 + 0.05 * k, pan=(-0.15, 0.15, 0.0)[k], send=0.45)
-    add('sfx', sizzle(), f0 + st + 0.05, 0.06, pan=-0.2, send=0.3)
-add('hits', smp('boom_earthcore'), f0 + 2.8, 0.45, send=0.4)
-add('music', strings(38, 4.6, 0.9, 900), f0 + 0.6, 0.10, send=0.6)
-add('music', strings(45, 3.6, 0.8, 1200), f0 + 1.7, 0.07, pan=0.3, send=0.6)
-
 # credits: the akashic (ink), the Local Student Council (chime)
 c0 = R.CREDITS[0]
 add('sfx', smp('downshifter', 1.15), c0 - 0.1, 0.30, send=0.4)
@@ -285,12 +274,16 @@ add('music', strings(38, 3.4, 0.9, 900), c0 + 3.0, 0.10, send=0.6)
 add('sfx', chime(990, 3.0), c0 + 3.1, 0.04, send=0.8)
 add('hits', smp('braam_up_under', 1.0), c0 + 3.0, 0.30, send=0.5)
 _r12 = smp('riser_12')
-add('sfx', _r12, R.MAP_IN[0] - len(_r12) / SR, 0.35, send=0.3)
+add('sfx', _r12, R.CLOUD_BREAK - len(_r12) / SR, 0.35, send=0.3)
 
-# falling through the clouds onto the realm
-add('hits', smp('boom_big_reveal'), R.MAP_IN[0], 0.7, send=0.4)
-add('sfx', whoosh(2.4, 300, 3000), R.MAP_IN[0] - 0.1, 0.4, send=0.5)
-add('sfx', wind(6.0) * np.exp(-tt(6.0) / 2.5), R.MAP_IN[0], 0.12, send=0.4)
+# the dive: rushing air through the clouds, a deck bursting open as the music opens up, then the low run past the peaks
+dive = R.CLOUD_BREAK - R.MAP_IN[0]
+add('sfx', wind(dive) * (np.minimum(tt(dive) / 0.8, 1) * (0.6 + 0.4 * tt(dive) / dive)), R.MAP_IN[0], 0.14, send=0.4)
+add('hits', smp('boom_big_reveal'), R.CLOUD_BREAK, 0.7, send=0.4)
+add('sfx', whoosh(2.4, 300, 3000), R.CLOUD_BREAK - 0.1, 0.4, send=0.5)
+add('sfx', wind(6.0) * np.exp(-tt(6.0) / 2.5), R.CLOUD_BREAK, 0.12, send=0.4)
+for k, st in enumerate((19.1, 20.1, 21.1)):                  # peaks and treetops rushing past
+    add('sfx', whoosh(1.1, 400, 2600), st, 0.16, pan=(0.35, -0.35, 0.2)[k], send=0.35)
 
 # the theme: 3 bars under the descent, then one phrase per house (+ the campus)
 for b in range(3):

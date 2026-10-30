@@ -19,7 +19,7 @@ vo0, vo1 = np.load(os.path.join(B, 'vo_span.npy'))
 STINGER = 164.5                       # the track's final hit
 TITLE_HIT = R.TITLE[0] + 1.2          # PAGSIKLAB ignites
 OFF = STINGER - TITLE_HIT             # track time = video time + OFF, from the map onward
-CUT = R.MAP_IN[0]                     # cut from the quiet intro to the full section as we fall onto the realm
+CUT = R.CLOUD_BREAK                   # cut from the quiet intro to the full section as we burst out of the clouds
 XF = int(0.25 * SR)
 
 music = np.zeros((N, 2))
@@ -62,7 +62,7 @@ vo = np.load(os.path.join(B, 'vo_stem.npy')).astype(np.float64)
 mix = music + fx + vo * 1.0
 if os.environ.get('MIX_REPORT'):
     lvl = lambda x: 20 * np.log10(np.sqrt((x ** 2).mean()) + 1e-12)
-    for nm, a, b in [('cold open', 0, 7), ('forge', 7, 12), ('credits', 12, 18), ('houses', 24, 90), ('campus', 90, 101), ('title', 108, 118)]:
+    for nm, a, b in [('cold open', 0, 7), ('credits', 7, 13), ('dive', 13, 18), ('houses', 24, 90), ('campus', 90, 101), ('title', 108, 118)]:
         i, j = int(a * SR), int(b * SR)
         print('%-10s music %6.1f  fx %6.1f  vo %6.1f dB' % (nm, lvl(music[i:j]), lvl(fx[i:j]), lvl(vo[i:j])))
 e = np.ones(N)

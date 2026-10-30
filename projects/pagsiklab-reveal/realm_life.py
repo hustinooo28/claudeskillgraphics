@@ -60,12 +60,15 @@ def dragon_path(t, ctx):
         z = st['z'] + 2.4 + 0.25 * math.sin(u * 2 * math.pi * 1.5)
         return Vector((st['x'] + rad * math.cos(a), st['y'] + rad * math.sin(a), z))
 
-    if t < R.HOUSE_START:                                   # sweeps in past the camera toward Dragonstone
-        u = ease((t - R.MAP_IN[0] - 1.0) / (R.HOUSE_START - R.MAP_IN[0] - 1.0))
-        start = Vector((14.0, -28.0, 22.0))
-        end = circle(0, 0.0)
-        mid = (start + end) / 2 + Vector((0, 0, 6))
-        return (1 - u) ** 2 * start + 2 * (1 - u) * u * mid + u ** 2 * end, 'fly'
+    if t < R.HOUSE_START:                                   # leads the camera down through the clouds and low over the
+        cam = ctx['camera_at']                              # north (ahead and to the right), then peels off to Dragonstone
+        a = cam(min(t + 1.8, R.HOUSE_START))[0]
+        b = cam(min(t + 2.0, R.HOUSE_START + 0.2))[0]
+        fwd = Vector((b.x - a.x, b.y - a.y, 0.0))
+        fwd = fwd.normalized() if fwd.length > 1e-6 else Vector((1.0, 0.0, 0.0))
+        lead = a + fwd.cross(Vector((0, 0, 1))) * 0.9 + Vector((0, 0, 0.3))
+        w = ease((t - 21.6) / (R.HOUSE_START - 21.6))
+        return lead.lerp(circle(0, 0.0), w) + Vector((0, 0, 1.5 * math.sin(w * math.pi))), 'fly'
     if t < R.OVERVIEW[0]:
         i = min(int((t - R.HOUSE_START) // R.HOUSE_LEN), 6)
         lt = t - (R.house_window(i)[0] if i < 6 else R.CAMPUS_WIN[0])
@@ -258,7 +261,7 @@ def build_armies(ctx):
         o2 = mesh_obj(f'banners_{n}', bm_b, banner_mats[key])
         o2.parent = o1
         # march slowly forward across the whole film
-        o1.keyframe_insert('location', frame=F(R.MAP_IN[0]))
+        o1.keyframe_insert('location', frame=F(R.CLOUD_BREAK))           # (held still before: the dive sees them from afar)
         o1.location = (0.55 * ch, 0.55 * sh_, 0.0)
         o1.keyframe_insert('location', frame=F(R.END))
         for fc in o1.animation_data.action.fcurves:

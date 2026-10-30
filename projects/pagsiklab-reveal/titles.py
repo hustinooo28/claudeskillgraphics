@@ -17,7 +17,6 @@ add('lsc_l1', 'THE LOCAL STUDENT COUNCIL', 34, 760, weight=700, track=10, color=
 add('lsc_l2', 'DSSC · STA. CRUZ EXTENSION CAMPUS', 20, 805, weight=600, track=9, color='#aab3ba')
 add('lsc_l3', 'PRESENTS', 20, 852, weight=600, track=14, color='#c9a46a')
 add('ak_l1', 'A PRODUCTION BY', 20, 395, weight=600, track=14, color='#c9a46a')
-add('year', '2026', 200, 540, weight=900, track=30, style='silver')
 
 # lower thirds: icon at x=150, text from x=232
 LX = 232

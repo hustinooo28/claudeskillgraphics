@@ -31,9 +31,9 @@ CAMPUS = dict(key='campus', house='THE SEAT OF THE REALM', seat='STA. CRUZ', mot
 
 # ---------------- edit (seconds) ----------------
 COLD_OPEN = (0.0, 7.0)          # trophy in the dark, "WHO WILL REIGN?", then the words alone on black
-TUNNEL = (7.0, 12.0)            # red/blue light streaks, the 2026 glass card
-CREDITS = (12.0, 18.0)          # the akashic (12-15), the Local Student Council presents (15-18)
-MAP_IN = (18.0, 24.0)           # fall through the clouds onto the realm
+CREDITS = (7.0, 13.0)           # the akashic (7-10), the Local Student Council presents (10-13)
+MAP_IN = (13.0, 24.0)           # dive from the sky through the clouds (13-18), then race low over mountains and
+CLOUD_BREAK = 18.0              # forests (18-24) into the first seat; the music opens up as we break out of the clouds
 HOUSE_START = 24.0
 HOUSE_LEN = 11.0
 CAMPUS_WIN = (HOUSE_START + 6 * HOUSE_LEN, HOUSE_START + 6 * HOUSE_LEN + 11.0)  # 87 - 98  the campus builds
