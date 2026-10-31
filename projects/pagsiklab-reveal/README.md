@@ -11,14 +11,14 @@ The 3D is a real Blender scene rendered with Cycles (sun and sky light, masonry,
 | 13.5–18.75 s | *the akashic* logo inks itself in on a deep blue glow: *a production by* | An ink-stroke whoosh on the track's swell |
 | 18.75–26.3 s | The Local Student Council seal: *presents*; a breath of black | A braam and a chime on the next swell; a riser into the drop |
 | 26.3–31.3 s | On the track's drop, a dive from high above the Westerlands: layer after layer of cloud rushes past the lens, the realm glimpsed far below through the gaps, with the dragon diving ahead | The full section lands on the first frame in the clouds; rushing air |
-| 31.3–37.3 s | The last cloud deck bursts open and the camera races low over the snowy peaks of the great Westerlands massif, the forests below it and the stormlands woods, the dragon just ahead, then pulls up over the coast into Dragonstone | A hit as the deck bursts; whooshes as the peaks and treetops rush past |
+| 31.3–37.3 s | The last cloud deck bursts open and the camera races low over the snowy peaks of the great Westerlands massif, the forests below it and the stormlands woods, the dragon just ahead, then pulls up over the coast into Dragonstone | A hit as the deck bursts; whooshes as the peaks and treetops rush past; the music steps up into its fullest section as the camera rises toward Dragonstone |
 | 37.3–103.3 s | Six reveals of 11 s each, in team order. The seat builds out of the map, the medallion rises, and a lower third names the house, team, seat, motto and sections. Each house has its own grade, weather and soundscape. | A fly-by on every flight between seats; each seat's world under the music (below); clockwork during each build, a hit when the medallion lands |
 | 103.3–114.3 s | **The Seat of the Realm**: the DSSC Sta. Cruz Extension Campus assembles in the centre of the map, with the LSC seal as its medallion | A warm breeze in the palms; a great bell on C tolls three times |
 | 114.3–121.3 s | "A NEW ERA IS HERE": the camera pulls up over all seven seats | High wind, a roar, a riser |
 | 121.3–134.3 s | A breath of silence, then **PAGSIKLAB** ignites left to right on the track's final hit; *Mini Olympics 2026*; "Who will claim the throne?"; the LSC seal and the akashic logo | Title impact, fade |
 | 134.3–142.3 s | After the fade to black: *One Step Better Than Yesterday.* on dark smoke and embers | A quiet drone and one soft low hit |
 
-The track plays from its top; one phrase-aligned jump of 30 bars inside its full section (76.6 → 118.4 s of the track) lands its final hit on the title. The ambience sits well under the music: `final_mix.py` sets the beds 17 dB and the fly-bys and thunder 8 dB under the music's own moment-to-moment loudness, and limits them to never come within 10 dB (beds) or 3 dB (hits) of it.
+The track plays from its top; one phrase-aligned jump of 30 bars (34.7 → 76.6 s of the track), as the camera rises out of the low run toward Dragonstone, steps the music up into its fullest stretch for the houses and lands its final hit on the title. The ambience sits well under the music: `final_mix.py` sets the beds 17 dB and the fly-bys and thunder 8 dB under the music's own moment-to-moment loudness, and limits them to never come within 10 dB (beds) or 3 dB (hits) of it.
 
 | Team | House | Seat | Look and weather | Sections |
 |---|---|---|---|---|
@@ -50,7 +50,7 @@ Teams, sections, seats and mottos come from the council's Mini Olympics sheet. T
 | `composite.py` | The film: openers, sky, haze, grading, light shafts, bloom, per-house particles, lower thirds, the finale and the closing line |
 | `audio/cut_sfx.py`, `audio/sfx/` | The recorded one-shots (impacts, booms, braams, risers, drones) cut from the SFX reel |
 | `audio/score.py` | Sound design locked to the picture (recorded impacts and booms, clockwork, wingbeats, the voice), each seat's synthesized ambience and the fly-bys on the camera's whips, plus a synthesized fallback score; writes the effects, ambience and transition stems |
-| `audio/final_mix.py` | Edits the council's music track to the picture (from its first note, drop on the first cloud frame, one 30-bar jump, final stinger on the title) and lays the effects and the world under it, set against the music's own loudness; a quiet bed under the closing line |
+| `audio/final_mix.py` | Edits the council's music track to the picture (from its first note, drop on the first cloud frame, one 30-bar jump up into its fullest section at the first seat, final stinger on the title) and lays the effects and the world under it, set against the music's own loudness; a quiet bed under the closing line |
 | `audio/vo_who_raw.wav` | "Who will reign?" (Kokoro `bm_george`), pitched down 3 semitones in `score.py` |
 
 ## Rebuild

@@ -20,12 +20,13 @@ vo0, vo1 = np.load(os.path.join(B, 'vo_span.npy'))
 # The track plays from its first note under the opener, so its intro (swells at 0.5, 8.25, 13.5, 18.75, 23.75 s)
 # carries the trophy and the credits and its drop (26.30 s) lands on the first frame in the clouds. The film from
 # there to the title is 42 s shorter than the track from its drop to its final hit, so one jump of 30 bars (5 of the
-# track's 6-bar phrases, phrase start to phrase start) inside the full section closes the gap.
+# track's 6-bar phrases, phrase start to phrase start) closes the gap. It sits where the camera pulls up out of the
+# low run toward the first seat, so the houses play over the track's most intense stretch.
 BAR = 1.3952                          # 172 bpm, 4/4 (from the onsets: phrase hits at 34.71 and 151.92 s, 84 bars apart)
 DROP, STINGER = 26.30, 164.5          # the track's drop and its final hit
 JUMP = 30 * BAR
 P0 = 0.08                             # track = film + P0 before the jump; splits the 0.14 s residue between drop and title
-JSRC = 34.71 + 5 * 6 * BAR            # 76.57 s: a phrase start whose next phrase matches the one 30 bars on most closely
+JSRC = 34.71                          # the phrase start as the camera rises toward Dragonstone (film 34.63 s)
 JF = JSRC - P0                        # film time of the jump
 XF = int(0.04 * SR)
 

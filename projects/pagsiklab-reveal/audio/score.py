@@ -289,6 +289,12 @@ add('sfx', wind(dive) * (np.minimum(tt(dive) / 0.8, 1) * (0.6 + 0.4 * tt(dive) /
 add('hits', smp('boom_big_reveal', 0.9), R.CLOUD_BREAK, 0.45, send=0.4)
 add('sfx', whoosh(2.4, 300, 3000), R.CLOUD_BREAK - 0.1, 0.4, send=0.5)
 add('sfx', wind(6.0) * np.exp(-tt(6.0) / 2.5), R.CLOUD_BREAK, 0.12, send=0.4)
+# the music steps up into its fullest section as the camera rises toward the first seat (final_mix.py's jump):
+# a short riser into it and a deep hit on its downbeat
+UP = 34.71 - 0.08 - R.LEAD
+_r = smp('riser_12', 1.1)
+add('sfx', _r, UP - len(_r) / SR, 0.25, send=0.3)
+add('hits', smp('boom_cavernous_a', 0.9), UP, 0.4, send=0.4)
 for k, st in enumerate((19.1, 20.1, 21.1)):                  # peaks and treetops rushing past
     add('sfx', whoosh(1.1, 400, 2600), st, 0.16, pan=(0.35, -0.35, 0.2)[k], send=0.35)
 
