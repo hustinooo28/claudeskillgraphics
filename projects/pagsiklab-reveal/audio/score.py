@@ -11,12 +11,13 @@ sys.path.insert(0, os.path.dirname(HERE))
 import realm as R
 
 SR = 48000
-N = int(SR * R.END) + SR
+N = int(SR * (R.END + R.LEAD)) + SR             # film length: the opener is LEAD longer than the 3D timeline
+OFS = 0.0                                      # added to every placement: 0 for the opener (film time), LEAD after
 rng = np.random.default_rng(11)
 BAR = R.HOUSE_LEN / 6
 BEAT = BAR / 3
 THEME_START = R.HOUSE_START - 3 * BAR          # 3 bars of ostinato under the descent onto the map
-BUS = {k: np.zeros((N, 2)) for k in ('music', 'drums', 'sfx', 'hits', 'vo', 'verb')}
+BUS = {k: np.zeros((N, 2)) for k in ('music', 'drums', 'sfx', 'hits', 'vo', 'verb', 'amb', 'trans')}
 
 
 # ---------------- primitives ----------------
@@ -49,7 +50,7 @@ def saw(f, d, detune=(0.0,), vib=0.0):
 
 
 def add(bus, x, start, gain=1.0, pan=0.0, send=0.25):
-    i = int(start * SR)
+    i = int((start + OFS) * SR)
     if i < 0:
         x, i = x[-i:], 0
     j = min(i + len(x), N)
@@ -265,21 +266,27 @@ def sizzle(d=1.4):
     return filt(noise(d), 'bandpass', [3000, 9000]) * np.exp(-t / 0.5) * (0.6 + 0.4 * np.sin(2 * np.pi * 23 * t))
 
 
-# credits: the akashic (ink), the Local Student Council (chime)
-c0 = R.CREDITS[0]
+# the cold open (film time): a low hall tone under the trophy, a soft swell as the question appears
+add('sfx', filt(noise(12.0), 'lowpass', 140) * np.minimum(tt(12.0) / 3.0, 1) * np.clip((12.6 - tt(12.0)) / 2.0, 0, 1), 0.5, 0.10, send=0.6)
+add('hits', smp('boom_cavernous_b', 0.8), R.WHO_AT, 0.18, send=0.6)
+# credits: the akashic (ink), the Local Student Council (chime), each on a swell of the track
+c0, c1 = R.CREDITS[0], R.LSC_AT
 add('sfx', smp('downshifter', 1.15), c0 - 0.1, 0.30, send=0.4)
-add('sfx', filt(noise(1.3), 'highpass', 3000) * np.exp(-tt(1.3) / 0.6) * 0.3, c0 + 0.25, 0.12, pan=-0.3, send=0.2)
+add('sfx', filt(noise(2.4), 'highpass', 3000) * np.exp(-tt(2.4) / 0.9) * 0.3, c0 + 0.35, 0.12, pan=-0.3, send=0.2)   # the ink
 add('music', strings(50, 3.0, 0.7, 1600), c0, 0.07, send=0.7)
-add('music', strings(38, 3.4, 0.9, 900), c0 + 3.0, 0.10, send=0.6)
-add('sfx', chime(990, 3.0), c0 + 3.1, 0.04, send=0.8)
-add('hits', smp('braam_up_under', 1.0), c0 + 3.0, 0.30, send=0.5)
+add('music', strings(38, 3.4, 0.9, 900), c1, 0.10, send=0.6)
+add('sfx', chime(990, 3.0), c1 + 0.1, 0.04, send=0.8)
+add('hits', smp('braam_up_under', 1.0), c1, 0.30, send=0.5)
+# into the drop: a riser through the breath of black, the music lands on the first frame in the clouds
 _r12 = smp('riser_12')
-add('sfx', _r12, R.CLOUD_BREAK - len(_r12) / SR, 0.35, send=0.3)
+add('sfx', _r12, R.OPEN_END - len(_r12) / SR, 0.35, send=0.3)
+add('hits', smp('boom_big_reveal'), R.OPEN_END, 0.55, send=0.4)
 
-# the dive: rushing air through the clouds, a deck bursting open as the music opens up, then the low run past the peaks
+OFS = R.LEAD                                   # everything below is placed on the 3D timeline
+# the dive: rushing air through the clouds, a deck bursting open, then the low run past the peaks
 dive = R.CLOUD_BREAK - R.MAP_IN[0]
 add('sfx', wind(dive) * (np.minimum(tt(dive) / 0.8, 1) * (0.6 + 0.4 * tt(dive) / dive)), R.MAP_IN[0], 0.14, send=0.4)
-add('hits', smp('boom_big_reveal'), R.CLOUD_BREAK, 0.7, send=0.4)
+add('hits', smp('boom_big_reveal', 0.9), R.CLOUD_BREAK, 0.45, send=0.4)
 add('sfx', whoosh(2.4, 300, 3000), R.CLOUD_BREAK - 0.1, 0.4, send=0.5)
 add('sfx', wind(6.0) * np.exp(-tt(6.0) / 2.5), R.CLOUD_BREAK, 0.12, send=0.4)
 for k, st in enumerate((19.1, 20.1, 21.1)):                  # peaks and treetops rushing past
@@ -306,8 +313,6 @@ for i in range(7):
     else:                                    # the seat of the realm gets the big braam
         add('hits', smp('braam_massive'), s + 0.7 + 2.6 + 1.6, 0.6, send=0.5)
     add('sfx', chime(1180 + 60 * i, 2.5), s + 0.7 + 2.6 + 1.6, 0.06, pan=0.3, send=0.8)
-    # flight to the next seat
-    add('sfx', whoosh(1.6, 300, 1800), s + R.HOUSE_LEN - 1.45, 0.22, send=0.4)
 
 # the guide dragon: wingbeats on every flight, a roar as it lands on the campus roof and as it takes off
 def wingbeat():
@@ -366,6 +371,263 @@ for b, (root, q) in enumerate([(38, 'm'), (34, 'M'), (45, 'M')]):
 add('music', strings(26, 6.0, 1.0, 600), t0 + 6.5, 0.16, send=0.6)     # final low D under the end card
 add('sfx', chime(880, 4.0), t0 + 4.0, 0.05, send=0.9)
 
+# ---------------- the world: an ambience for every seat, and a fly-by on every flight ----------------
+# Two stems of their own, both written at unit level: final_mix.py sets them against the music's own loudness
+# moment by moment (the beds well under it, the fly-bys and thunder a few dB under its peaks), so the music leads.
+def colored(d, slope=-1.0):
+    """noise with a 1/f^(slope) spectrum: -1 pink, -2 brown"""
+    n = int(d * SR)
+    X = np.fft.rfft(rng.standard_normal(n))
+    f = np.fft.rfftfreq(n, 1 / SR)
+    X *= np.maximum(f, 20.0) ** (slope / 2)
+    x = np.fft.irfft(X, n)
+    return x / (x.std() + 1e-12)
+
+
+def drift(d, rate, lo=0.0, hi=1.0):
+    """a smooth random modulator between lo and hi, changing about `rate` times a second"""
+    k = max(int(d * rate) + 4, 4)
+    pts = rng.random(k)
+    y = np.interp(np.linspace(0, k - 3, int(d * SR)), np.arange(k), pts)
+    y = filt(y, 'lowpass', max(rate * 1.5, 0.3), order=1) if rate < 10 else y
+    y = (y - y.min()) / (np.ptp(y) + 1e-9)
+    return lo + (hi - lo) * y
+
+
+def tv_band(x, fc, q):
+    """band-pass whose centre follows fc (an array, one value per sample), filtered in short blocks"""
+    y = np.zeros_like(x)
+    zi = np.zeros((1, 2))
+    for k in range(0, len(x), 512):
+        f0 = float(np.clip(fc[k], 40, SR / 2 - 400))
+        sos = signal.butter(1, [f0 / (1 + 0.5 / q), f0 * (1 + 0.5 / q)], btype='band', fs=SR, output='sos')
+        y[k:k + 512], zi = signal.sosfilt(sos, x[k:k + 512], zi=zi)
+    return y
+
+
+def grains(d, rate, f_lo, f_hi, dec=0.004, shape=1.6):
+    """sparse random impulses (crackle, droplets, sand), each a tiny decaying burst"""
+    n = int(d * SR)
+    x = np.zeros(n)
+    m = rng.poisson(rate * d)
+    idx = rng.integers(0, n, m)
+    x[idx] = (rng.pareto(shape, m) + 1) ** 0.8 * rng.choice([-1, 1], m)
+    k = tt(dec * 6)
+    x = signal.fftconvolve(x, np.exp(-k / dec) * rng.standard_normal(len(k)))[:n]
+    return filt(x, 'bandpass', [f_lo, f_hi])
+
+
+def unit(x):
+    return x / (np.sqrt((x ** 2).mean()) + 1e-12)
+
+
+def stereo(l, r):
+    return np.stack([l, r], 1)
+
+
+def fade_io(x, a, b):
+    t = np.arange(len(x)) / SR
+    e = np.minimum(t / max(a, 1e-3), 1) * np.clip((len(x) / SR - t) / max(b, 1e-3), 0, 1)
+    return x * (e[:, None] if x.ndim == 2 else e)
+
+
+def bird(f0):
+    """a songbird phrase: a quick run of chirps"""
+    out = []
+    for _ in range(int(rng.integers(3, 8))):
+        d = float(rng.uniform(0.035, 0.09))
+        t = tt(d)
+        u = t / d
+        f = f0 * float(rng.uniform(0.85, 1.2)) * (1 + float(rng.uniform(-0.35, 0.35)) * u)
+        ph = 2 * np.pi * np.cumsum(f) / SR
+        out.append((np.sin(ph) + 0.15 * np.sin(2 * ph)) * np.sin(np.pi * u) ** 2)
+        out.append(np.zeros(int(float(rng.uniform(0.02, 0.07)) * SR)))
+    return np.concatenate(out)
+
+
+def cry(f_hi, f_lo, d, rough=0.3):
+    """a distant raptor / gull cry: a falling, slightly rough tone"""
+    t = tt(d)
+    u = t / d
+    f = f_hi * (f_lo / f_hi) ** u ** 0.7 * (1 + 0.012 * np.sin(2 * np.pi * 31 * t))
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    x = np.sin(ph) + 0.45 * np.sin(2 * ph) + 0.2 * np.sin(3 * ph)
+    x = x * (1 + rough * filt(noise(d), 'lowpass', 300))
+    return filt(x * np.sin(np.pi * np.minimum(u * 1.4, 1)) ** 0.6 * np.clip((1 - u) * 4, 0, 1), 'lowpass', 3200)
+
+
+def howl(f0, d=3.2):
+    """a lone wolf far off: rising, held with a tremble, falling away"""
+    t = tt(d)
+    u = t / d
+    f = f0 * (0.75 + 0.35 * np.sin(np.pi * np.minimum(u * 2.2, 1) / 2) - 0.22 * np.clip((u - 0.65) / 0.35, 0, 1) ** 1.5)
+    f = f * (1 + 0.012 * np.sin(2 * np.pi * 5.5 * t))
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    x = np.sin(ph) + 0.35 * np.sin(2 * ph) + 0.12 * np.sin(3 * ph) + 0.08 * filt(noise(d), 'bandpass', [600, 1800])
+    return filt(x * np.sin(np.pi * u) ** 0.8, 'lowpass', 1800)
+
+
+def bell(f=130.81, d=7.0):
+    """a great bronze bell on C (hum, prime, minor third, fifth, nominal ... all with their own decays)"""
+    t = tt(d)
+    parts = ((0.5, 0.8, 4.5), (1.0, 0.7, 3.2), (1.2, 0.55, 2.4), (1.5, 0.35, 1.8), (2.0, 0.6, 1.6),
+             (2.51, 0.3, 0.9), (2.66, 0.25, 0.8), (3.01, 0.2, 0.6))
+    x = sum(np.sin(2 * np.pi * f * m * (1 + 0.0007 * k) * t + k) * a * np.exp(-t / dd) for k, (m, a, dd) in enumerate(parts))
+    strike = filt(noise(d), 'bandpass', [800, 3500]) * np.exp(-t / 0.012) * 0.6
+    return x + strike
+
+
+def thunder(close=True, d=6.0):
+    """close: a tearing crack, then the roll; far: only the roll"""
+    t = tt(d)
+    roll = filt(colored(d, -2.0), 'lowpass', 160 if close else 110)
+    sw = sum(np.exp(-((t - c) / w) ** 2) for c, w in zip(rng.uniform(0.2, d * 0.7, 5), rng.uniform(0.3, 0.9, 5)))
+    roll = unit(roll) * (0.3 + sw) * np.exp(-t / (d * 0.45)) * np.minimum(t / (0.05 if close else 0.6), 1)
+    if not close:
+        return roll
+    crack = filt(noise(d), 'highpass', 700) * np.exp(-t / 0.09) * 3.0
+    rip = filt(noise(d), 'bandpass', [250, 2500]) * np.exp(-t / 0.45) * (0.5 + drift(d, 40)) * 1.4
+    return roll + crack + rip
+
+
+def flyby(d, pan0, pan1, peak=0.65):
+    """the camera tearing through the air between seats: rising rush, a low whoomp at the fastest point,
+    a falling (doppler) tail; swept across the stereo field the way the world moves on screen"""
+    t = tt(d)
+    u = t / d
+    e = np.where(u < peak, (u / peak) ** 2.5, np.exp(-(u - peak) / 0.12))
+    fc = np.where(u < peak, 300 * (2600 / 300) ** (u / peak), 2600 * (700 / 2600) ** np.clip((u - peak) / (1 - peak), 0, 1))
+    air = tv_band(colored(d, -0.5), fc, 1.2) * e
+    hiss = filt(noise(d), 'highpass', 4000) * e ** 1.5 * 0.25
+    whoomp = np.sin(2 * np.pi * np.cumsum(55 * (1 - 0.4 * u)) / SR) * np.exp(-((u - peak) / 0.09) ** 2) * 0.9
+    x = unit(air + hiss) + whoomp
+    pan = pan0 + (pan1 - pan0) * np.clip((u - peak + 0.35) / 0.6, 0, 1)
+    return stereo(x * np.cos((pan + 1) * np.pi / 4), x * np.sin((pan + 1) * np.pi / 4))
+
+
+# the beds: one per seat, ~unit RMS
+def bed_fire(d):      # Dragonstone: a volcanic rumble under the rock, the hiss and crackle of fire
+    rum = filt(colored(d, -2), 'lowpass', 90) * drift(d, 0.4, 0.5, 1.0)
+    roar = filt(noise(d), 'bandpass', [180, 900]) * drift(d, 2.0, 0.3, 1.0) * 0.35
+    ch = [grains(d, 22, 1200, 7000, 0.003) * 0.9 for _ in range(2)]
+    return stereo(unit(rum) + unit(roar) * 0.6 + unit(ch[0]) * 0.55, unit(rum) + unit(roar) * 0.6 + unit(ch[1]) * 0.55)
+
+
+def bed_surf(d):      # Casterly Rock: surf breaking on the cliffs, gusts over the rock, a gull far off
+    t = tt(d)
+    w = np.zeros(len(t))
+    for c in np.arange(float(rng.uniform(0.5, 2.0)), d, 5.6):
+        w += np.where(t < c, np.exp(-((t - c) / 1.6) ** 2), np.exp(-(t - c) / 2.2))
+    wash = filt(colored(d, -1), 'lowpass', 500) * 0.5
+    crash = tv_band(colored(d, -1), 400 + 2200 * w, 0.7) * w
+    gust = filt(noise(d), 'bandpass', [300, 1400]) * drift(d, 0.5, 0.1, 0.8) ** 2
+    l, r = unit(wash) + unit(crash) * 1.2 + unit(gust) * 0.4, unit(wash) + unit(np.roll(crash, 9000)) * 1.2 + unit(gust) * 0.4
+    g = cry(1900, 1300, 0.42) * 0.25
+    at = int(d * 0.55 * SR)
+    l[at:at + len(g)] += unit(g)[:len(l) - at] * 0.45
+    return stereo(l, r)
+
+
+def bed_meadow(d):    # Highgarden: a warm breeze in the leaves, songbirds all around
+    rust = [filt(noise(d), 'bandpass', [1800, 7000]) * (0.3 + filt(np.abs(noise(d)), 'lowpass', 14)) * drift(d, 0.3, 0.3, 1.0) for _ in range(2)]
+    breeze = filt(colored(d, -1), 'bandpass', [200, 900]) * drift(d, 0.25, 0.4, 1.0)
+    l, r = unit(rust[0]) * 0.6 + unit(breeze) * 0.5, unit(rust[1]) * 0.6 + unit(breeze) * 0.5
+    for _ in range(int(d * 0.9)):
+        b = bird(float(rng.uniform(2600, 5200))) * 1.1
+        at = int(rng.uniform(0, d - 1.0) * SR)
+        p = float(rng.uniform(-0.9, 0.9))
+        n = min(len(b), len(l) - at)
+        l[at:at + n] += b[:n] * math.cos((p + 1) * math.pi / 4)
+        r[at:at + n] += b[:n] * math.sin((p + 1) * math.pi / 4)
+    return stereo(l, r)
+
+
+def bed_blizzard(d):  # Winterfell: a howling gale, driven snow, and a wolf somewhere in the dark
+    t = tt(d)
+    how = [tv_band(colored(d, -1), drift(d, 0.35, 320, 880), 6.0) * drift(d, 0.4, 0.4, 1.0) for _ in range(2)]
+    snow = [filt(noise(d), 'highpass', 2500) * drift(d, 0.6, 0.2, 1.0) for _ in range(2)]
+    low = filt(colored(d, -2), 'lowpass', 120)
+    l, r = unit(how[0]) + unit(snow[0]) * 0.45 + unit(low) * 0.5, unit(how[1]) + unit(snow[1]) * 0.45 + unit(low) * 0.5
+    hw = howl(410)
+    at = int(d * 0.42 * SR)
+    n = min(len(hw), len(l) - at)
+    l[at:at + n] += unit(hw)[:n] * 0.6
+    r[at:at + n] += unit(hw)[:n] * 0.4
+    return stereo(l, r)
+
+
+def bed_desert(d):    # Sunspear: hot dry wind, sand hissing over the dunes, the dunes' low song, a hawk high above
+    sand = [filt(noise(d), 'bandpass', [2500, 10000]) * drift(d, 0.5, 0.3, 1.0) ** 1.5 for _ in range(2)]
+    grit = [grains(d, 260, 3000, 11000, 0.0015, 2.5) for _ in range(2)]
+    wind_ = filt(colored(d, -1), 'bandpass', [150, 700]) * drift(d, 0.3, 0.5, 1.0)
+    t = tt(d)
+    song = (np.sin(2 * np.pi * 98 * t) + 0.4 * np.sin(2 * np.pi * 196.6 * t)) * drift(d, 0.2, 0.2, 1.0)
+    l = unit(sand[0]) * 0.7 + unit(grit[0]) * 0.35 + unit(wind_) * 0.8 + unit(song) * 0.18
+    r = unit(sand[1]) * 0.7 + unit(grit[1]) * 0.35 + unit(wind_) * 0.8 + unit(song) * 0.18
+    hk = cry(2900, 2100, 0.9, 0.5)
+    at = int(d * 0.3 * SR)
+    n = min(len(hk), len(l) - at)
+    r[at:at + n] += unit(hk)[:n] * 0.4
+    l[at:at + n] += unit(hk)[:n] * 0.2
+    return stereo(l, r)
+
+
+def bed_storm(d):     # Storm's End: hard rain on stone, the wind driving it (the thunder is placed on the lightning)
+    wash = [filt(colored(d, -1), 'bandpass', [400, 9000]) for _ in range(2)]
+    drops = [grains(d, 900, 1500, 9000, 0.002, 2.2) for _ in range(2)]
+    gust = filt(noise(d), 'bandpass', [250, 1100]) * drift(d, 0.6, 0.2, 1.0) ** 2
+    return stereo(unit(wash[0]) + unit(drops[0]) * 0.6 + unit(gust) * 0.6, unit(wash[1]) + unit(drops[1]) * 0.6 + unit(gust) * 0.6)
+
+
+def bed_campus(d):    # the seat of the realm: a warm breeze and palms rustling
+    rust = [filt(noise(d), 'bandpass', [1200, 5000]) * (0.4 + filt(np.abs(noise(d)), 'lowpass', 9)) * drift(d, 0.3, 0.3, 1.0) for _ in range(2)]
+    breeze = filt(colored(d, -1), 'bandpass', [150, 700]) * drift(d, 0.2, 0.5, 1.0)
+    return stereo(unit(rust[0]) * 0.6 + unit(breeze), unit(rust[1]) * 0.6 + unit(breeze))
+
+
+def bed_sky(d):       # the overview: thin high-altitude wind
+    return stereo(*[unit(filt(colored(d, -1), 'bandpass', [300, 2500]) * drift(d, 0.3, 0.4, 1.0)) for _ in range(2)])
+
+
+def put(bus, x, start, gain, send=0.2):
+    add(bus, x[:, 0], start, gain, pan=-1.0, send=send)
+    add(bus, x[:, 1], start, gain, pan=1.0, send=send)
+
+
+# where the camera whips from seat to seat (fastest frame, measured on the render) and which way the world moves
+WHIPS = [(34.33, -0.8), (45.25, -0.8), (55.96, -0.6), (67.08, -0.8), (78.00, -0.2), (88.96, -0.7)]
+BEDS = [bed_fire, bed_surf, bed_meadow, bed_blizzard, bed_desert, bed_storm, bed_campus]
+LEVEL = [1.0, 0.9, 0.8, 1.0, 0.9, 1.15, 0.7]            # relative bed levels (the storm leans in, the campus is gentle)
+edges = [22.4] + [w for w, _ in WHIPS] + [R.OVERVIEW[0] + 0.4]
+XF_ = 0.9                                                 # beds cross-fade under each fly-by
+for k, fn in enumerate(BEDS):
+    a, b = edges[k] - XF_ / 2, edges[k + 1] + XF_ / 2
+    put('amb', fade_io(fn(b - a), 1.6 if k == 0 else XF_, XF_), a, LEVEL[k], send=0.15)
+put('amb', fade_io(bed_sky(R.OVERVIEW[1] - R.OVERVIEW[0] - 0.4), 1.0, 1.8), R.OVERVIEW[0] - 0.2, 0.6, send=0.2)
+
+# fly-bys: each crests on the whip's fastest frame
+for pk, dir_ in WHIPS:
+    d = 1.7
+    put('trans', flyby(d, -dir_, dir_), pk - 0.65 * d, 1.0, send=0.2)
+put('trans', flyby(1.6, 0.6, -0.4), 22.04 - 0.65 * 1.6, 0.6, send=0.2)   # the pull-up out of the low run
+
+# Storm's End: thunder on the lightning (flashes at +1.4/+1.55 and +6.2 s into the window), distant rolls between
+s5 = R.house_window(5)[0]
+th = thunder(True, 6.5)
+put('trans', stereo(th, np.roll(th, 400)), s5 + 1.40, 1.0, send=0.5)
+th = thunder(True, 6.0)
+put('trans', stereo(np.roll(th, 300), th), s5 + 6.20, 0.9, send=0.5)
+for at, g_ in ((s5 - 0.2, 0.55), (s5 + 4.0, 0.45), (s5 + 9.2, 0.4)):
+    th = thunder(False, 5.0)
+    put('trans', stereo(th, th), at, g_, send=0.6)
+
+# the seat of the realm: the great bell tolls as it rises and as the council's medallion lands
+cw = R.CAMPUS_WIN[0]
+for at, g_ in ((cw + 1.0, 0.5), (cw + 3.1, 0.55), (cw + 5.3, 0.7)):
+    b_ = bell()
+    put('trans', stereo(b_, np.roll(b_, 240)), at, g_, send=0.7)
+
+
 # the voice: "Who will reign?" as the words resolve on screen (deep male, pitched down, in a stone hall)
 import soundfile as _sf
 _vo, _sr = _sf.read(os.path.join(HERE, 'vo_who_raw.wav'), dtype='float64')
@@ -373,7 +635,8 @@ _vo = signal.resample_poly(_vo, 48000, _sr)
 _vo = signal.resample(_vo, int(len(_vo) / 2 ** (-3 / 12)))          # -3 semitones (slower and lower)
 _vo = filt(_vo, 'highpass', 55) + filt(_vo, 'lowpass', 220) * 0.6     # chest warmth
 _vo = np.tanh(_vo / np.abs(_vo).max() * 1.6) / np.tanh(1.6)
-VO_AT = 1.75
+VO_AT = R.WHO_AT + 0.15
+OFS = 0.0                                      # the voice is in the opener: film time
 add('vo', _vo, VO_AT, 0.55, send=0.9)
 add('vo', np.concatenate([np.zeros(int(0.32 * SR)), filt(_vo, 'lowpass', 1800)]), VO_AT, 0.10, pan=-0.4, send=1.0)   # hall echo
 add('vo', np.concatenate([np.zeros(int(0.55 * SR)), filt(_vo, 'lowpass', 1200)]), VO_AT, 0.06, pan=0.4, send=1.0)
@@ -391,22 +654,26 @@ _duck = np.convolve(_duck, np.ones(4800) / 4800, mode='same')
 BUS['music'] *= _duck[:, None]
 mix = BUS['music'] * 2.0 + BUS['drums'] * 0.65 + BUS['sfx'] * 1.1 + BUS['hits'] * 0.65 + BUS['vo'] + verb * 0.6
 fx = BUS['sfx'] * 1.1 + BUS['hits'] * 0.6 + np.stack([signal.fftconvolve((BUS['verb_sfx'] + BUS['verb_hits'] * 0.55)[:, c], ir[:, c])[:N] for c in range(2)], 1) * 0.6
-np.save(os.path.join(os.path.dirname(HERE), 'build', 'fx_stem.npy'), fx[:int(R.END * SR)].astype(np.float32))
+np.save(os.path.join(os.path.dirname(HERE), 'build', 'fx_stem.npy'), fx[:int((R.END + R.LEAD) * SR)].astype(np.float32))
 np.save(os.path.join(os.path.dirname(HERE), 'build', 'vo_span.npy'), np.array([VO_AT, VO_AT + len(_vo) / SR]))
+def stem(bus, wet):
+    return BUS[bus] + np.stack([signal.fftconvolve(BUS['verb_' + bus][:, c], ir[:, c])[:N] for c in range(2)], 1) * wet
+np.save(os.path.join(os.path.dirname(HERE), 'build', 'amb_stem.npy'), stem('amb', 0.5)[:int((R.END + R.LEAD) * SR)].astype(np.float32))
+np.save(os.path.join(os.path.dirname(HERE), 'build', 'trans_stem.npy'), stem('trans', 0.6)[:int((R.END + R.LEAD) * SR)].astype(np.float32))
 vo_stem = BUS['vo'] + np.stack([signal.fftconvolve(BUS['verb_vo'][:, c], ir[:, c])[:N] for c in range(2)], 1) * 0.6
-np.save(os.path.join(os.path.dirname(HERE), 'build', 'vo_stem.npy'), vo_stem[:int(R.END * SR)].astype(np.float32))
+np.save(os.path.join(os.path.dirname(HERE), 'build', 'vo_stem.npy'), vo_stem[:int((R.END + R.LEAD) * SR)].astype(np.float32))
 # the moment of silence before the title
 g = np.ones(N)
-a, b = int((R.TITLE[0] + 0.7) * SR), int((R.TITLE[0] + 1.2) * SR)
+a, b = int((R.TITLE[0] + 0.7 + R.LEAD) * SR), int((R.TITLE[0] + 1.2 + R.LEAD) * SR)
 g[a:b] = np.linspace(1, 0.0, b - a) ** 2
 g[b - int(0.05 * SR):b] = 0
 mix[:b] *= g[:b, None]
 mix = np.stack([filt(mix[:, c], 'highpass', 28) for c in range(2)], 1)
 fade = np.ones(N)
-k0 = int((R.END - 1.6) * SR)
+k0 = int((R.END + R.LEAD - 1.6) * SR)
 fade[k0:] = np.clip(np.linspace(1, 0, N - k0) * 1.6, 0, 1) ** 2
 mix *= fade[:, None]
-mix = mix[:int(R.END * SR)]
+mix = mix[:int((R.END + R.LEAD) * SR)]
 mix = mix / np.abs(mix).max() * 1.2
 mix = np.tanh(mix) / np.tanh(1.2) * 0.9
 os.makedirs(os.path.join(os.path.dirname(HERE), 'build'), exist_ok=True)

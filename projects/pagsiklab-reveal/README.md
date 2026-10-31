@@ -1,31 +1,33 @@
 # PAGSIKLAB 2026: the house reveal
 
-A 129-second 16:9 intro (121 s of film and an 8-second closing line) for **PAGSIKLAB**, the Mini Olympics of DSSC – Sta. Cruz Extension Campus, presented by the Local Student Council and produced by *the akashic*. It reveals which team is which Game of Thrones house in the style of the show's opening titles: a camera flies over a model of the realm while each seat assembles itself out of the map with turning gears, and the house medallion rises above it.
+A 142-second 16:9 intro (134 s of film and an 8-second closing line) for **PAGSIKLAB**, the Mini Olympics of DSSC – Sta. Cruz Extension Campus, presented by the Local Student Council and produced by *the akashic*. It reveals which team is which Game of Thrones house in the style of the show's opening titles: a camera flies over a model of the realm while each seat assembles itself out of the map with turning gears, and the house medallion rises above it.
 
-The 3D is a real Blender scene rendered with Cycles (sun and sky light, masonry, polished brass, glossy water, motion blur; 10 samples plus denoising at 720p, upscaled to 1080p, about 13 hours on a 4-core CPU) with a depth pass; the compositor uses that depth for atmospheric fog and drifting mist, then grades each house (cold North, amber South, bleached Dorne, storm, fire), adds light shafts, bloom, weather particles, frost on the lens, a slight handheld drift, crushed blacks, a heavy vignette and grain. The music is the council's chosen epic Game of Thrones theme cover (not stored in this repo; put it at `build/track.wav`), edited so its final stinger lands on the title; the sound effects come from the council's royalty-free cinematic SFX reel (FlameSound, free edition), cut into one-shots by `audio/cut_sfx.py`, with clockwork, wingbeats and the voice generated here.
+The 3D is a real Blender scene rendered with Cycles (sun and sky light, masonry, polished brass, glossy water, motion blur; 10 samples plus denoising at 720p, upscaled to 1080p, about 13 hours on a 4-core CPU) with a depth pass; the compositor uses that depth for atmospheric fog and drifting mist, then grades each house (cold North, amber South, bleached Dorne, storm, fire), adds light shafts, bloom, weather particles, frost on the lens, a slight handheld drift, crushed blacks, a heavy vignette and grain. The music is the council's chosen epic Game of Thrones theme cover (not stored in this repo; put it at `build/track.wav`), played from its first note under the opener, its drop on the first frame in the clouds and its final stinger on the title; the sound effects come from the council's royalty-free cinematic SFX reel (FlameSound, free edition), cut into one-shots by `audio/cut_sfx.py`, with clockwork, wingbeats, the voice and every seat's ambience (fire, surf, birdsong, blizzard, desert wind, rain and thunder, a bronze bell) synthesized here.
 
 | Time | Scene | Sound |
 |---|---|---|
-| 0–5 s | A gold trophy on a stone plinth in a dark hall, one shaft of light, dust in the beam: "WHO WILL REIGN?" | Low strings, wind, a deep boom |
-| 5–7 s | The words alone on black | Held note |
-| 7–10 s | *the akashic* logo inks itself in on a deep blue glow: *a production by* | An ink-stroke whoosh |
-| 10–13 s | The Local Student Council seal: *presents* | Strings, a chime |
-| 13–18 s | A dive from high above the Westerlands: layer after layer of cloud rushes past the lens, the realm glimpsed far below through the gaps, with the dragon diving ahead | Rushing air, a long riser |
-| 18–24 s | The last cloud deck bursts open and the camera races low over the snowy peaks of the great Westerlands massif, the forests below it and the stormlands woods, the dragon just ahead, then pulls up over the coast into Dragonstone | The music opens up with a big hit; whooshes as the peaks and treetops rush past |
-| 24–90 s | Six reveals of 11 s (6 bars) each, in team order. The seat builds out of the map, the medallion rises, and a lower third names the house, team, seat, motto and sections. Each house has its own grade and weather. | Clockwork ticks and clunks during each build, a hit when the medallion lands; the score adds a layer per house |
-| 90–101 s | **The Seat of the Realm**: the DSSC Sta. Cruz Extension Campus assembles in the centre of the map, with the LSC seal as its medallion | The full theme with choir |
-| 101–108 s | "A NEW ERA IS HERE": the camera pulls up over all seven seats | Held chord, choir swell, riser |
-| 108–121 s | A breath of silence, then **PAGSIKLAB** ignites left to right; *Mini Olympics 2026*; "Who will claim the throne?"; the LSC seal and the akashic logo | Title impact, final chords, fade |
-| 121–129 s | After the fade to black: *One Step Better Than Yesterday.* on dark smoke and embers | A quiet drone and one soft low hit |
+| 0–12.6 s | A gold trophy on a stone plinth in a dark hall, one shaft of light, dust in the beam (the 5 s render slowed to 0.4x along its optical flow); "WHO WILL REIGN?" on the track's swell at 8.25 s | The council's track from its first note; a low hall tone; the voice and a deep boom with the words |
+| 12.6–13.5 s | The words alone on black | |
+| 13.5–18.75 s | *the akashic* logo inks itself in on a deep blue glow: *a production by* | An ink-stroke whoosh on the track's swell |
+| 18.75–26.3 s | The Local Student Council seal: *presents*; a breath of black | A braam and a chime on the next swell; a riser into the drop |
+| 26.3–31.3 s | On the track's drop, a dive from high above the Westerlands: layer after layer of cloud rushes past the lens, the realm glimpsed far below through the gaps, with the dragon diving ahead | The full section lands on the first frame in the clouds; rushing air |
+| 31.3–37.3 s | The last cloud deck bursts open and the camera races low over the snowy peaks of the great Westerlands massif, the forests below it and the stormlands woods, the dragon just ahead, then pulls up over the coast into Dragonstone | A hit as the deck bursts; whooshes as the peaks and treetops rush past |
+| 37.3–103.3 s | Six reveals of 11 s each, in team order. The seat builds out of the map, the medallion rises, and a lower third names the house, team, seat, motto and sections. Each house has its own grade, weather and soundscape. | A fly-by on every flight between seats; each seat's world under the music (below); clockwork during each build, a hit when the medallion lands |
+| 103.3–114.3 s | **The Seat of the Realm**: the DSSC Sta. Cruz Extension Campus assembles in the centre of the map, with the LSC seal as its medallion | A warm breeze in the palms; a great bell on C tolls three times |
+| 114.3–121.3 s | "A NEW ERA IS HERE": the camera pulls up over all seven seats | High wind, a roar, a riser |
+| 121.3–134.3 s | A breath of silence, then **PAGSIKLAB** ignites left to right on the track's final hit; *Mini Olympics 2026*; "Who will claim the throne?"; the LSC seal and the akashic logo | Title impact, fade |
+| 134.3–142.3 s | After the fade to black: *One Step Better Than Yesterday.* on dark smoke and embers | A quiet drone and one soft low hit |
+
+The track plays from its top; one phrase-aligned jump of 30 bars inside its full section (76.6 → 118.4 s of the track) lands its final hit on the title. The ambience sits well under the music: `final_mix.py` sets the beds 17 dB and the fly-bys and thunder 8 dB under the music's own moment-to-moment loudness, and limits them to never come within 10 dB (beds) or 3 dB (hits) of it.
 
 | Team | House | Seat | Look and weather | Sections |
 |---|---|---|---|---|
-| 1 | Targaryen | Dragonstone (island of black spires) | Fire grade, rising embers | BSAB-1B, BSAB-2B, DIT-2A, BSAB-3B |
-| 2 | Lannister | Casterly Rock (towers on a great rock) | Gold light, golden dust | BSAB-3A, ACT-1B, BSIT-3B, BSIT-2A |
-| 3 | Tyrell | Highgarden (concentric ring walls) | Green and warm, drifting rose petals | BSIT-4A, BSAB-4B, DIT-3A, BPA-2A |
-| 4 | Stark | Winterfell (curtain wall and great keep) | Cold, snow | ACT-1A, BSIT-2B, BSIT-4B, DIT-2B |
-| 5 | Martell | Sunspear (sandstone domes and a spire) | Sun-baked, heat shimmer | BSIT-3A, BSAB-4A, BSIT-1B, BSAB-2A |
-| 6 | Baratheon | Storm's End (one colossal drum tower) | Storm, rain and lightning | BSIT-1A, BPA-1A, BSAB-1A |
+| 1 | Targaryen | Dragonstone (island of black spires) | Fire grade, rising embers; volcanic rumble and crackling fire | BSAB-1B, BSAB-2B, DIT-2A, BSAB-3B |
+| 2 | Lannister | Casterly Rock (towers on a great rock) | Gold light, golden dust; surf on the cliffs, gusts, a far gull | BSAB-3A, ACT-1B, BSIT-3B, BSIT-2A |
+| 3 | Tyrell | Highgarden (concentric ring walls) | Green and warm, drifting rose petals; breeze in the leaves, songbirds | BSIT-4A, BSAB-4B, DIT-3A, BPA-2A |
+| 4 | Stark | Winterfell (curtain wall and great keep) | Cold, snow; a howling gale, driven snow, a wolf far off | ACT-1A, BSIT-2B, BSIT-4B, DIT-2B |
+| 5 | Martell | Sunspear (sandstone domes and a spire) | Sun-baked, heat shimmer; hot wind, hissing sand, the dunes' low hum, a hawk | BSIT-3A, BSAB-4A, BSIT-1B, BSAB-2A |
+| 6 | Baratheon | Storm's End (one colossal drum tower) | Storm, rain and lightning; hard rain, thunder on every flash, distant rolls | BSIT-1A, BPA-1A, BSAB-1A |
 
 Teams, sections, seats and mottos come from the council's Mini Olympics sheet. The house sigils, the PAGSIKLAB lettering and the music track were supplied by the council; the music is a fan cover of the Game of Thrones theme, so this cut is for the event screens, not paid promotion.
 
@@ -47,8 +49,8 @@ Teams, sections, seats and mottos come from the council's Mini Olympics sheet. T
 | `titles.py`, `titles.js` | Every on-screen word, rendered in Cinzel to transparent layers |
 | `composite.py` | The film: openers, sky, haze, grading, light shafts, bloom, per-house particles, lower thirds, the finale and the closing line |
 | `audio/cut_sfx.py`, `audio/sfx/` | The recorded one-shots (impacts, booms, braams, risers, drones) cut from the SFX reel |
-| `audio/score.py` | Sound design locked to the picture (recorded impacts and booms, clockwork, wingbeats, the voice), plus a synthesized fallback score; also writes the effects stem |
-| `audio/final_mix.py` | Edits the council's music track to the picture (quiet intro under the cold open, full section from the descent, final stinger on the title) and lays the effects on top; a quiet bed under the closing line |
+| `audio/score.py` | Sound design locked to the picture (recorded impacts and booms, clockwork, wingbeats, the voice), each seat's synthesized ambience and the fly-bys on the camera's whips, plus a synthesized fallback score; writes the effects, ambience and transition stems |
+| `audio/final_mix.py` | Edits the council's music track to the picture (from its first note, drop on the first cloud frame, one 30-bar jump, final stinger on the title) and lays the effects and the world under it, set against the music's own loudness; a quiet bed under the closing line |
 | `audio/vo_who_raw.wav` | "Who will reign?" (Kokoro `bm_george`), pitched down 3 semitones in `score.py` |
 
 ## Rebuild

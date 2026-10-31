@@ -6,7 +6,7 @@ from multiprocessing import Pool
 import realm as R
 
 FPS, W, H = R.FPS, 1920, 1080
-NF = int(round((R.END + R.ROLL) * FPS))   # the film, then the closing line
+NF = int(round((R.END + R.ROLL) * FPS)) + R.LEAD_F   # the film, then the closing line
 F = lambda t: int(round(t * FPS))
 yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
 
@@ -407,12 +407,28 @@ def embers_2d(c, t, s):
 SPOT = None
 
 
+def trophy_frame(k):
+    """the trophy render at a fractional frame: its slow dolly is slowed further, so in-between frames are
+    interpolated along the optical flow (the motion is a few pixels a frame at most)"""
+    rd = lambda i: cv2.imread(f"{os.environ.get('TROPHY', 'build/trophy')}/{i:05d}.png").astype(np.float32)
+    dd = lambda i: cv2.imread(f'build/trophy_depth/{i:05d}.png', cv2.IMREAD_UNCHANGED).astype(np.float32) / 65535 * 20
+    i = min(int(k), 119)
+    w = min(k - i, 1.0)
+    a, da = rd(i), dd(i)
+    if w < 1e-3:
+        return a, da
+    b, db = rd(i + 1), dd(i + 1)
+    dis = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
+    fl = dis.calc(cv2.cvtColor(a.astype(np.uint8), cv2.COLOR_BGR2GRAY), cv2.cvtColor(b.astype(np.uint8), cv2.COLOR_BGR2GRAY), None)
+    wa = cv2.remap(a, xx - w * fl[..., 0], yy - w * fl[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    wb = cv2.remap(b, xx + (1 - w) * fl[..., 0], yy + (1 - w) * fl[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    return wa * (1 - w) + wb * w, da * (1 - w) + db * w
+
+
 def card_trophy(t, fi):
     """the reference's opening: a trophy in a dark hall under one shaft of light"""
     global SPOT
-    k = min(fi, 120)
-    raw = cv2.imread(f"{os.environ.get('TROPHY', 'build/trophy')}/{k:05d}.png").astype(np.float32)
-    dep = cv2.imread(f'build/trophy_depth/{k:05d}.png', cv2.IMREAD_UNCHANGED).astype(np.float32) / 65535 * 20
+    raw, dep = trophy_frame(min(t / R.TROPHY[1], 1.0) * 120)
     c = grade(raw * 1.05, (0.95, (1.06, 1.0, 0.95), (0.70, 0.95, 1.25), 1.3, -12))
     # warm the gold, punch its highlights
     lum = c.mean(2, keepdims=True)
@@ -433,24 +449,25 @@ def card_trophy(t, fi):
     lay, _ = particles('dust', t, 1.6)
     c = c + lay * cone[..., None] * 1.6
     c = bloom(c, 0.5)
-    c *= sm(prog(t, 0.0, 1.4))
+    c *= sm(prog(t, 0.5, 2.2))                                   # up out of the dark as the music begins
     return c * VIG
 
 
 def who_text(c, t):
-    a = sm(prog(t, 1.6, 1.0)) * (1 - sm(prog(t, 6.2, 0.7)))
+    w0 = R.WHO_AT
+    a = sm(prog(t, w0, 1.2)) * (1 - sm(prog(t, R.COLD_OPEN[1] - 0.9, 0.8)))
     if a <= 0.003:
         return c
-    lay = scale_about(txt('who'), 1.0 + 0.03 * prog(t, 1.6, 5.0))
-    blur = 5 * (1 - sm(prog(t, 1.6, 1.2)))
+    lay = scale_about(txt('who'), 1.0 + 0.03 * prog(t, w0, 5.0))
+    blur = 5 * (1 - sm(prog(t, w0, 1.4)))
     if blur > 0.3:
         lay = cv2.GaussianBlur(lay, (0, 0), blur)
     return over(c, lay, a)
 
 
 def card_open(t, fi):
-    if t < 5.0:
-        c = card_trophy(t, fi) * (1 - sm(prog(t, 4.4, 0.6)))
+    if t < R.TROPHY[1]:
+        c = card_trophy(t, fi) * (1 - sm(prog(t, R.TROPHY[1] - 1.2, 1.2)))
     else:
         c = np.zeros((H, W, 3), np.float32)
         c = apply_particles(c, 'embers', t, 0.25)
@@ -459,33 +476,35 @@ def card_open(t, fi):
 
 def card_credits(t, fi):
     lt = t - R.CREDITS[0]
+    ak = R.LSC_AT - R.CREDITS[0]                                 # the akashic's span
     c = np.zeros((H, W, 3), np.float32)
-    if lt < 3.0:      # the akashic, on a deep blue glow
-        a = sm(prog(lt, 0.0, 0.3)) * (1 - sm(prog(lt, 2.5, 0.5)))
+    if lt < ak:       # the akashic, on a deep blue glow
+        a = sm(prog(lt, 0.0, 0.6)) * (1 - sm(prog(lt, ak - 0.8, 0.7)))
         glow = np.exp(-(((xx - W / 2) / 520) ** 2 + ((yy - 560) / 320) ** 2))[..., None]
         c += glow * np.float32([150, 50, 10]) * 0.9 * a
         logo = rgba_img('assets/akashic.png', 760)
         lh, lw = logo.shape[:2]
         x0, y0 = W // 2 - lw // 2, 560 - lh // 2
-        wipe = prog(lt, 0.2, 1.3) * (lw + 240) - 120
+        wipe = prog(lt, 0.3, 2.0) * (lw + 240) - 120
         mask = np.clip((wipe - np.arange(lw, dtype=np.float32)) / 120, 0, 1)[None, :, None]
         c = over(c, logo * mask, a, x0, y0)
-        c = over(c, txt('ak_l1'), sm(prog(lt, 0.3, 0.8)) * a)
+        c = over(c, txt('ak_l1'), sm(prog(lt, 0.6, 1.0)) * a)
     else:             # the Local Student Council presents
-        u = lt - 3.0
-        a = sm(prog(u, 0.0, 0.7)) * (1 - sm(prog(u, 2.4, 0.5)))
+        u = lt - ak
+        u1 = R.CREDITS[1] - R.LSC_AT - 1.0                        # out ~0.4 s before the drop: a breath of black
+        a = sm(prog(u, 0.0, 0.9)) * (1 - sm(prog(u, u1, 0.6)))
         c += np.exp(-(((xx - W / 2) / 700) ** 2 + ((yy - 470) / 420) ** 2))[..., None] * np.float32([40, 30, 18]) * 0.6
         c = apply_particles(c, 'embers', t, 0.3)
         seal = rgba_img('assets/lsc-seal.webp', 400)
-        s = 0.96 + 0.04 * oc(prog(u, 0.0, 2.5))
+        s = 0.96 + 0.04 * oc(prog(u, 0.0, 5.0))
         sz = int(400 * s)
         seal_s = cv2.resize(seal, (sz, sz), interpolation=cv2.INTER_AREA)
         full = np.zeros((H, W, 4), np.float32)
         full[445 - sz // 2:445 - sz // 2 + sz, W // 2 - sz // 2:W // 2 - sz // 2 + sz] = seal_s
         c += cv2.GaussianBlur(full[..., 3], (0, 0), 30)[..., None] * np.float32([60, 120, 200]) * 0.45 * a   # full-frame glow, no box edges
         c = over(c, full, a)
-        for name, dl in (('lsc_l1', 0.4), ('lsc_l2', 0.6), ('lsc_l3', 0.9)):
-            c = over(c, txt(name), sm(prog(u, dl, 0.8)) * (1 - sm(prog(u, 2.4, 0.5))))
+        for name, dl in (('lsc_l1', 0.6), ('lsc_l2', 1.0), ('lsc_l3', 2.0)):
+            c = over(c, txt(name), sm(prog(u, dl, 1.0)) * (1 - sm(prog(u, u1, 0.6))))
     return c * VIG
 
 
@@ -541,7 +560,7 @@ def cloud_dive(c, t):
         c = c * (1 - m[..., None]) + col * m[..., None]
     if t > tb - 1.0:                                             # the last deck closes in, then bursts open
         c = clouds_part(c, prog(t, tb - 0.4, 1.0), 0.22 * math.exp(-((t - tb) / 0.12) ** 2), sm(prog(t, tb - 1.0, 0.6)))
-    return c * sm(prog(t, t0, 0.5))                             # in from the black of the council card
+    return c * sm(prog(t, t0 - 1.0 / FPS, 0.12))                # cut in on the music's drop
 
 
 def title_img():
@@ -701,12 +720,16 @@ def end_card(t):
 
 
 def render(fi):
+    seed = fi
     t = fi / FPS + 1e-6
+    if t >= R.OPEN_END:                                          # from the dive on: the 3D timeline
+        fi -= R.LEAD_F
+        t = fi / FPS + 1e-6
     if t >= R.END:
         c = end_card(t)
-    elif t < R.COLD_OPEN[1]:
+    elif fi == seed and t < R.COLD_OPEN[1]:
         c = card_open(t, fi)
-    elif t < R.CREDITS[1]:
+    elif fi == seed:
         c = card_credits(t, fi)
     else:
         c = treat3d(fi, t)
@@ -728,13 +751,13 @@ def render(fi):
         if t >= R.TITLE[0]:
             c = finale(c, t)
     if c.mean() > 2:
-        rgen = np.random.default_rng(fi)
+        rgen = np.random.default_rng(seed)
         g1 = cv2.resize(rgen.standard_normal((H // 2, W // 2)).astype(np.float32), (W, H))
         g2 = cv2.GaussianBlur(rgen.standard_normal((H, W)).astype(np.float32), (0, 0), 0.6)
         lum = np.clip(c.mean(2) / 255, 0, 1)
         amt = (4.5 * (lum * (1 - lum)) * 2 + 0.8)[..., None]                    # strongest in the mid-tones
         c = c + (g1 * 0.6 + g2 * 0.5)[..., None] * amt
-        if t >= R.MAP_IN[0]:
+        if fi != seed:
             c = c + LENS_DUST * np.clip((c.mean(2, keepdims=True) - 90) / 120, 0, 1) * 18
     return np.clip(c, 0, 255).astype(np.uint8).tobytes()
 

@@ -30,8 +30,6 @@ CAMPUS = dict(key='campus', house='THE SEAT OF THE REALM', seat='STA. CRUZ', mot
               pos=(0.47, 0.41))
 
 # ---------------- edit (seconds) ----------------
-COLD_OPEN = (0.0, 7.0)          # trophy in the dark, "WHO WILL REIGN?", then the words alone on black
-CREDITS = (7.0, 13.0)           # the akashic (7-10), the Local Student Council presents (10-13)
 MAP_IN = (13.0, 24.0)           # dive from the sky through the clouds (13-18), then race low over mountains and
 CLOUD_BREAK = 18.0              # forests (18-24) into the first seat; the music opens up as we break out of the clouds
 HOUSE_START = 24.0
@@ -41,6 +39,19 @@ OVERVIEW = (CAMPUS_WIN[1], CAMPUS_WIN[1] + 7.0)                                #
 TITLE = (OVERVIEW[1], OVERVIEW[1] + 13.0)                                      # 105 - 118
 END = TITLE[1]
 ROLL = 8.0                      # the closing line on black, after the film has faded out
+
+# The opener runs on the music's own intro, so it is longer in the film than in the 3D timeline above: everything
+# from the dive on plays LEAD seconds later in the film (the rendered frames keep their scene-time numbering).
+# Opener times below are film times, set on the track's swells (0.5, 8.25, 13.5, 18.75, 23.75 s) and its drop
+# (26.3 s), which lands on the first frame in the clouds.
+LEAD_F = 319                    # frames
+LEAD = LEAD_F / FPS             # 13.29 s
+OPEN_END = MAP_IN[0] + LEAD     # 26.29  first frame in the clouds, on the drop
+TROPHY = (0.0, 12.6)            # the trophy in the dark hall (its 5 s render, slowed to 0.4x)
+WHO_AT = 8.25                   # "WHO WILL REIGN?", alone on black once the trophy has gone
+COLD_OPEN = (0.0, 13.5)
+CREDITS = (13.5, OPEN_END)      # the akashic (13.5-18.75), the Local Student Council presents (18.75-25.9)
+LSC_AT = 18.75
 
 
 def house_window(i):

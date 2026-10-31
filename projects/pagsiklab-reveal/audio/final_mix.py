@@ -3,6 +3,7 @@ Needs build/track.wav (48 kHz stereo) and build/fx_stem.npy (from score.py). Wri
 import os, sys
 import numpy as np
 from scipy import signal
+from scipy.ndimage import minimum_filter1d
 from scipy.io import wavfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
@@ -12,23 +13,31 @@ SR = 48000
 B = os.path.join(os.path.dirname(HERE), 'build')
 sr, tr = wavfile.read(os.path.join(B, 'track.wav'))
 tr = tr.astype(np.float64) / 32768
-N = int(R.END * SR)
+N = int((R.END + R.LEAD) * SR)                                         # film length
 fx = np.load(os.path.join(B, 'fx_stem.npy')).astype(np.float64)
 vo0, vo1 = np.load(os.path.join(B, 'vo_span.npy'))
 
-STINGER = 164.5                       # the track's final hit
-TITLE_HIT = R.TITLE[0] + 1.2          # PAGSIKLAB ignites
-OFF = STINGER - TITLE_HIT             # track time = video time + OFF, from the map onward
-CUT = R.CLOUD_BREAK                   # cut from the quiet intro to the full section as we burst out of the clouds
-XF = int(0.25 * SR)
+# The track plays from its first note under the opener, so its intro (swells at 0.5, 8.25, 13.5, 18.75, 23.75 s)
+# carries the trophy and the credits and its drop (26.30 s) lands on the first frame in the clouds. The film from
+# there to the title is 42 s shorter than the track from its drop to its final hit, so one jump of 30 bars (5 of the
+# track's 6-bar phrases, phrase start to phrase start) inside the full section closes the gap.
+BAR = 1.3952                          # 172 bpm, 4/4 (from the onsets: phrase hits at 34.71 and 151.92 s, 84 bars apart)
+DROP, STINGER = 26.30, 164.5          # the track's drop and its final hit
+JUMP = 30 * BAR
+P0 = 0.08                             # track = film + P0 before the jump; splits the 0.14 s residue between drop and title
+JSRC = 34.71 + 5 * 6 * BAR            # 76.57 s: a phrase start whose next phrase matches the one 30 bars on most closely
+JF = JSRC - P0                        # film time of the jump
+XF = int(0.04 * SR)
 
 music = np.zeros((N, 2))
-a = tr[:int(CUT * SR) + XF].copy()                                     # 0:00-0:18 under the cold open
-music[:len(a)] += a * np.r_[np.ones(len(a) - XF), np.linspace(1, 0, XF)][:, None]
-s0 = int((CUT + OFF) * SR) - XF
-b = tr[s0:s0 + N - int(CUT * SR) + XF]
-b = b * np.r_[np.linspace(0, 1, XF), np.ones(len(b) - XF)][:, None]
-music[int(CUT * SR) - XF:int(CUT * SR) - XF + len(b)] += b
+i0 = int(JF * SR)
+a = tr[int(P0 * SR):int(P0 * SR) + i0 + XF]
+music[:len(a)] += a * np.r_[np.ones(len(a) - XF), np.cos(np.linspace(0, np.pi / 2, XF))][:, None]
+s0 = int((JF + P0 + JUMP) * SR)
+b = tr[s0:s0 + N - i0]
+b = b * np.r_[np.sin(np.linspace(0, np.pi / 2, XF)), np.ones(len(b) - XF)][:, None]
+music[i0:i0 + len(b)] += b
+DROP_FILM, HIT_FILM = DROP - P0, STINGER - P0 - JUMP
 
 # the music sits under the voice and opens up afterward
 g = np.ones(N)
@@ -59,14 +68,29 @@ fx = fx * g_fx[:, None]
 lim = 10 ** (-16 / 20)
 fx = np.tanh(fx / lim) * lim
 vo = np.load(os.path.join(B, 'vo_stem.npy')).astype(np.float64)
-mix = music + fx + vo * 1.0
+
+# the world: ambience beds well under the music, fly-bys and thunder a few dB under it, always led by it
+amb = np.load(os.path.join(B, 'amb_stem.npy')).astype(np.float64)
+trans = np.load(os.path.join(B, 'trans_stem.npy')).astype(np.float64)
+m_slow = env_rms(music, int(2.0 * SR))
+m_fast = env_rms(music, int(0.3 * SR))
+amb = amb * (m_slow * 10 ** (-17 / 20))[:, None]
+trans = trans * (m_slow * 10 ** (-8 / 20))[:, None]
+for x, win, head in ((amb, 0.4, -10), (trans, 0.05, -3)):        # safety: never within `head` dB of the music
+    lim_g = np.minimum(1.0, m_fast * 10 ** (head / 20) / (env_rms(x, int(win * SR)) + 1e-9))
+    lim_g = movavg(minimum_filter1d(lim_g, int(0.06 * SR)), int(0.03 * SR))   # hold the dips, then smooth them
+    x *= np.clip(lim_g, 0, 1)[:, None]
+
+mix = music + fx + vo * 1.0 + amb + trans
 if os.environ.get('MIX_REPORT'):
     lvl = lambda x: 20 * np.log10(np.sqrt((x ** 2).mean()) + 1e-12)
-    for nm, a, b in [('cold open', 0, 7), ('credits', 7, 13), ('dive', 13, 18), ('houses', 24, 90), ('campus', 90, 101), ('title', 108, 118)]:
+    L_ = R.LEAD
+    for nm, a, b in [('trophy', 0.5, 12.6), ('credits', 13.5, 26.0), ('dive', 26.3, 31.3), ('houses', 24 + L_, 90 + L_),
+                     ('storm', 79 + L_, 90 + L_), ('campus', 90 + L_, 101 + L_), ('title', 108 + L_, 118 + L_)]:
         i, j = int(a * SR), int(b * SR)
-        print('%-10s music %6.1f  fx %6.1f  vo %6.1f dB' % (nm, lvl(music[i:j]), lvl(fx[i:j]), lvl(vo[i:j])))
+        print('%-8s music %6.1f  fx %6.1f  amb %6.1f  trans %6.1f  vo %6.1f dB' % (nm, lvl(music[i:j]), lvl(fx[i:j]), lvl(amb[i:j]), lvl(trans[i:j]), lvl(vo[i:j])))
 e = np.ones(N)
-k0 = int((R.END - 1.6) * SR)
+k0 = int((R.END + R.LEAD - 1.6) * SR)
 e[k0:] = np.linspace(1, 0, N - k0) ** 2
 mix *= e[:, None]
 
@@ -77,7 +101,7 @@ def sfx(name):
     x = signal.resample_poly(x, SR, r) if r != SR else x
     x = x if x.ndim == 2 else np.stack([x, x], 1)
     return x / np.sqrt((x ** 2).mean() + 1e-12)                      # unit RMS
-ref = np.sqrt((music[int(R.TITLE[0] * SR):k0] ** 2).mean())
+ref = np.sqrt((music[int((R.TITLE[0] + R.LEAD) * SR):k0] ** 2).mean())
 NC = int(R.ROLL * SR)
 cred = np.zeros((NC, 2))
 bed = sfx('drone_stellar')[:NC - int(0.3 * SR)]
@@ -91,4 +115,5 @@ mix = np.stack([signal.sosfilt(signal.butter(2, 28, 'high', fs=SR, output='sos')
 mix = mix / np.abs(mix).max() * 1.15
 mix = np.tanh(mix) / np.tanh(1.15) * 0.9
 wavfile.write(os.path.join(B, 'score.wav'), SR, (mix * 32767).astype(np.int16))
-print('final mix written, %.1f s with the closing line; track offset %.2f s (video %.1f s = track %.1f s)' % (len(mix) / SR, OFF, CUT, CUT + OFF))
+print('final mix written, %.1f s; track from its top, drop %.2f s on the first cloud frame %.2f s; jump %.2f -> %.2f s at film %.2f; '
+      'final hit %.2f s vs title %.2f s' % (len(mix) / SR, DROP, R.OPEN_END, JSRC, JSRC + JUMP, JF, HIT_FILM, R.TITLE[0] + 1.2 + R.LEAD))
