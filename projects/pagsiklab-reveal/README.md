@@ -43,6 +43,7 @@ Teams, sections, seats and mottos come from the council's Mini Olympics sheet. T
 | `realm_life.py` | The dragon's flight path (flies alongside the camera, patrols behind each seat, lands on the campus roof), the seat names as extruded brass lettering floating flat on the map (each sinks away while its house is revealed), and marching regiments with house banners and tent camps |
 | `cut_emblems.py` | Cuts the council's house emblems out of their backgrounds for the medallions and lower thirds |
 | `scene.py` | Builds the Blender scene: terrain, trees, the six castles and the campus, their build animations, the camera path, and a 16-bit depth pass |
+| `horizon.py` | Projects the sea horizon from the camera for the low run, so the compositor's horizon glow sits steady |
 | `titles.py`, `titles.js` | Every on-screen word, rendered in Cinzel to transparent layers |
 | `composite.py` | The film: openers, sky, haze, grading, light shafts, bloom, per-house particles, lower thirds, the finale and the closing line |
 | `audio/cut_sfx.py`, `audio/sfx/` | The recorded one-shots (impacts, booms, braams, risers, drones) cut from the SFX reel |
@@ -58,6 +59,7 @@ Needs Blender 4.2 (any build with Workbench; headless works with Mesa's `libegl1
 python3 make_map.py && python3 make_sigils.py
 blender -b --factory-startup -P intro_trophy.py
 blender -b --factory-startup -P scene.py -- --save --out build/v6/frames && python3 render_watchdog.py blender 312 2904 100   # ~13 h on 4 CPU cores
+blender -b build/scene.blend -P horizon.py
 python3 titles.py && node titles.js build/titles.json
 python3 audio/score.py && python3 audio/final_mix.py      # needs build/track.wav
 python3 composite.py build/film.mp4

@@ -266,6 +266,12 @@ CSHADOW = np.vstack([np.hstack([_c, _c]), np.hstack([_c, _c])])   # mirror-tiled
 SRC3D = os.environ.get('SRC3D', 'build/v6')
 
 
+HORIZON = {}                                                      # build/horizon.json, written by horizon.py
+if os.path.exists('build/horizon.json'):
+    import json
+    HORIZON = json.load(open('build/horizon.json'))
+
+
 def sky_matte(raw, dep, r=4, eps=2e-3):
     """Soft sky matte: the depth pass is one sample per pixel, so its sky test is aliased on
     silhouettes and dithers under motion blur. A guided filter fits it to the beauty pass's own
@@ -319,6 +325,16 @@ def treat3d(fi, t):
     hy = np.clip(yy / (H * 0.6), 0, 1)[..., None]
     fogcol = np.float32(top) * (1 - hy) + np.float32(far) * hy
     c = c * (1 - fog) + fogcol * fog
+    if t < R.HOUSE_START:                                         # low run: a pale glow on the horizon keeps the sea
+        gw = sm(prog(t, R.CLOUD_BREAK - 0.5, 1.0)) * (1 - sm(prog(t, 22.8, 1.0)))   # apart from the night sky
+        if gw > 0:
+            glow = None
+            if str(fi) in HORIZON:                                  # the sea's far edge, projected from the camera
+                k, b = HORIZON[str(fi)]
+                dy = (k * xx[:1] + b) - yy
+                glow = np.where(dy > 0, np.exp(-dy / 70.0), np.exp(dy / 8.0)).astype(np.float32)
+            if glow is not None:
+                c = c + (glow * sky * gw)[..., None] * (np.float32(far) * 0.9 + 18)
     src, rcol, rs = RAYS[ga] if u < 0.5 else RAYS[gb]
     c = god_rays(c, src, rcol, rs * 0.8 * shaft_gain, t)
     c = bloom(c, 0.3)
