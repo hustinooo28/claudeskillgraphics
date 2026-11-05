@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GSSSC LED Wall Loop</title>
+<!-- The renderer serves these from local node_modules (npm install in this folder). -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5/600.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5/800.css">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="motion-kit.js"></script>
+<style>
+  :root { --w: 1920px; --h: 1080px; --shadow: 0 6px 26px rgba(8, 18, 70, .55), 0 2px 6px rgba(8, 18, 70, .35); }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: #000; overflow: hidden; }
+  #stage {
+    position: absolute; left: 0; top: 0; width: var(--w); height: var(--h); overflow: hidden;
+    background: #1546d6; color: #fff; font-family: 'Montserrat', sans-serif; text-transform: uppercase;
+  }
+
+  /* ---- background: the poster's own layers ---- */
+  .layer { position: absolute; pointer-events: none; will-change: transform; }
+  #bgGrad   { left: -190px; top: -31px; width: 2193px; height: 1110px; background: url(assets/bg-gradient.jpg) center/100% 100%; transform-origin: 50% 50%; }
+  #bgCampus { left: -22px; top: -441px; width: 1962px; height: 1962px; background: url(assets/bg-campus.jpg) center/cover; opacity: .09; transform-origin: 50% 62%; }
+  #bgRed    { left: -169px; top: -317px; width: 2234px; height: 1441px; background: url(assets/bg-red.png) center/100% 100%; transform-origin: 50% 100%; }
+  .blob { position: absolute; border-radius: 50%; mix-blend-mode: screen; filter: blur(60px); }
+  #blobCyan { width: 900px; height: 620px; left: 560px; top: 330px; background: radial-gradient(closest-side, rgba(40, 240, 235, .55), rgba(40, 240, 235, 0)); }
+  #blobBlue { width: 1100px; height: 700px; left: -200px; top: -200px; background: radial-gradient(closest-side, rgba(70, 110, 255, .45), rgba(70, 110, 255, 0)); }
+  #blobRed  { width: 1300px; height: 520px; left: -300px; top: 760px; background: radial-gradient(closest-side, rgba(255, 30, 60, .45), rgba(255, 30, 60, 0)); }
+  #net { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: screen; }
+  #vignette { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 48%, transparent 55%, rgba(0, 0, 30, .35) 100%); }
+
+  /* light flare that sweeps across on the intro */
+  #flare { position: absolute; top: -200px; left: 0; width: 520px; height: 1480px; transform: translateX(-700px) rotate(18deg);
+           background: linear-gradient(90deg, transparent, rgba(255,255,255,.0) 20%, rgba(200,250,255,.35) 50%, rgba(255,255,255,0) 80%, transparent);
+           mix-blend-mode: screen; filter: blur(30px); opacity: 0; }
+
+  /* ---- content ---- */
+  #content { position: absolute; inset: 0; }
+  .row { position: absolute; left: 0; right: 0; height: 0; display: flex; align-items: center; justify-content: center; white-space: nowrap; text-shadow: var(--shadow); }
+  .in { white-space: pre; }
+  .w, .c { display: inline-block; will-change: transform, filter, opacity; }
+
+  #seals { top: 257px; gap: 6px; }
+  .seal { position: relative; width: 82px; height: 82px; }
+  .seal img { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 6px 14px rgba(0, 10, 60, .5)); }
+  .seal .ring { position: absolute; inset: -2px; border-radius: 50%; border: 3px solid rgba(220, 250, 255, .9); opacity: 0; box-shadow: 0 0 18px rgba(120, 240, 255, .8); }
+
+  #college { top: 333px; font-weight: 800; }
+  #council { top: 362px; font-weight: 600; }
+  .title   { top: 0; font-weight: 700; line-height: 1; }
+  #t1 { top: 492px; } #t2 { top: 559px; } #t3 { top: 626px; }
+  #date    { top: 737px; font-weight: 700; gap: .32em; }
+  #date .pipe { display: inline-block; width: .11em; height: .95em; background: #fff; box-shadow: var(--shadow); transform-origin: 50% 50%; }
+  #aud1 { top: 834px; font-weight: 400; text-transform: none; }
+  #aud2 { top: 862px; font-weight: 400; text-transform: none; }
+
+  /* bloom that travels across the headline */
+  #shine { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; --sx: 130%;
+           -webkit-mask-image: linear-gradient(100deg, transparent 36%, #000 50%, transparent 64%); mask-image: linear-gradient(100deg, transparent 36%, #000 50%, transparent 64%);
+           -webkit-mask-size: 300% 100%; mask-size: 300% 100%; -webkit-mask-position: var(--sx) 0; mask-position: var(--sx) 0; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+  #shine .row { text-shadow: 0 0 18px #7ff0ff, 0 0 40px #4fd8ff; color: #e6fdff; filter: blur(5px); }
+  #shine .row.core { color: #fff; filter: blur(1.5px); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="layer" id="bgGrad"></div>
+  <div class="blob" id="blobBlue"></div>
+  <div class="blob" id="blobCyan"></div>
+  <div class="layer" id="bgCampus"></div>
+  <canvas id="net" width="1920" height="1080"></canvas>
+  <div class="layer" id="bgRed"></div>
+  <div class="blob" id="blobRed"></div>
+  <div id="vignette"></div>
+  <div id="flare"></div>
+
+  <div id="content">
+    <div class="row" id="seals">
+      <div class="seal" id="sealA"><div class="ring"></div><img src="assets/seal-dssc.png" alt="Davao del Sur State College seal"></div>
+      <div class="seal" id="sealB"><div class="ring"></div><img src="assets/seal-gsssc.png" alt="Graduate School Supreme Student Council seal"></div>
+    </div>
+    <div class="row" id="college">Davao del Sur State College</div>
+    <div class="row" id="council">Graduate School Supreme Student Council</div>
+    <div class="row title" id="t1">Mapping Research on Curriculum</div>
+    <div class="row title" id="t2">and Instruction Management in</div>
+    <div class="row title" id="t3">Teaching Mathematics</div>
+    <div class="row" id="date"><span class="seg">November 7, 2026</span><span class="pipe"></span><span class="seg">8:00AM- 12NN</span><span class="pipe"></span><span class="seg">DSSC Mini Theater</span></div>
+    <div class="row" id="aud1">All First-Year and Second-Year students of the Master of Arts</div>
+    <div class="row" id="aud2">in Education, Major in Mathematics Teaching (MAEd-MT).</div>
+    <div id="shine"></div>
+  </div>
+</div>
+
+<script>
+const LOOP = 24;                       // seconds; every ambient motion is periodic over LOOP → seamless repeat
+const TAU = Math.PI * 2;
+const $ = (q) => document.querySelector(q);
+
+/* ---------- size each line to the poster's measured width ---------- */
+function fitWidth(el, target) {
+  el.style.fontSize = '100px';
+  const w = el.scrollWidth;
+  const size = (100 * target) / w;
+  el.style.fontSize = size + 'px';
+  return size;
+}
+// Flex rows collapse the spaces between word spans, so each text row gets one inner span.
+function wrapRows() {
+  document.querySelectorAll('#content > .row:not(#seals):not(#date)').forEach((r) => {
+    if (!r.querySelector(':scope > .in')) r.innerHTML = `<span class="in">${r.innerHTML}</span>`;
+  });
+}
+function layout() {
+  fitWidth($('#college'), 461);
+  fitWidth($('#council'), 518);
+  const ts = fitWidth($('#t1'), 1616);
+  ['#t2', '#t3'].forEach((q) => ($(q).style.fontSize = ts + 'px'));
+  fitWidth($('#date'), 988);
+  const as = fitWidth($('#aud1'), 964);
+  $('#aud2').style.fontSize = as + 'px';
+}
+
+/* ---------- deterministic "research map" network (draws from t) ---------- */
+const net = $('#net'), ctx = net.getContext('2d');
+let seed = 7;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const NODES = Array.from({ length: 54 }, () => ({
+  x: rnd() * 1920, y: rnd() * 1080,
+  ax: 30 + rnd() * 70, ay: 20 + rnd() * 50,
+  kx: 1 + Math.floor(rnd() * 2), ky: 1 + Math.floor(rnd() * 2),   // whole cycles per loop
+  px: rnd() * TAU, py: rnd() * TAU, r: 1.6 + rnd() * 2.2, tw: rnd() * TAU,
+}));
+const GLYPHS = ['π', 'Σ', '∫', '√', '∞', 'Δ', 'θ', '÷', '×', '≈', 'ƒ(x)', 'x²', '%', '∠'].map((g, i) => ({
+  g, x: 80 + ((i * 137) % 1760), y0: rnd(), size: 26 + rnd() * 34, k: 1, rot: rnd() * TAU,
+}));
+let netAlpha = 0;   // tweened by the timeline
+function drawNet(t) {
+  const p = (t % LOOP) / LOOP;
+  ctx.clearRect(0, 0, 1920, 1080);
+  if (netAlpha <= 0.001) return;
+  ctx.globalAlpha = netAlpha;
+  const pts = NODES.map((n) => ({
+    x: n.x + Math.sin(TAU * p * n.kx + n.px) * n.ax,
+    y: n.y + Math.cos(TAU * p * n.ky + n.py) * n.ay,
+    r: n.r, b: 0.55 + 0.45 * Math.sin(TAU * p * 3 + n.tw),
+  }));
+  ctx.lineWidth = 1.1;
+  for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+    const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y, d = Math.hypot(dx, dy);
+    if (d < 230) {
+      ctx.strokeStyle = `rgba(170, 235, 255, ${0.22 * (1 - d / 230)})`;
+      ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke();
+    }
+  }
+  for (const q of pts) {
+    ctx.fillStyle = `rgba(210, 250, 255, ${0.5 * q.b})`;
+    ctx.beginPath(); ctx.arc(q.x, q.y, q.r * 2.6, 0, TAU); ctx.fill();
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.9 * q.b})`;
+    ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, TAU); ctx.fill();
+  }
+  // maths symbols rising slowly through the frame (one full pass per loop)
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const s of GLYPHS) {
+    const y = 1180 - (((s.y0 + p * s.k) % 1) * 1360);
+    ctx.save();
+    ctx.translate(s.x + Math.sin(TAU * p * 2 + s.rot) * 24, y);
+    ctx.rotate(Math.sin(TAU * p + s.rot) * 0.25);
+    ctx.font = `600 ${s.size}px Montserrat`;
+    ctx.fillStyle = 'rgba(220, 245, 255, .16)';
+    ctx.fillText(s.g, 0, 0);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ---------- ambient background, periodic over LOOP ---------- */
+function ambient(t) {
+  const p = (t % LOOP) / LOOP, s = (k, ph = 0) => Math.sin(TAU * p * k + ph), c = (k, ph = 0) => Math.cos(TAU * p * k + ph);
+  gsap.set('#bgGrad',   { x: s(1) * 70, y: c(1) * 18, scale: 1.08 + 0.03 * s(2) });
+  gsap.set('#bgCampus', { x: s(1, 1) * 30, scale: 1.04 + 0.03 * c(1) });
+  gsap.set('#bgRed',    { scaleY: 1 + 0.08 * s(2, .5), opacity: 0.85 + 0.15 * s(3) });
+  gsap.set('#blobCyan', { x: s(1) * 260, y: c(2) * 70, scale: 1 + 0.15 * s(3) });
+  gsap.set('#blobBlue', { x: c(1) * 220 + 200, y: s(1) * 80 });
+  gsap.set('#blobRed',  { x: s(1, 2) * 500 + 300, opacity: 0.7 + 0.3 * c(2) });
+  drawNet(t);
+}
+
+/* ---------- headline bloom layer (a copy of the title rows) ---------- */
+function buildShine() {
+  const sh = $('#shine');
+  ['#t1', '#t2', '#t3'].forEach((q) => {
+    for (const core of [false, true]) {
+      const r = $(q).cloneNode(true);
+      r.removeAttribute('id'); r.style.top = getComputedStyle($(q)).top;
+      if (core) r.classList.add('core');
+      sh.appendChild(r);
+    }
+  });
+}
+function shineSweep(tl, at, dur = 1.6) {
+  tl.fromTo('#shine', { '--sx': '130%' }, { '--sx': '-30%', duration: dur, ease: 'power2.inOut' }, at);
+}
+function ringPulse(tl, ring, at) {
+  tl.fromTo(ring, { scale: 1, opacity: 0.9 }, { scale: 2.1, opacity: 0, duration: 1.1, ease: 'power2.out' }, at);
+}
+
+(async function main() {
+  await document.fonts.load('700 80px Montserrat');
+  await Promise.all(['400', '600', '800'].map((w) => document.fonts.load(`${w} 30px Montserrat`)));
+  await document.fonts.ready;
+  wrapRows();
+  layout();
+  buildShine();
+
+  const titleWords = ['#t1', '#t2', '#t3'].flatMap((q) => MK.splitWords(q + ' .in'));
+  const collegeChars = MK.splitChars('#college .in');
+  const councilWords = MK.splitWords('#council .in');
+  const audWords = ['#aud1', '#aud2'].flatMap((q) => MK.splitWords(q + ' .in'));
+  const segs = gsap.utils.toArray('#date .seg'), pipes = gsap.utils.toArray('#date .pipe');
+  const rings = gsap.utils.toArray('.seal .ring');
+  const netState = { a: 0 };
+
+  const tl = gsap.timeline({ defaults: { ease: 'expo.out' } });
+  // start state (also the loop's end state): content hidden, background breathing
+  tl.set([...titleWords, ...collegeChars, ...councilWords, ...audWords, ...segs], { opacity: 0 }, 0);
+  tl.set(pipes, { scaleY: 0 }, 0);
+  tl.set('.seal', { opacity: 0 }, 0);
+
+  /* Intro: light flare sweeps the wall, the map fades up */
+  tl.fromTo('#flare', { x: -700, opacity: 0 }, { x: 2300, opacity: 1, duration: 1.8, ease: 'power2.inOut' }, 0.1);
+  tl.to('#flare', { opacity: 0, duration: 0.3 }, 1.6);
+  tl.fromTo(netState, { a: 0.25 }, { a: 1, duration: 2.5, ease: 'power1.inOut', onUpdate: () => (netAlpha = netState.a) }, 0);
+
+  /* Seals spin in, each with a ring pulse */
+  tl.fromTo('#sealA', { opacity: 0, scale: 0.3, rotation: -140, filter: 'blur(10px)' }, { opacity: 1, scale: 1, rotation: 0, filter: 'blur(0px)', duration: 1.0, ease: 'back.out(1.6)' }, 0.55);
+  tl.fromTo('#sealB', { opacity: 0, scale: 0.3, rotation: 140, filter: 'blur(10px)' }, { opacity: 1, scale: 1, rotation: 0, filter: 'blur(0px)', duration: 1.0, ease: 'back.out(1.6)' }, 0.7);
+  ringPulse(tl, rings[0], 1.0); ringPulse(tl, rings[1], 1.12);
+
+  /* Institution lines */
+  tl.fromTo(collegeChars, { opacity: 0, y: 14, filter: 'blur(6px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.6, stagger: { each: 0.022, from: 'center' } }, 1.15);
+  tl.fromTo(councilWords, { opacity: 0, y: 10, filter: 'blur(6px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.6, stagger: 0.07 }, 1.55);
+
+  /* Headline, word by word out of blur */
+  tl.fromTo(titleWords, { opacity: 0, scale: 1.6, y: -30, filter: 'blur(18px)' },
+                        { opacity: 1, scale: 1, y: 0, filter: 'blur(0px)', duration: 0.85, stagger: 0.1, transformOrigin: '50% 60%' }, 2.0);
+  shineSweep(tl, 3.35, 1.5);
+
+  /* Date / time / venue */
+  tl.fromTo(segs, { opacity: 0, y: 40, filter: 'blur(8px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.7, stagger: 0.16 }, 3.6);
+  tl.to(pipes, { scaleY: 1, duration: 0.5, stagger: 0.16 }, 3.75);
+
+  /* Audience */
+  tl.fromTo(audWords, { opacity: 0, y: 16, filter: 'blur(6px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.6, stagger: 0.025, ease: 'power3.out' }, 4.3);
+
+  /* Hold: gentle life while everything is readable */
+  tl.to('#content', { y: -6, duration: 4, ease: 'sine.inOut', yoyo: true, repeat: 3 }, 5.5);  // 5.5 → 21.5, back to 0
+  [8.5, 13.5, 18.2].forEach((at) => shineSweep(tl, at, 1.7));
+  [10.5, 16].forEach((at) => { ringPulse(tl, rings[0], at); ringPulse(tl, rings[1], at + 0.12); });
+  tl.fromTo(segs, { textShadow: '0px 0px 0px rgba(160,245,255,0), 0px 6px 26px rgba(8,18,70,.55)' }, { textShadow: '0px 0px 22px rgba(160,245,255,.95), 0px 6px 26px rgba(8,18,70,.55)', duration: 0.5, stagger: 0.15, yoyo: true, repeat: 1, ease: 'sine.inOut' }, 11.6);
+
+  /* Outro: lifts out of focus, then the wall breathes before the loop restarts */
+  const out = 21.4;
+  tl.to(audWords, { opacity: 0, y: -10, filter: 'blur(6px)', duration: 0.4, stagger: 0.008, ease: 'power3.in' }, out);
+  tl.to(segs, { opacity: 0, y: -16, filter: 'blur(8px)', duration: 0.4, stagger: 0.06, ease: 'power3.in' }, out + 0.1);
+  tl.to(pipes, { scaleY: 0, duration: 0.3, ease: 'power3.in' }, out + 0.1);
+  tl.to(titleWords, { opacity: 0, scale: 1.35, y: -24, filter: 'blur(16px)', duration: 0.55, stagger: { each: 0.03, from: 'end' }, ease: 'power3.in' }, out + 0.2);
+  tl.to([...collegeChars, ...councilWords], { opacity: 0, filter: 'blur(6px)', duration: 0.4, stagger: 0.008, ease: 'power3.in' }, out + 0.6);
+  tl.to('#sealA', { opacity: 0, scale: 0.4, rotation: 120, filter: 'blur(8px)', duration: 0.55, ease: 'power3.in' }, out + 0.8);
+  tl.to('#sealB', { opacity: 0, scale: 0.4, rotation: -120, filter: 'blur(8px)', duration: 0.55, ease: 'power3.in' }, out + 0.85);
+  tl.to(netState, { a: 0.25, duration: 1.2, ease: 'power1.inOut', onUpdate: () => (netAlpha = netState.a) }, out + 1.0);
+  tl.to({}, { duration: 0.001 }, LOOP - 0.001);   // pin the length to exactly LOOP
+
+  MK.onFrame(ambient);
+  MK.mount(tl);
+  window.__ready.then(() => tl.repeatDelay(0));   // seamless in preview / live playback
+})();
+</script>
+</body>
+</html>

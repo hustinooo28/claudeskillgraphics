@@ -1,0 +1,8 @@
+{
+  "name": "gsssc-ledwall",
+  "private": true,
+  "dependencies": {
+    "@fontsource/montserrat": "^5.1.0",
+    "gsap": "^3.13.0"
+  }
+}
